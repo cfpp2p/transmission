@@ -1394,7 +1394,7 @@ int trashDataFile(const char * filename)
 
     if (!fFileStat)
         [self updateFileStat];
-    
+
     __block BOOL canChange = NO;
     [indexSet enumerateIndexesWithOptions: NSEnumerationConcurrent usingBlock: ^(NSUInteger index, BOOL *stop) {
         if (fFileStat[index].progress < 1.0 || fFileStat[index].progress == 1.0)
