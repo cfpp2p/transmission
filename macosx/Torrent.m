@@ -1386,15 +1386,18 @@ int trashDataFile(const char * filename)
 
 - (BOOL) canChangeDownloadCheckForFiles: (NSIndexSet *) indexSet
 {
-    if ([self fileCount] == 1 || [self isComplete])
+    if ([self fileCount] == 1)
         return NO;
-    
+
+    if ([self isComplete])
+        return YES;
+
     if (!fFileStat)
         [self updateFileStat];
     
     __block BOOL canChange = NO;
     [indexSet enumerateIndexesWithOptions: NSEnumerationConcurrent usingBlock: ^(NSUInteger index, BOOL *stop) {
-        if (fFileStat[index].progress < 1.0)
+        if (fFileStat[index].progress < 1.0 || fFileStat[index].progress == 1.0)
         {
             canChange = YES;
             *stop = YES;
