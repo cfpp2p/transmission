@@ -1386,9 +1386,6 @@ int trashDataFile(const char * filename)
 
 - (BOOL) canChangeDownloadCheckForFiles: (NSIndexSet *) indexSet
 {
-    if ([self fileCount] == 1)
-        return NO;
-
     if ([self isComplete])
         return YES;
 
