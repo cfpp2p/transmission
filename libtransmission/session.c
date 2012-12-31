@@ -7,7 +7,7 @@
  * This exemption does not extend to derived works not owned by
  * the Transmission project.
  *
- * $Id: session.c 12649 2011-08-08 16:29:47Z jordan $
+ * $Id: session.c 13665 2012-12-31 17:56:21Z cfpp2p $
  */
 
 #include <assert.h>
