@@ -250,11 +250,11 @@ TrMainWindow :: TrMainWindow( Session& session, Prefs& prefs, TorrentModel& mode
     myTrayIcon.setIcon( QApplication::windowIcon( ) );
 
     connect( &myPrefs, SIGNAL(changed(int)), this, SLOT(refreshPref(int)) );
-    connect( ui.action_ShowMainWindow, SIGNAL(toggled(bool)), this, SLOT(toggleWindows(bool)));
+    connect( ui.action_ShowMainWindow, SIGNAL(triggered(bool)), this, SLOT(toggleWindows(bool)));
     connect( &myTrayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
              this, SLOT(trayActivated(QSystemTrayIcon::ActivationReason)));
 
-    ui.action_ShowMainWindow->setChecked( !minimized );
+    toggleWindows( !minimized );
     ui.action_TrayIcon->setChecked( minimized || prefs.getBool( Prefs::SHOW_TRAY_ICON ) );
 
     ui.verticalLayout->addWidget( createStatusBar( ) );
@@ -306,23 +306,6 @@ TrMainWindow :: TrMainWindow( Session& session, Prefs& prefs, TorrentModel& mode
 
 TrMainWindow :: ~TrMainWindow( )
 {
-}
-
-/****
-*****
-****/
-
-void
-TrMainWindow :: closeEvent( QCloseEvent * event )
-{
-    // if they're using a tray icon, close to the tray
-    // instead of exiting
-    if( !myPrefs.getBool( Prefs :: SHOW_TRAY_ICON ) )
-        event->accept( );
-    else {
-        toggleWindows( false );
-        event->ignore( );
-    }
 }
 
 /****
@@ -567,6 +550,32 @@ TrMainWindow :: setSortAscendingPref( bool b )
 ****/
 
 void
+TrMainWindow :: showEvent( QShowEvent * event )
+{
+    Q_UNUSED (event);
+
+    ui.action_ShowMainWindow->setChecked(true);
+}
+
+/****
+*****
+****/
+
+void
+TrMainWindow :: hideEvent( QHideEvent * event )
+{
+    Q_UNUSED (event);
+
+    if (!isVisible()) {
+        ui.action_ShowMainWindow->setChecked(false);
+    }
+}
+
+/****
+*****
+****/
+
+void
 TrMainWindow :: onPrefsDestroyed( )
 {
     myPrefsDialog = 0;
@@ -609,16 +618,24 @@ TrMainWindow :: setLocation( )
 }
 
 // Open Folder & select torrent's file or top folder
+#undef HAVE_OPEN_SELECT
+#if defined(Q_OS_WIN)
+# define HAVE_OPEN_SELECT
+static
 void openSelect(const QString& path)
 {
-#if defined(Q_OS_WIN)
     const QString explorer = "explorer";
         QString param;
         if (!QFileInfo(path).isDir())
             param = QLatin1String("/select,");
         param += QDir::toNativeSeparators(path);
         QProcess::startDetached(explorer, QStringList(param));
+}
 #elif defined(Q_OS_MAC)
+# define HAVE_OPEN_SELECT
+static
+void openSelect(const QString& path)
+{
     QStringList scriptArgs;
         scriptArgs << QLatin1String("-e")
                    << QString::fromLatin1("tell application \"Finder\" to reveal POSIX file \"%1\"")
@@ -628,25 +645,28 @@ void openSelect(const QString& path)
         scriptArgs << QLatin1String("-e")
                    << QLatin1String("tell application \"Finder\" to activate");
         QProcess::execute("/usr/bin/osascript", scriptArgs);
-#elif defined(Q_OS_UNIX)
-    QDesktopServices :: openUrl( QUrl::fromLocalFile( path ) );
-#endif
 }
+#endif
 
 void
 TrMainWindow :: openFolder( )
 {
     const int torrentId( *getSelectedTorrents().begin() );
     const Torrent * tor( myModel.getTorrentFromId( torrentId ) );
-    const QString path( tor->getPath( ) );
+    QString path( tor->getPath( ) );
     const FileList files = tor->files();
-    if (files.size() == 1)
-        openSelect( path + "/" + files.at(0).filename );
-    else {
-        QDir dir( path + "/" + files.at(0).filename );
-        dir.cdUp();
-        openSelect( dir.path() );
+    const QString firstfile = files.at(0).filename;
+    int slashIndex = firstfile.indexOf('/');
+    if (slashIndex > -1) {
+        path = path + "/" + firstfile.left(slashIndex);
     }
+#ifdef HAVE_OPEN_SELECT
+    else {
+        openSelect( path + "/" + firstfile );
+        return;
+    }
+#endif
+    QDesktopServices :: openUrl( QUrl::fromLocalFile( path ) );
 }
 
 void
@@ -993,7 +1013,7 @@ TrMainWindow :: trayActivated( QSystemTrayIcon::ActivationReason reason )
         if( isMinimized ( ) )
             toggleWindows( true );
         else
-            ui.action_ShowMainWindow->toggle( );
+            toggleWindows( !isVisible() );
     }
 }
 
@@ -1079,6 +1099,7 @@ TrMainWindow :: refreshPref( int key )
             b = myPrefs.getBool( key );
             ui.action_TrayIcon->setChecked( b );
             myTrayIcon.setVisible( b );
+            dynamic_cast<MyApp*>(QCoreApplication::instance())->setQuitOnLastWindowClosed(!b);
             refreshTrayIconSoon( );
             break;
 
