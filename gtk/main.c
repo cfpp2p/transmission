@@ -760,6 +760,7 @@ presentMainWindow( struct cbdata * cbdata )
         gtr_widget_set_visible( GTK_WIDGET( window ), TRUE );
     }
     gtr_window_present( window );
+    gdk_window_raise (gtk_widget_get_window (GTK_WIDGET(window)));
 }
 
 static void
