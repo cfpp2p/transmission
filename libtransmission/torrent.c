@@ -3287,24 +3287,29 @@ deleteLocalData( tr_torrent * tor, tr_fileFunc func )
     /* build a list of 'top's child directories that belong to this torrent */
     for( f=0; f<tor->info.fileCount; ++f )
     {
+        char * dir;
+        char * filename;
+
         /* get the directory that this file goes in... */
-        char * filename = tr_buildPath( top, tor->info.files[f].name, NULL );
-        char * dir = tr_dirname( filename );
+        filename = tr_buildPath( top, tor->info.files[f].name, NULL );
+        dir = tr_dirname( filename );
+        tr_free( filename );
         if( !tr_is_same_file( top, dir ) && strcmp( top, dir ) ) {
             for( ;; ) {
                 char * parent = tr_dirname( dir );
                 if( tr_is_same_file( top, parent ) || !strcmp( top, parent ) ) {
+                    /* break is guaranteed now */
+                    tr_free( parent ); /* free parent now since dir won't point to it on break */
                     if( tr_ptrArrayFindSorted( &folders, dir, vstrcmp ) == NULL ) {
                         tr_ptrArrayInsertSorted( &folders, tr_strdup( dir ), vstrcmp );
                     }
                     break;
                 }
-                tr_free( dir );
-                dir = parent;
+                tr_free( dir ); /* free dir and maybe equivalent parent pointed to by prior */
+                dir = parent; /* point dir at current parent  */
             }
         }
-        tr_free( dir );
-        tr_free( filename );
+        tr_free( dir ); /* free dir and maybe equivalent parent pointed to by prior */
     }
     for( i=0, n=tr_ptrArraySize(&folders); i<n; ++i )
         removeEmptyFoldersAndJunkFiles( tr_ptrArrayNth( &folders, i ) );
