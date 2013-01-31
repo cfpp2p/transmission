@@ -87,20 +87,47 @@ getFiles( const char *      dir,
     return list;
 }
 
+bool
+tr_setPieceSize(tr_metainfo_builder* b, uint32_t ps)
+{
+    const uint32_t KiB = 1024;
+
+    switch( ps ) {
+        case  32:
+        case  64:
+        case 128:
+        case 256:
+        case 512:
+        case  1 * KiB:
+        case  2 * KiB:
+        case  4 * KiB:
+        case  8 * KiB:
+        case 16 * KiB:
+            b->pieceSize = ps * KiB;
+            break;
+        default: /* unknown piecesize */
+            return false;
+    }
+
+    b->pieceCount = (int)( b->totalSize / b->pieceSize );
+    if( b->totalSize % b->pieceSize )
+        ++b->pieceCount;
+    return true;
+}
+
 static uint32_t
 bestPieceSize( uint64_t totalSize )
 {
-    const uint32_t KiB = 1024;
     const uint32_t MiB = 1048576;
     const uint32_t GiB = 1073741824;
 
-    if( totalSize >=   ( 2 * GiB ) ) return   2 * MiB;
-    if( totalSize >=   ( 1 * GiB ) ) return   1 * MiB;
-    if( totalSize >= ( 512 * MiB ) ) return 512 * KiB;
-    if( totalSize >= ( 350 * MiB ) ) return 256 * KiB;
-    if( totalSize >= ( 150 * MiB ) ) return 128 * KiB;
-    if( totalSize >=  ( 50 * MiB ) ) return  64 * KiB;
-    return 32 * KiB;  /* less than 50 meg */
+    if( totalSize >=   ( 2 * GiB ) ) return 2048;
+    if( totalSize >=   ( 1 * GiB ) ) return 1024;
+    if( totalSize >= ( 512 * MiB ) ) return  512;
+    if( totalSize >= ( 350 * MiB ) ) return  256;
+    if( totalSize >= ( 150 * MiB ) ) return  128;
+    if( totalSize >=  ( 50 * MiB ) ) return   64;
+    return 32;  /* less than 50 meg */
 }
 
 static int
@@ -162,10 +189,7 @@ tr_metaInfoBuilderCreate( const char * topFileArg )
            sizeof( tr_metainfo_builder_file ),
            builderFileCompare );
 
-    ret->pieceSize = bestPieceSize( ret->totalSize );
-    ret->pieceCount = (int)( ret->totalSize / ret->pieceSize );
-    if( ret->totalSize % ret->pieceSize )
-        ++ret->pieceCount;
+    tr_setPieceSize( ret, bestPieceSize( ret->totalSize ) );
 
     return ret;
 }
