@@ -14,6 +14,7 @@
 #include <stdio.h> /* fprintf() */
 #include <stdlib.h> /* EXIT_FAILURE */
 #include <unistd.h> /* getcwd() */
+#include <string.h> /* strlen() */
 
 #include <libtransmission/transmission.h>
 #include <libtransmission/makemeta.h>
@@ -24,6 +25,7 @@
 #define MY_NAME "transmission-create"
 
 #define MAX_TRACKERS 128
+static const uint32_t KiB = 1024;
 static tr_tracker_info trackers[MAX_TRACKERS];
 static int trackerCount = 0;
 static bool isPrivate = false;
@@ -31,11 +33,13 @@ static bool showVersion = false;
 const char * comment = NULL;
 const char * outfile = NULL;
 const char * infile = NULL;
+static int piecesize = 0;
 
 static tr_option options[] =
 {
   { 'p', "private", "Allow this torrent to only be used with the specified tracker(s)", "p", 0, NULL },
   { 'o', "outfile", "Save the generated .torrent to this filename", "o", 1, "<file>" },
+  { 's', "piecesize", "Set the piece of size in KiB (32, 64, 128... 4096, 8192)", "s", 1, "<size in KiB>" },
   { 'c', "comment", "Add a comment", "c", 1, "<comment>" },
   { 't', "tracker", "Add a tracker's announce URL", "t", 1, "<url>" },
   { 'V', "version", "Show version number and exit", "V", 0, NULL },
@@ -61,6 +65,12 @@ parseCommandLine( int argc, const char ** argv )
             case 'V': showVersion = true; break;
             case 'p': isPrivate = true; break;
             case 'o': outfile = optarg; break;
+            case 's': if( optarg ) {
+                          sscanf( optarg, "%d", &piecesize );
+                          if( optarg[strlen(optarg) - 1] == 'M')
+                              piecesize *= KiB;
+                      }
+                      break;
             case 'c': comment = optarg; break;
             case 't': if( trackerCount + 1 < MAX_TRACKERS ) {
                           trackers[trackerCount].tier = trackerCount;
@@ -142,10 +152,13 @@ main( int argc, char * argv[] )
         }
     }
 
-    printf( "Creating torrent \"%s\" ...", outfile );
+    b = tr_metaInfoBuilderCreate( infile );
+
+    tr_setPieceSize(b, piecesize);
+
+    printf( "Creating torrent \"%s\" with %d KiB piece size...", outfile, b->pieceSize / KiB );
     fflush( stdout );
 
-    b = tr_metaInfoBuilderCreate( infile );
     tr_makeMetaInfo( b, outfile, trackers, trackerCount, comment, isPrivate );
     while( !b->isDone ) {
         tr_wait_msec( 500 );
