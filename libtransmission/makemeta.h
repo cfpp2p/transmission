@@ -93,6 +93,8 @@ tr_metainfo_builder;
 
 tr_metainfo_builder*tr_metaInfoBuilderCreate( const char * topFile );
 
+bool tr_setPieceSize( tr_metainfo_builder*, uint32_t piecesize );
+
 void                tr_metaInfoBuilderFree( tr_metainfo_builder* );
 
 /**
