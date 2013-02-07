@@ -1823,21 +1823,13 @@ static void
 tr_torrentRemovePieceTemp( tr_torrent * tor )
 {
     DIR * dir;
-    struct dirent * d;
     tr_list * l;
     tr_list * files = NULL;
     const char * path = tor->pieceTempDir;
-    tr_bool renamed = FALSE;
-#ifdef SYS_DARWIN
-    char * home = tr_strdup( getenv( "HOME" ) );
-#else
-    const char * home = tor->pieceTempDir;
-#endif
-    char * newpath;
-    char * oldpath;
     
     if(( dir = opendir( path )))
     {
+        struct dirent * d;
         while(( d = readdir( dir )))
         {
             const char * name = d->d_name;
@@ -1850,12 +1842,23 @@ tr_torrentRemovePieceTemp( tr_torrent * tor )
 	/* tr_list_append( &files, tr_strdup( path ) ); */
     }
 
+#ifdef SYS_DARWIN
+    char * home = tr_strdup( getenv( "HOME" ) );
+#else
+    const char * home = tor->pieceTempDir;
+#endif
+    tr_bool renamed = FALSE;
+    char * newpath;
+    char * oldpath;
+
     for( l = files; l != NULL; l = l->next )
     {
         /* deleteLocalFile( l->data, remove ); */
 	oldpath = tr_buildPath( path, l->data, NULL );
 	newpath = tr_buildPath( home, ".Trash/pcTMP", tr_metainfoGetBasename( &tor->info ), l->data, NULL );
 	tr_moveFile( oldpath, newpath, &renamed );
+    tr_free( newpath );
+    tr_free( oldpath );
     }
     
     if( tor->isDeleting )
@@ -1864,8 +1867,6 @@ tr_torrentRemovePieceTemp( tr_torrent * tor )
     if( files != NULL )
     {
         tr_list_free( &files, tr_free );
-        tr_free( newpath );
-        tr_free( oldpath );
     }
 #ifdef SYS_DARWIN
     tr_free( home );
@@ -2335,6 +2336,7 @@ usePieceTemp( tr_torrent * tor, tr_file_index_t i )
       char * oldpathPTlast = tr_torrentFindPieceTemp( tor, lpindex );
       char * sub = tr_strdup_printf( "%010u.dat", fpindex );
       char * newpathPTfirst = tr_buildPath( home, ".Trash/pcTMP", sub, NULL );
+      tr_free( sub );
       sub = tr_strdup_printf( "%010u.dat", lpindex );
       char * newpathPTlast = tr_buildPath( home, ".Trash/pcTMP", sub, NULL );
 
@@ -2348,19 +2350,28 @@ usePieceTemp( tr_torrent * tor, tr_file_index_t i )
         tr_moveFile( oldpathPTfirst, newpathPTfirst, &renamed );
 
       /* Trash File */
-      char * newpath = NULL;
       char * oldpath = tr_torrentFindFile( tor, i );
-      
+
       if( oldpath )
       {
+        char * newpath = NULL;
+        char * tmpPath = tr_buildPath( tor->downloadDir, sub, NULL );
+        char * tmpPath2 = tr_buildPath( tor->incompleteDir, sub, NULL );
+        tr_free( sub );
         sub = tr_torrentBuildPartial( tor, i );
-        if( fileExists( tr_buildPath( tor->downloadDir, sub, NULL ) ) || fileExists( tr_buildPath( tor->incompleteDir, sub, NULL ) ) )
+        if( fileExists( tmpPath ) || fileExists( tmpPath2 ) )
 	  newpath = tr_buildPath( home, ".Trash", sub, NULL );
         else
         {
+      tr_free( sub );
 	  sub = tr_strdup( tor->info.files[i].name );
-	  if( fileExists( tr_buildPath( tor->downloadDir, sub, NULL ) ) || fileExists( tr_buildPath( tor->incompleteDir, sub, NULL ) ) )
-	    newpath = tr_buildPath( home, ".Trash", sub, NULL );
+      tr_free( tmpPath );
+      tr_free( tmpPath2 );
+      tmpPath = tr_buildPath( tor->downloadDir, sub, NULL );
+      tmpPath2 = tr_buildPath( tor->incompleteDir, sub, NULL );
+	  if( fileExists( tmpPath ) || fileExists( tmpPath2 ) )
+		
+		newpath = tr_buildPath( home, ".Trash", sub, NULL );
         }
         if( newpath )
         {
@@ -2371,6 +2382,8 @@ usePieceTemp( tr_torrent * tor, tr_file_index_t i )
 	  
 	  tr_free( newpath );
         }
+       tr_free( tmpPath );
+       tr_free( tmpPath2 );
       }
       /* this is required to get a 'clean' verify and thus eliminate *
        * checksum errors.                                            */
@@ -2396,27 +2409,32 @@ usePieceTemp( tr_torrent * tor, tr_file_index_t i )
   else
   {
     char * newpath = NULL;
-    char * oldpath = NULL;
+//    char * oldpath = NULL;
     char * sub = tr_torrentBuildPartial( tor, i );
     tr_bool found = FALSE;
     
     if( !tr_cpFileIsComplete( &tor->completion, i ) )
       tor->currentDir = tor->incompleteDir;
-    
-    if( fileExists( tr_buildPath( home, ".Trash", sub, NULL ) ) )
+
+    char * tmpPath = tr_buildPath( home, ".Trash", sub, NULL );
+    if( fileExists( tmpPath ) )
     {
       newpath = tr_buildPath( tor->currentDir, sub, NULL );
       found = TRUE;
     }
     else
     {
+      tr_free( sub );
       sub = tr_strdup( tor->info.files[i].name );
-      if( fileExists( tr_buildPath( home, ".Trash", sub, NULL ) ) )
+      tr_free( tmpPath );
+      tmpPath = tr_buildPath( home, ".Trash", sub, NULL );
+      if( fileExists( tmpPath ) )
       {
 	newpath = tr_buildPath( tor->currentDir, sub, NULL );
         found = TRUE;
       }
     }
+    tr_free( tmpPath );
     /* Only try to restore data if it exists in the Trash. */
     if( found )
     {
@@ -2426,7 +2444,7 @@ usePieceTemp( tr_torrent * tor, tr_file_index_t i )
       /* Restore File */
       if( newpath )
       {
-	oldpath = tr_buildPath( home, ".Trash", sub, NULL );
+	char * oldpath = tr_buildPath( home, ".Trash", sub, NULL );
 
         if( !tr_moveFile( oldpath, newpath, &renamed ) )
 	  tr_tordbg( tor, "rc1b:Found file:%d. Restored to \"%s\". Verification has been completed!", (int)i, newpath );
@@ -2438,9 +2456,11 @@ usePieceTemp( tr_torrent * tor, tr_file_index_t i )
       }
       
       /* Restore Pieces---fp/lp */
+      tr_free( sub );
       sub = tr_strdup_printf( "%010u.dat", fpindex );
       char * oldpathPTfirst = tr_buildPath( home, ".Trash/pcTMP", sub, NULL );
       char * newpathPTfirst = tr_buildPath( tor->pieceTempDir, sub, NULL );
+      tr_free( sub );
       sub = tr_strdup_printf( "%010u.dat", lpindex );
       char * oldpathPTlast = tr_buildPath( home, ".Trash/pcTMP", sub, NULL );
       char * newpathPTlast = tr_buildPath( tor->pieceTempDir, sub, NULL );
