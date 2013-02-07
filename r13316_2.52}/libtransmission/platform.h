@@ -51,6 +51,9 @@ const char * tr_getResumeDir( const tr_session * );
 /** @brief return the default name of the directory where temporary piece files are stored */
 const char * tr_getDefaultPieceSubDir( void );
 
+/** @brief return the default name of the directory where transmission trash files are stored */
+const char * tr_getDefaultTrashSubDir( void );
+
 /** @brief return the directory where .torrent files are stored */
 const char * tr_getTorrentDir( const tr_session * );
 

@@ -302,10 +302,12 @@ getOldConfigDir( void )
  #define RESUME_SUBDIR  "Resume"
  #define TORRENT_SUBDIR "Torrents"
  #define PIECE_SUBDIR   "Pieces"
+ #define TRASH_SUBDIR   "Trash"
 #else
  #define RESUME_SUBDIR  "resume"
  #define TORRENT_SUBDIR "torrents"
  #define PIECE_SUBDIR   "pieces"
+ #define TRASH_SUBDIR   "trash"
 #endif
 
 static const char *
@@ -536,6 +538,12 @@ const char *
 tr_getDefaultPieceSubDir( void )
 {
     return PIECE_SUBDIR;
+}
+
+const char *
+tr_getDefaultTrashSubDir( void )
+{
+    return TRASH_SUBDIR;
 }
 
 /***

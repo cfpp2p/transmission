@@ -39,7 +39,8 @@ enum
     TR_FR_IDLELIMIT           = ( 1 << 17 ),
     TR_FR_TIME_SEEDING        = ( 1 << 18 ),
     TR_FR_TIME_DOWNLOADING    = ( 1 << 19 ),
-    TR_FR_PIECE_TEMP_DIR      = ( 1 << 20 )
+    TR_FR_PIECE_TEMP_DIR      = ( 1 << 20 ),
+    TR_FR_TRASH_TEMP_DIR      = ( 1 << 21 )
 };
 
 /**

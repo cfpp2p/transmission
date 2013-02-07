@@ -31,6 +31,7 @@
 #define KEY_DONE_DATE           "done-date"
 #define KEY_DOWNLOAD_DIR        "destination"
 #define KEY_PIECE_TEMP_DIR      "piece-temp-dir"
+#define KEY_TRASH_TEMP_DIR      "trash-temp-dir"
 #define KEY_DND                 "dnd"
 #define KEY_DOWNLOADED          "downloaded"
 #define KEY_INCOMPLETE_DIR      "incomplete-dir"
@@ -607,7 +608,7 @@ tr_torrentSaveResume( tr_torrent * tor )
     if( !tr_isTorrent( tor ) )
         return;
 
-    tr_bencInitDict( &top, 50 ); /* arbitrary "big enough" number */
+    tr_bencInitDict( &top, 51 ); /* arbitrary "big enough" number */
     tr_bencDictAddInt( &top, KEY_TIME_SEEDING, tor->secondsSeeding );
     tr_bencDictAddInt( &top, KEY_TIME_DOWNLOADING, tor->secondsDownloading );
     tr_bencDictAddInt( &top, KEY_ACTIVITY_DATE, tor->activityDate );
@@ -618,6 +619,7 @@ tr_torrentSaveResume( tr_torrent * tor )
     if( tor->incompleteDir != NULL )
         tr_bencDictAddStr( &top, KEY_INCOMPLETE_DIR, tor->incompleteDir );
     tr_bencDictAddStr( &top, KEY_PIECE_TEMP_DIR, tor->pieceTempDir );
+    tr_bencDictAddStr( &top, KEY_TRASH_TEMP_DIR, tor->trashTempDir );
     tr_bencDictAddInt( &top, KEY_DOWNLOADED, tor->downloadedPrev + tor->downloadedCur );
     tr_bencDictAddInt( &top, KEY_UPLOADED, tor->uploadedPrev + tor->uploadedCur );
     tr_bencDictAddInt( &top, KEY_MAX_PEERS, tor->maxConnectedPeers );
@@ -700,6 +702,15 @@ loadFromFile( tr_torrent * tor,
         tr_free( tor->pieceTempDir );
         tor->pieceTempDir = tr_strdup( str );
         fieldsLoaded |= TR_FR_PIECE_TEMP_DIR;
+    }
+
+    if( ( fieldsToLoad & TR_FR_TRASH_TEMP_DIR )
+        && tr_bencDictFindStr( &top, KEY_TRASH_TEMP_DIR, &str )
+        && str && *str )
+    {
+        tr_free( tor->trashTempDir );
+        tor->trashTempDir = tr_strdup( str );
+        fieldsLoaded |= TR_FR_TRASH_TEMP_DIR;
     }
 
     if( ( fieldsToLoad & TR_FR_DOWNLOADED )

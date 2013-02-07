@@ -152,6 +152,9 @@ struct tr_torrent
     /* Where temporary piece files are stored. */
     char * pieceTempDir;
 
+    /* Where trash files are stored. */
+    char * trashTempDir;
+
     /* Length, in bytes, of the "info" dict in the .torrent file. */
     int infoDictLength;
 

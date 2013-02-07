@@ -308,7 +308,7 @@ tr_sessionGetDefaultSettings( const char * configDir UNUSED, tr_benc * d )
 {
     assert( tr_bencIsDict( d ) );
 
-    tr_bencDictReserve( d, 58 );
+    tr_bencDictReserve( d, 59 );
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_ENABLED,        FALSE );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_BLOCKLIST_URL,            "http://www.example.com/blocklist" );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_MAX_CACHE_SIZE_MB,        DEFAULT_CACHE_SIZE_MB );
@@ -316,6 +316,7 @@ tr_sessionGetDefaultSettings( const char * configDir UNUSED, tr_benc * d )
     tr_bencDictAddBool( d, TR_PREFS_KEY_LPD_ENABLED,              FALSE );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_DOWNLOAD_DIR,             tr_getDefaultDownloadDir( ) );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_PIECE_TEMP_DIR,           "" );
+    tr_bencDictAddStr ( d, TR_PREFS_KEY_TRASH_TEMP_DIR,           "" );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_DSPEED_KBps,              100 );
     tr_bencDictAddBool( d, TR_PREFS_KEY_DSPEED_ENABLED,           FALSE );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_ENCRYPTION,               TR_DEFAULT_ENCRYPTION );
@@ -374,7 +375,7 @@ tr_sessionGetSettings( tr_session * s, struct tr_benc * d )
 {
     assert( tr_bencIsDict( d ) );
 
-    tr_bencDictReserve( d, 59 );
+    tr_bencDictReserve( d, 60 );
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_ENABLED,        tr_blocklistIsEnabled( s ) );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_BLOCKLIST_URL,            tr_blocklistGetURL( s ) );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_MAX_CACHE_SIZE_MB,        tr_sessionGetCacheLimit_MB( s ) );
@@ -382,6 +383,7 @@ tr_sessionGetSettings( tr_session * s, struct tr_benc * d )
     tr_bencDictAddBool( d, TR_PREFS_KEY_LPD_ENABLED,              s->isLPDEnabled );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_DOWNLOAD_DIR,             s->downloadDir );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_PIECE_TEMP_DIR,           tr_sessionGetPieceTempDir( s ) );
+    tr_bencDictAddStr ( d, TR_PREFS_KEY_TRASH_TEMP_DIR,           tr_sessionGetTrashTempDir( s ) );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_DSPEED_KBps,              tr_sessionGetSpeedLimit_KBps( s, TR_DOWN ) );
     tr_bencDictAddBool( d, TR_PREFS_KEY_DSPEED_ENABLED,           tr_sessionIsSpeedLimited( s, TR_DOWN ) );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_ENCRYPTION,               s->encryptionMode );
@@ -794,6 +796,8 @@ sessionSetImpl( void * vdata )
         tr_sessionSetDownloadDir( session, str );
     if( tr_bencDictFindStr( settings, TR_PREFS_KEY_PIECE_TEMP_DIR, &str ) )
         tr_sessionSetPieceTempDir( session, str );
+    if( tr_bencDictFindStr( settings, TR_PREFS_KEY_TRASH_TEMP_DIR, &str ) )
+        tr_sessionSetTrashTempDir( session, str );
     if( tr_bencDictFindStr( settings, TR_PREFS_KEY_INCOMPLETE_DIR, &str ) )
         tr_sessionSetIncompleteDir( session, str );
     if( tr_bencDictFindBool( settings, TR_PREFS_KEY_INCOMPLETE_DIR_ENABLED, &boolVal ) )
@@ -966,6 +970,13 @@ tr_sessionGetPieceTempDir( const tr_session * session )
     return session->pieceDir;
 }
 
+const char *
+tr_sessionGetTrashTempDir( const tr_session * session )
+{
+    assert( tr_isSession( session ) );
+    return session->trashDir;
+}
+
 void
 tr_sessionSetPieceTempDir( tr_session * session, const char * path )
 {
@@ -977,6 +988,20 @@ tr_sessionSetPieceTempDir( tr_session * session, const char * path )
                                           tr_getDefaultPieceSubDir( ), NULL );
     else
         session->pieceDir = tr_strdup( path );
+    tr_sessionUnlock( session );
+}
+
+void
+tr_sessionSetTrashTempDir( tr_session * session, const char * path )
+{
+    assert( tr_isSession( session ) );
+    tr_sessionLock( session );
+    tr_free( session->trashDir );
+    if( !path || !*path )
+        session->trashDir = tr_buildPath( tr_sessionGetConfigDir( session ),
+                                          tr_getDefaultTrashSubDir( ), NULL );
+    else
+        session->trashDir = tr_strdup( path );
     tr_sessionUnlock( session );
 }
 
@@ -1883,6 +1908,7 @@ tr_sessionClose( tr_session * session )
     tr_free( session->configDir );
     tr_free( session->resumeDir );
     tr_free( session->pieceDir );
+    tr_free( session->trashDir );
     tr_free( session->torrentDir );
     tr_free( session->downloadDir );
     tr_free( session->incompleteDir );

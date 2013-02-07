@@ -839,6 +839,7 @@ torrentInit( tr_torrent * tor, const tr_ctor * ctor )
 
     s = tr_metainfoGetBasename( &tor->info );
     tor->pieceTempDir = tr_buildPath( tr_sessionGetPieceTempDir( tor->session ), s, NULL );
+    tor->trashTempDir = tr_buildPath( tr_sessionGetTrashTempDir( tor->session ), s, NULL );
     tr_free( s );
 
     tor->bandwidth = tr_bandwidthNew( session, session->bandwidth );
@@ -867,6 +868,7 @@ torrentInit( tr_torrent * tor, const tr_ctor * ctor )
 
     refreshCurrentDir( tor );
     tr_mkdirp( tor->pieceTempDir, 0777 );
+    tr_mkdirp( tor->trashTempDir, 0777 );
 
     doStart = tor->isRunning;
     tor->isRunning = 0;
@@ -1567,6 +1569,7 @@ freeTorrent( tr_torrent * tor )
     tr_free( tor->downloadDir );
     tr_free( tor->incompleteDir );
     tr_free( tor->pieceTempDir );
+    tr_free( tor->trashTempDir );
     tr_free( tor->peer_id );
 
     if( tor == session->torrentList )
@@ -1845,7 +1848,7 @@ tr_torrentRemovePieceTemp( tr_torrent * tor )
 #ifdef SYS_DARWIN
     char * home = tr_strdup( getenv( "HOME" ) );
 #else
-    const char * home = tor->pieceTempDir;
+    const char * home = tor->trashTempDir;
 #endif
     tr_bool renamed = FALSE;
     char * newpath;
@@ -2312,7 +2315,7 @@ usePieceTemp( tr_torrent * tor, tr_file_index_t i )
 #ifdef SYS_DARWIN
     char * home = tr_strdup( getenv( "HOME" ) );
 #else
-    const char * home = tor->pieceTempDir;
+    const char * home = tor->trashTempDir;
 #endif
   tr_bool renamed = FALSE;
   tr_file * file = &tor->info.files[i];
