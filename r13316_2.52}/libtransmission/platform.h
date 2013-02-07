@@ -48,8 +48,8 @@ void tr_setConfigDir( tr_session * session, const char * configDir );
 /** @brief return the directory where .resume files are stored */
 const char * tr_getResumeDir( const tr_session * );
 
-/** @brief return the directory where temporary piece files are stored */
-const char * tr_getPieceDir( const tr_session * );
+/** @brief return the default name of the directory where temporary piece files are stored */
+const char * tr_getDefaultPieceSubDir( void );
 
 /** @brief return the directory where .torrent files are stored */
 const char * tr_getTorrentDir( const tr_session * );

@@ -164,6 +164,7 @@ const char* tr_getDefaultDownloadDir( void );
 #define TR_PREFS_KEY_LPD_ENABLED                   "lpd-enabled"
 #define TR_PREFS_KEY_PREFETCH_ENABLED              "prefetch-enabled"
 #define TR_PREFS_KEY_DOWNLOAD_DIR                  "download-dir"
+#define TR_PREFS_KEY_PIECE_TEMP_DIR                "piece-temp-dir"
 #define TR_PREFS_KEY_ENCRYPTION                    "encryption"
 #define TR_PREFS_KEY_IDLE_LIMIT                    "idle-seeding-limit"
 #define TR_PREFS_KEY_IDLE_LIMIT_ENABLED            "idle-seeding-limit-enabled"
@@ -345,6 +346,23 @@ const char * tr_sessionGetDownloadDir( const tr_session * session );
  * @return zero or positive integer on success, -1 in case of error.
  */
 int64_t tr_sessionGetDownloadDirFreeSpace( const tr_session * session );
+
+/**
+ * @brief Get the full path to where temporary piece files are stored.
+ */
+const char * tr_sessionGetPieceTempDir( const tr_session * session );
+
+/**
+ * @brief Set the full path to where temporary piece files are stored.
+ * @param path If empty or NULL a default path consisting of the
+ *             config directory and a "pieces" sub-directory is set.
+ * @note Changing this setting will only affect new torrents. Existing
+ *       torrents will continue to use the same directory as was set
+ *       when they were created.
+ * @see tr_sessionGetConfigDir
+ * @see tr_getDefaultPieceSubDir
+ */
+void tr_sessionSetPieceTempDir( tr_session * session, const char * path );
 
 /**
  * @brief Set the torrent's bandwidth priority.

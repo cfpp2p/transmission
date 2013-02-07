@@ -838,7 +838,7 @@ torrentInit( tr_torrent * tor, const tr_ctor * ctor )
         tor->incompleteDir = tr_strdup( dir );
 
     s = tr_metainfoGetBasename( &tor->info );
-    tor->pieceTempDir = tr_buildPath( tr_getPieceDir( tor->session ), s, NULL );
+    tor->pieceTempDir = tr_buildPath( tr_sessionGetPieceTempDir( tor->session ), s, NULL );
     tr_free( s );
 
     tor->bandwidth = tr_bandwidthNew( session, session->bandwidth );
@@ -866,6 +866,7 @@ torrentInit( tr_torrent * tor, const tr_ctor * ctor )
     tr_ctorInitTorrentWanted( ctor, tor );
 
     refreshCurrentDir( tor );
+    tr_mkdirp( tor->pieceTempDir, 0777 );
 
     doStart = tor->isRunning;
     tor->isRunning = 0;
@@ -1827,7 +1828,11 @@ tr_torrentRemovePieceTemp( tr_torrent * tor )
     tr_list * files = NULL;
     const char * path = tor->pieceTempDir;
     tr_bool renamed = FALSE;
+#ifdef SYS_DARWIN
     char * home = tr_strdup( getenv( "HOME" ) );
+#else
+    const char * home = tor->pieceTempDir;
+#endif
     char * newpath;
     char * oldpath;
     
@@ -1862,8 +1867,9 @@ tr_torrentRemovePieceTemp( tr_torrent * tor )
         tr_free( newpath );
         tr_free( oldpath );
     }
-      
+#ifdef SYS_DARWIN
     tr_free( home );
+#endif
  }
 
 static void
@@ -2302,7 +2308,11 @@ removePieceTemp( tr_torrent * tor, tr_piece_index_t piece )
 static tr_bool
 usePieceTemp( tr_torrent * tor, tr_file_index_t i )
 {
-  char * home = tr_strdup( getenv( "HOME" ) );
+#ifdef SYS_DARWIN
+    char * home = tr_strdup( getenv( "HOME" ) );
+#else
+    const char * home = tor->pieceTempDir;
+#endif
   tr_bool renamed = FALSE;
   tr_file * file = &tor->info.files[i];
   tr_piece_index_t fpindex = file->firstPiece;
@@ -2316,7 +2326,7 @@ usePieceTemp( tr_torrent * tor, tr_file_index_t i )
     if( tr_torrentFindFile2( tor, i, NULL, NULL ) )
     {
       if( tor->isRunning )
-        tr_torrentStop( tor );
+        tor->isStopping = TRUE;
 
       tr_fdFileClose( tor->session, tor, i, TR_FD_INDEX_FILE );
 
@@ -2377,7 +2387,9 @@ usePieceTemp( tr_torrent * tor, tr_file_index_t i )
       tr_free( oldpathPTlast );
     }
     
-  tr_free( home );
+#ifdef SYS_DARWIN
+    tr_free( home );
+#endif
   return !tr_torrentFindFile2( tor, i, NULL, NULL );
   }
   /* !DND */
@@ -2409,7 +2421,7 @@ usePieceTemp( tr_torrent * tor, tr_file_index_t i )
     if( found )
     {
       if( tor->isRunning )
-	tr_torrentStop( tor );
+	    tor->isStopping = TRUE;
 	
       /* Restore File */
       if( newpath )
@@ -2458,7 +2470,9 @@ usePieceTemp( tr_torrent * tor, tr_file_index_t i )
     tr_free( sub );
   }
 
-  tr_free( home );
+#ifdef SYS_DARWIN
+    tr_free( home );
+#endif
   return FALSE;
 }
 
