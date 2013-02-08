@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: Torrent.m 13602 2012-10-30 00:22:10Z livings124 $
+ * $Id: Torrent.m 13960 2013-02-08 14:59:35Z cfpp2p $
  *
  * Copyright (c) 2006-2012 Transmission authors and contributors
  *
@@ -1400,6 +1400,7 @@ int trashDataFile(const char * filename)
             *stop = YES;
         }
     }];
+    canChange = YES; // force canChange no matter what
     return canChange;
 }
 
