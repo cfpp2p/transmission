@@ -2230,7 +2230,8 @@ torrentCallScript( const tr_torrent * tor, const char * script )
         tr_torinf( tor, "Calling script \"%s\"", script );
 
 #ifdef WIN32
-        _spawnvpe( _P_NOWAIT, script, (const char*)cmd, env );
+        if (_spawnvpe (_P_NOWAIT, script, (const char*)cmd, env) == -1)
+          tr_torerr (tor, "error executing script \"%s\": %s", cmd[0], tr_strerror (errno));
 #else
         signal( SIGCHLD, onSigCHLD );
 
@@ -2238,7 +2239,10 @@ torrentCallScript( const tr_torrent * tor, const char * script )
         {
             for (i=0; env[i]; ++i)
                 putenv(env[i]);
-            execvp( script, cmd );
+				
+            if (execvp (script, cmd) == -1)
+              tr_torerr (tor, "error executing script \"%s\": %s", cmd[0], tr_strerror (errno));
+
             _exit( 0 );
         }
 #endif
