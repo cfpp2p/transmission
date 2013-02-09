@@ -1383,8 +1383,9 @@ int trashDataFile(const char * filename)
 {
     NSAssert2(index < [self fileCount], @"Index %d is greater than file count %d", index, [self fileCount]);
     
-    if ([self fileCount] == 1) /* || [self isComplete]) */
+   /*  if ([self fileCount] == 1)  || [self isComplete]) 
         return NO;
+   */
 
     if ([self isComplete])
         return YES;
