@@ -1858,7 +1858,7 @@ tr_torrentRemovePieceTemp( tr_torrent * tor )
     {
         /* deleteLocalFile( l->data, remove ); */
 	oldpath = tr_buildPath( path, l->data, NULL );
-	newpath = tr_buildPath( home, ".Trash/pcTMP", tr_metainfoGetBasename( &tor->info ), l->data, NULL );
+	newpath = tr_buildPath( home, ".Trash/pcTMPremoved", tr_metainfoGetBasename( &tor->info ), l->data, NULL );
 	tr_moveFile( oldpath, newpath, &renamed );
     tr_free( newpath );
     tr_free( oldpath );
@@ -2338,11 +2338,20 @@ usePieceTemp( tr_torrent * tor, tr_file_index_t i )
       char * oldpathPTfirst = tr_torrentFindPieceTemp( tor, fpindex );
       char * oldpathPTlast = tr_torrentFindPieceTemp( tor, lpindex );
       char * sub = tr_strdup_printf( "%010u.dat", fpindex );
+#ifdef SYS_DARWIN
+      char * sub2 = tr_metainfoGetBasename( &tor->info );
+      char * newpathPTfirst = tr_buildPath( home, ".Trash/pcTMP", sub2, sub, NULL );
+#else
       char * newpathPTfirst = tr_buildPath( home, ".Trash/pcTMP", sub, NULL );
+#endif
       tr_free( sub );
       sub = tr_strdup_printf( "%010u.dat", lpindex );
+#ifdef SYS_DARWIN
+      char * newpathPTlast = tr_buildPath( home, ".Trash/pcTMP", sub2, sub, NULL );
+      tr_free( sub2 );
+#else
       char * newpathPTlast = tr_buildPath( home, ".Trash/pcTMP", sub, NULL );
-
+#endif
       if( ((int)i - 1) > -1 && !tr_torrentFindFile2( tor, ((int)i - 1), NULL, NULL ) /*|| (int)fpindex == 0*/ )
         tr_moveFile( oldpathPTfirst, newpathPTfirst, &renamed );
 
@@ -2461,11 +2470,21 @@ usePieceTemp( tr_torrent * tor, tr_file_index_t i )
       /* Restore Pieces---fp/lp */
       tr_free( sub );
       sub = tr_strdup_printf( "%010u.dat", fpindex );
+#ifdef SYS_DARWIN
+      char * sub2 = tr_metainfoGetBasename( &tor->info );
+      char * oldpathPTfirst = tr_buildPath( home, ".Trash/pcTMP", sub2, sub, NULL );
+#else
       char * oldpathPTfirst = tr_buildPath( home, ".Trash/pcTMP", sub, NULL );
+#endif
       char * newpathPTfirst = tr_buildPath( tor->pieceTempDir, sub, NULL );
       tr_free( sub );
       sub = tr_strdup_printf( "%010u.dat", lpindex );
+#ifdef SYS_DARWIN
+      char * oldpathPTlast = tr_buildPath( home, ".Trash/pcTMP", sub2, sub, NULL );
+      tr_free( sub2 );
+#else
       char * oldpathPTlast = tr_buildPath( home, ".Trash/pcTMP", sub, NULL );
+#endif
       char * newpathPTlast = tr_buildPath( tor->pieceTempDir, sub, NULL );
 
       if( ((int)i - 1) > -1 && (int)fpindex != ((int)i - 1) && !tr_torrentFindFile2( tor, ((int)i - 1), NULL, NULL ) )
@@ -3246,22 +3265,24 @@ tr_torrentDeleteLocalData( tr_torrent * tor, tr_fileFunc fileFunc )
     else if( tor->info.fileCount == 1 )
     {
         char * tmp;
-	char * path;
+	    char * path;
 	
 	/* torrent only has one file */
         path = tr_buildPath( tor->currentDir, tor->info.files[0].name, NULL );
         deleteLocalFile( path, fileFunc );
 	
         tmp = tr_torrentBuildPartial( tor, 0 );
-	path = tr_buildPath( tor->currentDir, tmp, NULL );
+        tr_free( path );
+	    path = tr_buildPath( tor->currentDir, tmp, NULL );
         deleteLocalFile( path, fileFunc );
 
 	/* delete top level folder 12/27/12 */	
+        tr_free( path );
         path = tr_buildPath( tor->currentDir, tor->info.name, NULL );
         deleteLocalFile( path, fileFunc );
-	tr_tordbg( tor, "Trying to delete %s", path );
+        tr_tordbg( tor, "Trying to delete %s", path );
 
-	tr_free( tmp );
+        tr_free( tmp );
         tr_free( path );
     }
 }
