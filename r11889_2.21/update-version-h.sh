@@ -32,10 +32,10 @@ fi
 cat > libtransmission/version.h.new << EOF
 #define PEERID_PREFIX             "${peer_id_prefix}"
 #define USERAGENT_PREFIX          "${user_agent_prefix}"
-#define SVN_REVISION             "13316"
-#define SVN_REVISION_NUM          13316
+#define SVN_REVISION             "11889"
+#define SVN_REVISION_NUM          11889
 #define SHORT_VERSION_STRING      "${user_agent_prefix}"
-#define LONG_VERSION_STRING       "${user_agent_prefix} (13316)"
+#define LONG_VERSION_STRING       "${user_agent_prefix} (11889)"
 #define VERSION_STRING_INFOPLIST  ${user_agent_prefix}
 #define MAJOR_VERSION             ${major_version}
 #define MINOR_VERSION             ${minor_version}
