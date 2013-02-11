@@ -303,7 +303,7 @@ static unsigned short search_id;
 /* The maximum number of nodes that we snub.  There is probably little
    reason to increase this value. */
 #ifndef DHT_MAX_BLACKLISTED
-#define DHT_MAX_BLACKLISTED 10
+#define DHT_MAX_BLACKLISTED 100
 #endif
 static struct sockaddr_storage blacklist[DHT_MAX_BLACKLISTED];
 int next_blacklisted;
