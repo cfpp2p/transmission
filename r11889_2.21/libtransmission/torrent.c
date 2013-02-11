@@ -1858,7 +1858,7 @@ tr_torrentRemovePieceTemp( tr_torrent * tor )
     {
         /* deleteLocalFile( l->data, remove ); */
 	oldpath = tr_buildPath( path, l->data, NULL );
-	newpath = tr_buildPath( home, ".Trash/pcTMPremoved", tr_metainfoGetBasename( &tor->info ), l->data, NULL );
+	newpath = tr_buildPath( home, ".Trash/pcTMP", tr_metainfoGetBasename( &tor->info ), l->data, NULL );
 	tr_moveFile( oldpath, newpath, &renamed );
     tr_free( newpath );
     tr_free( oldpath );
@@ -2367,33 +2367,32 @@ usePieceTemp( tr_torrent * tor, tr_file_index_t i )
       if( oldpath )
       {
         char * newpath = NULL;
-        char * tmpPath = tr_buildPath( tor->downloadDir, sub, NULL );
-        char * tmpPath2 = tr_buildPath( tor->incompleteDir, sub, NULL );
         tr_free( sub );
         sub = tr_torrentBuildPartial( tor, i );
+        char * tmpPath = tr_buildPath( tor->downloadDir, sub, NULL );
+        char * tmpPath2 = tr_buildPath( tor->incompleteDir, sub, NULL );
         if( fileExists( tmpPath ) || fileExists( tmpPath2 ) )
-	  newpath = tr_buildPath( home, ".Trash", sub, NULL );
+            newpath = tr_buildPath( home, ".Trash", sub, NULL );
         else
         {
-      tr_free( sub );
-	  sub = tr_strdup( tor->info.files[i].name );
-      tr_free( tmpPath );
-      tr_free( tmpPath2 );
-      tmpPath = tr_buildPath( tor->downloadDir, sub, NULL );
-      tmpPath2 = tr_buildPath( tor->incompleteDir, sub, NULL );
-	  if( fileExists( tmpPath ) || fileExists( tmpPath2 ) )
-		
-		newpath = tr_buildPath( home, ".Trash", sub, NULL );
+            tr_free( sub );
+            sub = tr_strdup( tor->info.files[i].name );
+            tr_free( tmpPath );
+            tr_free( tmpPath2 );
+            tmpPath = tr_buildPath( tor->downloadDir, sub, NULL );
+            tmpPath2 = tr_buildPath( tor->incompleteDir, sub, NULL );
+            if( fileExists( tmpPath ) || fileExists( tmpPath2 ) )
+              newpath = tr_buildPath( home, ".Trash", sub, NULL );
         }
         if( newpath )
-        {
-          if( !tr_moveFile( oldpath, newpath, &renamed ) )
-	    tr_tordbg( tor, "rc1b:Found file:%d. Moved to \"%s\". Verification has been completed!", (int)i, newpath );
-          else
-	    tr_tordbg( tor, "rc1b:Unable to trash file:%d:%s.", (int)i, sub );
+            {
+            if( !tr_moveFile( oldpath, newpath, &renamed ) )
+	            tr_tordbg( tor, "rc1b:Found file:%d. Moved to \"%s\". Verification has been completed!", (int)i, newpath );
+            else
+                tr_tordbg( tor, "rc1b:Unable to trash file:%d:%s.", (int)i, sub );
 	  
-	  tr_free( newpath );
-        }
+            tr_free( newpath );
+            }
        tr_free( tmpPath );
        tr_free( tmpPath2 );
       }
