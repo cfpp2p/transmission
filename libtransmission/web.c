@@ -7,7 +7,7 @@
  * This exemption does not extend to derived works not owned by
  * the Transmission project.
  *
- * $Id: web.c 13112 2011-12-14 05:58:23Z jordan $
+ * $Id: web.c 14075 2013-07-05 16:32:45Z jordan $
  */
 
 #include <string.h> /* strlen(), strstr() */
@@ -25,12 +25,14 @@
 
 #include "transmission.h"
 #include "net.h" /* tr_address */
+#include "torrent.h"
 #include "platform.h" /* mutex */
 #include "session.h"
 #include "trevent.h" /* tr_runInEventThread() */
 #include "utils.h"
 #include "version.h" /* User-Agent */
 #include "web.h"
+#include "list.h"
 
 #if LIBCURL_VERSION_NUM >= 0x070F06 /* CURLOPT_SOCKOPT* was added in 7.15.6 */
  #define USE_LIBCURL_SOCKOPT
@@ -58,9 +60,10 @@ enum
 /***
 ****
 ***/
-
+tr_list * stopeasyhandle=NULL;
 struct tr_web_task
 {
+    int torrentId;
     long code;
     long timeout_secs;
     bool did_connect;
@@ -110,6 +113,20 @@ writeFunc( void * ptr, size_t size, size_t nmemb, void * vtask )
 {
     const size_t byteCount = size * nmemb;
     struct tr_web_task * task = vtask;
+    if (task->torrentId != -1)
+        {
+      tr_torrent * tor = tr_torrentFindFromId (task->session, task->torrentId);
+        if (tor)
+            {
+            unsigned int n=tr_bandwidthClamp(&(tor->bandwidth), TR_DOWN, nmemb );
+            unsigned int n2=tr_bandwidthClamp(&(task->session->bandwidth), TR_DOWN, nmemb );
+			if ( n2 < n ) n = n2;
+            if(n<1&&task->freebuf==NULL/*only limit webseed*/) {
+                tr_list_append(&stopeasyhandle,task->curl_easy);
+                return CURL_WRITEFUNC_PAUSE;
+                }
+            }
+        }
     evbuffer_add( task->response, ptr, byteCount );
     dbgmsg( "wrote %zu bytes to task %p's buffer", byteCount, task );
     return byteCount;
@@ -231,13 +248,14 @@ tr_webRun( tr_session         * session,
            tr_web_done_func     done_func,
            void               * done_func_user_data )
 {
-    return tr_webRunWithBuffer( session, url, range, cookies,
+    return tr_webRunWithBuffer( session, -1, url, range, cookies,
                                 done_func, done_func_user_data,
                                 NULL );
 }
 
 struct tr_web_task *
 tr_webRunWithBuffer( tr_session         * session,
+                     int                  torrentId,
                      const char         * url,
                      const char         * range,
                      const char         * cookies,
@@ -252,6 +270,7 @@ tr_webRunWithBuffer( tr_session         * session,
         struct tr_web_task * task = tr_new0( struct tr_web_task, 1 );
 
         task->session = session;
+        task->torrentId = torrentId;
         task->url = tr_strdup( url );
         task->range = tr_strdup( range );
         task->cookies = tr_strdup( cookies);
@@ -354,6 +373,13 @@ tr_webThreadFunc( void * vsession )
         }
         tr_lockUnlock( web->taskLock );
 
+        //restart stopped curl handle;
+        CURL *handle;
+        int n=tr_list_size(stopeasyhandle);
+        while(n--){
+            handle=tr_list_pop_front(&stopeasyhandle);
+            curl_easy_pause(handle,CURLPAUSE_CONT);
+        }
         /* maybe wait a little while before calling curl_multi_perform() */
         msec = 0;
         curl_multi_timeout( multi, &msec );
@@ -566,4 +592,4 @@ tr_http_escape_sha1( char * out, const uint8_t * sha1_digest )
             out += tr_snprintf( out, 4, "%%%02x", (unsigned int)*in++ );
 
     *out = '\0';
-}
+} 
