@@ -61,6 +61,7 @@ struct tr_web_task * tr_webRun( tr_session        * session,
 struct evbuffer;
 
 struct tr_web_task * tr_webRunWithBuffer( tr_session         * session,
+                                          int                  torrentId,
                                           const char         * url,
                                           const char         * range,
                                           const char         * cookies,
@@ -80,4 +81,4 @@ char* tr_http_unescape( const char * str, int len );
 }
 #endif
 
-#endif
+#endif 
