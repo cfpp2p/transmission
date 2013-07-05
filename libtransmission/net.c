@@ -282,6 +282,7 @@ tr_netOpenPeerSocket( tr_session        * session,
     {
         tr_err( _( "Couldn't set source address %s on %d: %s" ),
                 tr_address_to_string( source_addr ), s, tr_strerror( errno ) );
+        tr_netClose( session, s );
         return -errno;
     }
 
@@ -666,4 +667,4 @@ tr_address_is_valid_for_peers( const tr_address * addr, tr_port port )
         && ( !isIPv6LinkLocalAddress( addr ) )
         && ( !isIPv4MappedAddress( addr ) )
         && ( !isMartianAddr( addr ) );
-}
+} 
