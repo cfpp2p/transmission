@@ -1059,6 +1059,20 @@ on_announce_error( tr_tier * tier, const char * err, tr_announce_event e )
 
     /* schedule a reannounce */
     interval = getRetryInterval( tier->currentTracker );
+
+     /* HACK BEGIN */
+    if((tier->currentTracker != NULL)&&(err == strstr(err,"Tracker gave HTTP response code 0"))) {
+       dbgmsg (tier, "Forcing announce retry because of the connection refused n**** issue");
+       interval = tier->currentTracker->consecutiveFailures;
+       if(tier->currentTracker->consecutiveFailures > 10) {
+         /* Failed 10 (scaled within 55 seconds) quick reannouncements so reset and wait ~5 minutes to retry */
+         tier->currentTracker->consecutiveFailures = 0;
+         const unsigned int jitter_seconds = tr_cryptoWeakRandInt( 56 );
+         interval = 300 + jitter_seconds;
+         }
+     }
+      /* HACK END */
+
     dbgmsg( tier, "Retrying announce in %d seconds.", interval );
     tr_torinf( tier->tor, "Retrying announce in %d seconds.", interval );
     tier_announce_event_push( tier, e, tr_time( ) + interval );
@@ -1325,6 +1339,20 @@ on_scrape_error( tr_session * session, tr_tier * tier, const char * errmsg )
 
     /* schedule a rescrape */
     interval = getRetryInterval( tier->currentTracker );
+
+     /* HACK BEGIN */
+     if((tier->currentTracker != NULL)&&(errmsg == strstr(errmsg,"Tracker gave HTTP response code 0"))) {
+       dbgmsg (tier, "Forcing scrape retry because of the connection refused n**** issue");
+       interval = tier->currentTracker->consecutiveFailures;
+       if(tier->currentTracker->consecutiveFailures > 10) {
+         /* Failed 10 (scaled within 55 seconds) quick reannouncements so reset and wait ~5 minutes to retry */
+         tier->currentTracker->consecutiveFailures = 0;
+         const unsigned int jitter_seconds = tr_cryptoWeakRandInt( 56 );
+         interval = 300 + jitter_seconds;
+         }
+     }
+     /* HACK END */
+
     dbgmsg( tier, "Retrying scrape in %zu seconds.", (size_t)interval );
     tr_torinf( tier->tor, "Retrying scrape in %zu seconds.", (size_t)interval );
     tier->lastScrapeSucceeded = false;
@@ -1820,4 +1848,4 @@ tr_announcerResetTorrent( tr_announcer * announcer UNUSED, tr_torrent * tor )
 
     /* cleanup */
     tiersDestruct( &old );
-}
+} 
