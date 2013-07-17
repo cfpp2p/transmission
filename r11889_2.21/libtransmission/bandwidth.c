@@ -305,10 +305,11 @@ tr_bandwidthSetPeer( tr_bandwidth * b, tr_peerIo * peer )
 ****
 ***/
 
-unsigned int
-tr_bandwidthClamp( const tr_bandwidth  * b,
-                   tr_direction          dir,
-                   unsigned int          byteCount )
+static unsigned int
+bandwidthClamp( const tr_bandwidth  * b,
+                uint64_t              now,
+                tr_direction          dir,
+                unsigned int          byteCount )
 {
     assert( tr_isBandwidth( b ) );
     assert( tr_isDirection( dir ) );
@@ -316,14 +317,44 @@ tr_bandwidthClamp( const tr_bandwidth  * b,
     if( b )
     {
         if( b->band[dir].isLimited )
+        {
             byteCount = MIN( byteCount, b->band[dir].bytesLeft );
 
-        if( b->parent && b->band[dir].honorParentLimits )
-            byteCount = tr_bandwidthClamp( b->parent, dir, byteCount );
+            /* if we're getting close to exceeding the speed limit,
+             * clamp down harder on the bytes available */
+            if( byteCount > 0 )
+            {
+                double current;
+                double desired;
+                double r;
+
+                if( now == 0 )
+                    now = tr_time_msec( );
+
+                current = tr_bandwidthGetRawSpeed_Bps( b, now, TR_DOWN );
+                desired = tr_bandwidthGetDesiredSpeed_Bps( b, TR_DOWN );
+                r = desired >= 1 ? current / desired : 0;
+
+                     if( r > 1.0 ) byteCount = 0;
+                else if( r > 0.9 ) byteCount *= 0.8;
+                else if( r > 0.8 ) byteCount *= 0.9;
+            }
+        }
+
+        if( b->parent && b->band[dir].honorParentLimits && ( byteCount > 0 ) )
+            byteCount = bandwidthClamp( b->parent, now, dir, byteCount );
     }
 
     return byteCount;
 }
+unsigned int
+tr_bandwidthClamp( const tr_bandwidth  * b,
+                   tr_direction          dir,
+                   unsigned int          byteCount )
+{
+    return bandwidthClamp( b, 0, dir, byteCount );
+}
+
 
 unsigned int
 tr_bandwidthGetRawSpeed_Bps( const tr_bandwidth * b, const uint64_t now, const tr_direction dir )
@@ -373,4 +404,4 @@ fprintf( stderr, "%p consumed %5zu bytes of %5s data... was %6zu, now %6zu left\
 
     if( b->parent != NULL )
         tr_bandwidthUsed( b->parent, dir, byteCount, isPieceData, now );
-}
+} 
