@@ -290,7 +290,7 @@ task_request_next_chunk( struct tr_webseed_task * t )
         url = make_url( t->webseed, file );
         tr_snprintf( range, sizeof range, "%"PRIu64"-%"PRIu64,
                      file_offset, file_offset + this_pass - 1 );
-        tr_webRunWithBuffer( t->session, url, range,
+        tr_webRunWithBuffer( t->session, t->torrent_id, url, range,
                              web_response_func, t, t->content );
         tr_free( url );
     }
@@ -362,4 +362,4 @@ tr_webseedFree( tr_webseed * w )
         else
             webseed_free( w );
     }
-}
+} 
