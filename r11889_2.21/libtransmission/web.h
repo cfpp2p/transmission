@@ -59,6 +59,7 @@ void tr_webRun( tr_session        * session,
 struct evbuffer;
 
 void tr_webRunWithBuffer( tr_session         * session,
+                          int                  torrentId,
                           const char         * url,
                           const char         * range,
                           tr_web_done_func     done_func,
@@ -73,4 +74,4 @@ char* tr_http_unescape( const char * str, int len );
 }
 #endif
 
-#endif
+#endif 
