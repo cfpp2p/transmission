@@ -25,12 +25,16 @@
 #include "transmission.h"
 #include "list.h"
 #include "net.h" /* tr_address */
+#include "torrent.h"
 #include "platform.h" /* mutex */
 #include "session.h"
 #include "trevent.h" /* tr_runInEventThread() */
 #include "utils.h"
 #include "version.h" /* User-Agent */
 #include "web.h"
+#include "list.h"
+#include "peer-mgr.h"
+#include "bandwidth.h"
 
 #if LIBCURL_VERSION_NUM >= 0x070F06 /* CURLOPT_SOCKOPT* was added in 7.15.6 */
  #define USE_LIBCURL_SOCKOPT
@@ -71,8 +75,10 @@ struct tr_web
 ****
 ***/
 
+tr_list * stopeasyhandle=NULL;
 struct tr_web_task
 {
+    int torrentId;
     long code;
     struct evbuffer * response;
     struct evbuffer * freebuf;
@@ -81,6 +87,7 @@ struct tr_web_task
     tr_session * session;
     tr_web_done_func * done_func;
     void * done_func_user_data;
+    CURL * curl_easy;
 };
 
 static void
@@ -102,6 +109,41 @@ writeFunc( void * ptr, size_t size, size_t nmemb, void * vtask )
 {
     const size_t byteCount = size * nmemb;
     struct tr_web_task * task = vtask;
+    if (task->torrentId != -1)
+        {
+	    tr_torrent * tor = tr_torrentFindFromId (task->session, task->torrentId);
+        if (tor)
+            {
+            // Threading lacking - so get speed now  SRS 07-14-2013
+            uint64_t              now;
+            double                d;
+            double                r;
+            double                current;
+            double                desired;
+
+            unsigned int n=tr_bandwidthClamp(tor->bandwidth, TR_DOWN, nmemb );
+            unsigned int n2=tr_bandwidthClamp(task->session->bandwidth, TR_DOWN, nmemb );
+            if ( n2 < n ) n = n2;
+
+            now = tr_time_msec( );
+            d = tr_peerMgrGetWebseedSpeed_Bps( tor, now );
+
+                current = tr_bandwidthGetRawSpeed_Bps( tor->bandwidth, now, TR_DOWN );
+                current += d;
+                desired = tr_bandwidthGetDesiredSpeed_Bps( tor->bandwidth, TR_DOWN );
+                r = desired >= 1 ? current / desired : 0;
+
+                     if( r > 1.0 ) n = 0;
+                else if( r > 0.9 ) n *= 0.8;
+                else if( r > 0.8 ) n *= 0.9;
+
+
+            if(n<1&&task->freebuf==NULL/*only limit webseed*/) {
+                tr_list_append(&stopeasyhandle,task->curl_easy);
+                return CURL_WRITEFUNC_PAUSE;
+                }
+            }
+        }
     evbuffer_add( task->response, ptr, byteCount );
     dbgmsg( "wrote %zu bytes to task %p's buffer", byteCount, task );
     return byteCount;
@@ -148,7 +190,7 @@ createEasy( tr_session * s, struct tr_web_task * task )
 {
     const tr_address * addr;
     tr_bool is_default_value;
-    CURL * e = curl_easy_init( );
+    CURL * e = task->curl_easy = curl_easy_init( );
     const long verbose = getenv( "TR_CURL_VERBOSE" ) != NULL;
     char * cookie_filename = tr_buildPath( s->configDir, "cookies.txt", NULL );
 
@@ -222,13 +264,14 @@ tr_webRun( tr_session         * session,
            tr_web_done_func     done_func,
            void               * done_func_user_data )
 {
-    tr_webRunWithBuffer( session, url, range,
+    tr_webRunWithBuffer( session, -1, url, range,
                          done_func, done_func_user_data,
                          NULL );
 }
 
 void
 tr_webRunWithBuffer( tr_session         * session,
+                     int                  torrentId,
                      const char         * url,
                      const char         * range,
                      tr_web_done_func     done_func,
@@ -242,6 +285,7 @@ tr_webRunWithBuffer( tr_session         * session,
         struct tr_web_task * task = tr_new0( struct tr_web_task, 1 );
 
         task->session = session;
+        task->torrentId = torrentId;
         task->url = tr_strdup( url );
         task->range = tr_strdup( range );
         task->done_func = done_func;
@@ -332,6 +376,13 @@ tr_webThreadFunc( void * vsession )
         }
         tr_lockUnlock( web->taskLock );
 
+        //restart stopped curl handle;
+        CURL *handle;
+        int n=tr_list_size(stopeasyhandle);
+        while(n--){
+            handle=tr_list_pop_front(&stopeasyhandle);
+            curl_easy_pause(handle,CURLPAUSE_CONT);
+        }
         /* maybe wait a little while before calling curl_multi_perform() */
         msec = 0;
         curl_multi_timeout( multi, &msec );
@@ -495,4 +546,4 @@ tr_http_unescape( const char * str, int len )
     char * ret = tr_strdup( tmp );
     curl_free( tmp );
     return ret;
-}
+} 
