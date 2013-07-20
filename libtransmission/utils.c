@@ -1024,6 +1024,7 @@ tr_urlParse( const char * url_in,
     int          err;
     int          port = 0;
     int          n;
+    bool         udp_will_fail = false;
     char *       tmp;
     char *       pch;
     size_t       host_len;
@@ -1042,12 +1043,38 @@ tr_urlParse( const char * url_in,
 /*fprintf( stderr, "protocol is [%s]... what's left is [%s]\n", protocol, pch);*/
         if( ( n = strcspn( pch, ":/" ) ) )
         {
+            int       max_size_host_sub = 0;
+            int       host_sub_start = 0;
+            int       i;
+
+            // Ticket 5424 & 5426
+            err = !protocol;
+            if( !err )
+            {
+               if( !strcmp( protocol, "udp" ) ) {
+                  for( i=0; i<n; ++i ) {
+                  // find next dot
+                    if( pch[i] == 0x2E ) {
+                        max_size_host_sub = MAX( max_size_host_sub, (i - host_sub_start));
+                        host_sub_start = (i + 1);
+                    }
+                    if( max_size_host_sub > 63 ) break;
+                  }
+              if( i == n ) {
+                --i;
+                if( pch[i] != 0x2E ) max_size_host_sub = MAX( max_size_host_sub, (n - host_sub_start) );
+              }
+              if( max_size_host_sub > 63 ) udp_will_fail = true;
+             }
+            } // End Ticket 5424 & 5426
+
             const int havePort = pch[n] == ':';
             host = pch;
             host_len = n;
             pch += n;
             if( pch && *pch )
                 *pch++ = '\0';
+
 /*fprintf( stderr, "host is [%s]... what's left is [%s]\n", host, pch );*/
             if( havePort )
             {
@@ -1061,7 +1088,9 @@ tr_urlParse( const char * url_in,
         }
     }
 
-    err = !host || !path || !protocol;
+    err = !host || !path || !protocol || udp_will_fail;
+                                        // Ticket 5424 & 5426
+
 
     if( !err && !port )
     {
@@ -1804,4 +1833,4 @@ tr_formatter_get_units( tr_benc * d )
     l = tr_bencDictAddList( d, "speed-units", 4 );
     for( i=0; i<4; i++ ) tr_bencListAddStr( l, speed_units.units[i].name );
 }
-
+ 
