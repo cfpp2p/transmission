@@ -1178,7 +1178,6 @@ tr_urlParse( const char * url_in,
             if( !err )
             {
                if( !strcmp( protocol, "udp" ) ) {
-                  if( n < 256 ) {
                   for( i=0; i<n; ++i ) {
                   // find next dot
                     if( pch[i] == 0x2E ) {
@@ -1187,13 +1186,11 @@ tr_urlParse( const char * url_in,
                     }
                     if( max_size_host_sub > 63 ) break;
                   }
-               if( i == n ) {
-                 --i;
-                 if( pch[i] != 0x2E ) max_size_host_sub = MAX( max_size_host_sub, (n - host_sub_start) );
-               }
-              if( max_size_host_sub > 63 ) udp_will_fail = true;
+              if( i == n ) {
+                --i;
+                if( pch[i] != 0x2E ) max_size_host_sub = MAX( max_size_host_sub, (n - host_sub_start) );
               }
-              else udp_will_fail = true;
+              if( max_size_host_sub > 63 ) udp_will_fail = true;
              }
             } // End Ticket 5424 & 5426
 
