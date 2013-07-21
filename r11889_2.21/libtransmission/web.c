@@ -42,7 +42,8 @@
 
 enum
 {
-    THREADFUNC_MAX_SLEEP_MSEC = 1000,
+    /* Smooths webseed speeds */
+    THREADFUNC_MAX_SLEEP_MSEC = 200,
 };
 
 #if 0
