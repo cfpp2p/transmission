@@ -261,7 +261,8 @@ tr_set_file_for_single_pass( int fd )
 #endif
 #ifdef SYS_DARWIN
         fcntl( fd, F_RDAHEAD, 1 );
-        fcntl( fd, F_NOCACHE, 1 );
+// #5423
+//         fcntl( fd, F_NOCACHE, 1 );
 #endif
         errno = err;
     }
