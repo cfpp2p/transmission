@@ -1501,8 +1501,10 @@ peerCallbackFunc( tr_peer * peer, const tr_peer_event * e, void * vt )
             for( i=0; i<peerCount; i++ ) {
                 tr_peer * p = peers[i];
                 assert( p != peer );
-                tr_historyAdd( p->cancelsSentToPeer, tr_time( ), 1 );
-                tr_peerMsgsCancel( p->msgs, block );
+                if( ( p != NULL ) && ( p->msgs != NULL ) && ( p->cancelsSentToPeer != NULL ) ) {
+                    tr_historyAdd( p->cancelsSentToPeer, tr_time( ), 1 );
+                    tr_peerMsgsCancel( p->msgs, block );
+                }
                 removeRequestFromTables( t, block, p );
             }
 
