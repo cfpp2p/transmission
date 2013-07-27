@@ -1153,7 +1153,7 @@ tr_urlParse( const char * url_in,
     int          err;
     int          port = 0;
     int          n;
-    bool         udp_will_fail = false;
+    tr_bool      udp_will_fail = FALSE;
     char *       tmp;
     char *       pch;
     const char * protocol = NULL;
@@ -1178,6 +1178,7 @@ tr_urlParse( const char * url_in,
             if( !err )
             {
                if( !strcmp( protocol, "udp" ) ) {
+                  if( n < 256 ) {
                   for( i=0; i<n; ++i ) {
                   // find next dot
                     if( pch[i] == 0x2E ) {
@@ -1186,11 +1187,13 @@ tr_urlParse( const char * url_in,
                     }
                     if( max_size_host_sub > 63 ) break;
                   }
-              if( i == n ) {
-                --i;
-                if( pch[i] != 0x2E ) max_size_host_sub = MAX( max_size_host_sub, (n - host_sub_start) );
+               if( i == n ) {
+                 --i;
+                 if( pch[i] != 0x2E ) max_size_host_sub = MAX( max_size_host_sub, (n - host_sub_start) );
+               }
+              if( max_size_host_sub > 63 ) udp_will_fail = TRUE;
               }
-              if( max_size_host_sub > 63 ) udp_will_fail = true;
+              else udp_will_fail = TRUE;
              }
             } // End Ticket 5424 & 5426
 
@@ -1216,6 +1219,7 @@ tr_urlParse( const char * url_in,
 
     if( !err && !port )
     {
+        if( !strcmp( protocol, "udp" ) ) port = 80;
         if( !strcmp( protocol, "ftp" ) ) port = 21;
         if( !strcmp( protocol, "sftp" ) ) port = 22;
         if( !strcmp( protocol, "http" ) ) port = 80;
@@ -1918,4 +1922,4 @@ tr_formatter_get_units( tr_benc * d )
     l = tr_bencDictAddList( d, "speed-units", 4 );
     for( i=0; i<4; i++ ) tr_bencListAddStr( l, speed_units.units[i].name );
 }
- 
+
