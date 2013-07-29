@@ -360,6 +360,7 @@ cached_file_open( struct tr_cached_file  * o,
     int flags;
     struct stat sb;
     tr_bool alreadyExisted;
+    tr_bool resizeNeeded;
 
     /* create subfolders, if any */
     if( writable )
@@ -380,6 +381,10 @@ cached_file_open( struct tr_cached_file  * o,
         if( preallocate_file_full( filename, file_size ) )
             tr_dbg( "Preallocated file \"%s\"", filename );
 
+    /* we can't resize the file w/o write permissions */
+    resizeNeeded = alreadyExisted && ( file_size < (uint64_t)sb.st_size );
+    writable |= resizeNeeded;
+
     /* open the file */
     flags = writable ? ( O_RDWR | O_CREAT ) : O_RDONLY;
     flags |= O_LARGEFILE | O_BINARY | O_SEQUENTIAL;
@@ -398,15 +403,12 @@ cached_file_open( struct tr_cached_file  * o,
      * http://trac.transmissionbt.com/ticket/2228
      * https://bugs.launchpad.net/ubuntu/+source/transmission/+bug/318249
      */
-    if( alreadyExisted && ( file_size < (uint64_t)sb.st_size ) )
-    {
-        if( ftruncate( o->fd, file_size ) == -1 )
-        {
-            const int err = errno;
-            tr_err( _( "Couldn't truncate \"%1$s\": %2$s" ), filename, tr_strerror( err ) );
-            return err;
-        }
-    }
+    if( resizeNeeded && ( ftruncate (o->fd, file_size) == -1 ) )
+      {
+        const int err = errno;
+        tr_err(_( "Couldn't truncate \"%1$s\": %2$s"), filename, tr_strerror (err) );
+   return err;
+      }
 
     if( writable && !alreadyExisted && ( allocation == TR_PREALLOCATE_SPARSE ) )
         preallocate_file_sparse( o->fd, file_size );
