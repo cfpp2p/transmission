@@ -1722,7 +1722,7 @@ static void tr_torrentRemovePieceTemp( tr_torrent * tor );
 static void
 verifyTorrent( void * vtor )
 {
-    bool startAfter;
+    tr_bool startAfter;
     tr_torrent * tor = vtor;
 
     tr_sessionLock( tor->session );
@@ -1784,7 +1784,7 @@ stopTorrent( void * vtor )
     tr_announcerTorrentStopped( tor );
     tr_cacheFlushTorrent( tor->session->cache, tor );
 
-    tr_fdTorrentClose( tor->session, tor->uniqueId );
+    tr_fdTorrentClose( tor->session, tor->uniqueId, tor->isDeleting );
 
     if( !tor->isDeleting )
         tr_torrentSave( tor );
@@ -1803,6 +1803,7 @@ tr_torrentStop( tr_torrent * tor )
 
         tor->isRunning = 0;
         tor->isStopping = 0;
+        tor->isDeleting = 0;
 	tor->preFetchMagnet = 0;
         tr_torrentSetDirty( tor );
         tr_runInEventThread( tor->session, stopTorrent, tor );
@@ -2117,7 +2118,9 @@ tr_torrentRecheckCompleteness( tr_torrent * tor )
                       getCompletionString( completeness ) );
 
         tor->completeness = completeness;
-        tr_fdTorrentClose( tor->session, tor->uniqueId );
+        tor->isDeleting = 0;
+        tr_fdTorrentClose( tor->session, tor->uniqueId, tor->isDeleting );
+        //Re: Memory Management #5423 /* 7/25/13 */
 	
         if( tor->completeness == TR_SEED )
 	  {
@@ -2301,7 +2304,8 @@ static void
 removePieceTemp( tr_torrent * tor, tr_piece_index_t piece )
 {
     char * filename;
-    tr_fdFileClose( tor->session, tor, piece, TR_FD_INDEX_PIECE );
+    tor->isDeleting = 1;
+    tr_fdFileClose( tor->session, tor, piece, TR_FD_INDEX_PIECE, tor->isDeleting );
     if( ( filename = tr_torrentFindPieceTemp( tor, piece ) ) )
     {
         deleteLocalFile( filename, remove );
@@ -2331,8 +2335,9 @@ usePieceTemp( tr_torrent * tor, tr_file_index_t i )
     {
       if( tor->isRunning )
         tor->isStopping = TRUE;
-
-      tr_fdFileClose( tor->session, tor, i, TR_FD_INDEX_FILE );
+      
+      tor->isDeleting = 1;
+      tr_fdFileClose( tor->session, tor, i, TR_FD_INDEX_FILE, tor->isDeleting );
 
       /* Trash Pieces---fp/lp */
       char * oldpathPTfirst = tr_torrentFindPieceTemp( tor, fpindex );
@@ -2869,15 +2874,18 @@ tr_torrentGetFileMTime( const tr_torrent * tor, tr_file_index_t i )
 {
     struct stat sb;
     time_t mtime = 0;
+    tr_fd_index_type it;
     char * path = tr_torrentFindFile( tor, i );
 
-    if( ( path != NULL ) && !stat( path, &sb ) && S_ISREG( sb.st_mode ) )
-    {
+    if( !tr_fdFileGetCachedMTime( tor->session, tor->uniqueId, i, it, &mtime ) ) {
+        if( ( path != NULL ) && !stat( path, &sb ) && S_ISREG( sb.st_mode ) )
+        {
 #ifdef SYS_DARWIN
-        mtime = sb.st_mtimespec.tv_sec;
+            mtime = sb.st_mtimespec.tv_sec;
 #else
-        mtime = sb.st_mtime;
+            mtime = sb.st_mtime;
 #endif
+        }
     }
 
     tr_free( path );
@@ -3255,7 +3263,7 @@ tr_torrentDeleteLocalData( tr_torrent * tor, tr_fileFunc fileFunc )
 
     /* close all the files because we're about to delete them */
     tr_cacheFlushTorrent( tor->session->cache, tor );
-    tr_fdTorrentClose( tor->session, tor->uniqueId );
+    tr_fdTorrentClose( tor->session, tor->uniqueId, tor->isDeleting );
 
     if( tor->info.fileCount > 1 )
     {
@@ -3367,6 +3375,7 @@ setLocation( void * vdata )
         {
             /* blow away the leftover subdirectories in the old location */
             if( do_move )
+                tor->isDeleting = 0; /* #5423 Mem Management 7/25/13 */
                 tr_torrentDeleteLocalData( tor, remove );
             /* set the new location and reverify */
             tr_torrentSetDownloadDir( tor, location );
@@ -3430,7 +3439,8 @@ tr_torrentFileCompleted( tr_torrent * tor, tr_file_index_t fileNum )
     const time_t now = tr_time( );
 
     /* close the file so that we can reopen in read-only mode as needed */
-    tr_fdFileClose( tor->session, tor, fileNum, TR_FD_INDEX_FILE );
+    tor->isDeleting = 0;
+    tr_fdFileClose( tor->session, tor, fileNum, TR_FD_INDEX_FILE, tor->isDeleting );
 
     /* now that the file is complete and closed, we can start watching its
      * mtime timestamp for changes to know if we need to reverify pieces */

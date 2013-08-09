@@ -261,16 +261,15 @@ tr_set_file_for_single_pass( int fd )
 {
     if( fd >= 0 )
     {
-        /* Set hints about the lookahead buffer and caching. It's okay
-           for these to fail silently, so don't let them affect errno */
+    /* Set hints about the lookahead buffer and caching. It's okay
+       for these to fail silently, so don't let them affect errno */
         const int err = errno;
 #ifdef HAVE_POSIX_FADVISE
         posix_fadvise( fd, 0, 0, POSIX_FADV_SEQUENTIAL );
 #endif
 #ifdef SYS_DARWIN
         fcntl( fd, F_RDAHEAD, 1 );
-//        fcntl( fd, F_NOCACHE, 1 );
-//        #5423
+        /* fcntl( fd, F_NOCACHE, 1 ); */
 #endif
         errno = err;
     }
@@ -283,11 +282,13 @@ open_local_file( const char * filename, int flags )
     tr_set_file_for_single_pass( fd );
     return fd;
 }
+
 int
 tr_open_file_for_writing( const char * filename )
 {
     return open_local_file( filename, O_LARGEFILE|O_BINARY|O_CREAT|O_WRONLY );
 }
+
 int
 tr_open_file_for_scanning( const char * filename )
 {
@@ -297,18 +298,6 @@ tr_open_file_for_scanning( const char * filename )
 void
 tr_close_file( int fd )
 {
-#if defined(HAVE_POSIX_FADVISE)
-    /* Set hint about not caching this file.
-       It's okay for this to fail silently, so don't let it affect errno */
-    const int err = errno;
-    posix_fadvise( fd, 0, 0, POSIX_FADV_DONTNEED );
-    errno = err;
-#endif
-/* #ifdef SYS_DARWIN
-    it's unclear to me from the man pages if this actually flushes out the cache,
-     * but it couldn't hurt... 
-    fcntl( fd, F_NOCACHE, 1 );
-#endif */
     close( fd );
 }
 
@@ -360,6 +349,7 @@ cached_file_open( struct tr_cached_file  * o,
     int flags;
     struct stat sb;
     tr_bool alreadyExisted;
+    tr_bool resizeNeeded;
 
     /* create subfolders, if any */
     if( writable )
@@ -380,6 +370,11 @@ cached_file_open( struct tr_cached_file  * o,
         if( preallocate_file_full( filename, file_size ) )
             tr_dbg( "Preallocated file \"%s\"", filename );
 
+    /* we can't resize the file w/o write permissions */
+    resizeNeeded = alreadyExisted && ( file_size < (uint64_t)sb.st_size );
+    if( !writable && resizeNeeded )
+      tr_err( _( "%1$s needs to be truncated but has read-only permission. Is another torrent seeding this file?" ), filename );
+
     /* open the file */
     flags = writable ? ( O_RDWR | O_CREAT ) : O_RDONLY;
     flags |= O_LARGEFILE | O_BINARY | O_SEQUENTIAL;
@@ -398,7 +393,7 @@ cached_file_open( struct tr_cached_file  * o,
      * http://trac.transmissionbt.com/ticket/2228
      * https://bugs.launchpad.net/ubuntu/+source/transmission/+bug/318249
      */
-    if( alreadyExisted && ( file_size < (uint64_t)sb.st_size ) )
+    if( resizeNeeded )
     {
         if( ftruncate( o->fd, file_size ) == -1 )
         {
@@ -463,14 +458,29 @@ fileset_destruct( struct tr_fileset * set )
 }
 
 static void
-fileset_close_torrent( struct tr_fileset * set, int torrent_id )
+fileset_close_torrent( struct tr_fileset * set, int torrent_id, tr_bool isDeleting )
 {
-    struct tr_cached_file * o;
+  struct tr_cached_file * o;
 
-    if( set != NULL )
-        for( o=set->begin; o!=set->end; ++o )
-            if( ( o->torrent_id == torrent_id ) && cached_file_is_open( o ) )
-                cached_file_close( o );
+  if( set != NULL )
+    for( o=set->begin; o!=set->end; ++o )
+      if( ( o->torrent_id == torrent_id ) && cached_file_is_open( o ) )
+      {	
+	if( isDeleting )
+        {
+#ifdef HAVE_POSIX_FADVISE
+	  /* Set hint about not caching this file. It's okay for  *
+           * this to fail silently, so don't let it affect errno. */
+	  const int err = errno;
+	  posix_fadvise( o->fd, 0, 0, POSIX_FADV_DONTNEED );
+	  errno = err;
+#endif
+#ifdef SYS_DARWIN
+	  fcntl( o->fd, F_NOCACHE, 1 );
+#endif
+	}
+	cached_file_close( o );
+      }
 }
 
 static struct tr_cached_file *
@@ -531,9 +541,29 @@ get_fileset( tr_session * session )
     return session && session->fdInfo ? &session->fdInfo->fileset : NULL;
 }
 
+#ifdef SYS_DARWIN
+  #define TR_STAT_MTIME(sb) ((sb).st_mtimespec.tv_sec)
+#else
+  #define TR_STAT_MTIME(sb) ((sb).st_mtime)
+#endif
+
+tr_bool
+tr_fdFileGetCachedMTime( tr_session * s, int torrent_id, uint32_t i, tr_fd_index_type it, time_t * mtime )
+{
+  tr_bool success;
+  struct stat sb;
+  struct tr_cached_file * o = fileset_lookup( get_fileset( s ),
+                                               torrent_id, i, it );
+					       
+  if(( success = ( o != NULL ) && !fstat( o->fd, &sb )))
+    *mtime = TR_STAT_MTIME( sb );
+    
+  return success;
+}
+
 void
 tr_fdFileClose( tr_session * s, const tr_torrent * tor,
-                uint32_t i, tr_fd_index_type it )
+                uint32_t i, tr_fd_index_type it, tr_bool isDeleting )
 {
     struct tr_cached_file * o;
 
@@ -543,9 +573,23 @@ tr_fdFileClose( tr_session * s, const tr_torrent * tor,
          * up-to-date when this function returns to the caller... */
         if( o->is_writable )
             tr_fsync( o->fd );
+	
+	if( isDeleting )
+        {
+#ifdef HAVE_POSIX_FADVISE
+	  /* Set hint about not caching this file. It's okay for  *
+           * this to fail silently, so don't let it affect errno. */
+            const int err = errno;
+            posix_fadvise( o->fd, 0, 0, POSIX_FADV_DONTNEED );
+            errno = err;
+#endif
+#ifdef SYS_DARWIN
+	    fcntl( o->fd, F_NOCACHE, 1 );
+#endif
+	}
 
-        cached_file_close( o );
-    }
+	cached_file_close( o );
+    }    
 }
 
 int
@@ -563,9 +607,9 @@ tr_fdFileGetCached( tr_session * s, int torrent_id, uint32_t i,
 }
 
 void
-tr_fdTorrentClose( tr_session * session, int torrent_id )
+tr_fdTorrentClose( tr_session * session, int torrent_id, tr_bool isDeleting )
 {
-    fileset_close_torrent( get_fileset( session ), torrent_id );
+    fileset_close_torrent( get_fileset( session ), torrent_id, isDeleting );
 }
 
 /* returns an fd on success, or a -1 on failure and sets errno */

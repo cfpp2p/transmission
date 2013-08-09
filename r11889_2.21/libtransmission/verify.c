@@ -100,10 +100,9 @@ verifyTorrent( tr_torrent * tor, tr_bool * stopFlag )
             if( numRead > 0 ) {
                 bytesThisPass = (uint32_t)numRead;
                 SHA1_Update( &sha, buffer, bytesThisPass );
-// #5423
-//#if defined HAVE_POSIX_FADVISE && defined POSIX_FADV_DONTNEED
-//                posix_fadvise( fd, readPos, bytesThisPass, POSIX_FADV_DONTNEED );
-//#endif
+/* #if defined HAVE_POSIX_FADVISE && defined POSIX_FADV_DONTNEED
+                posix_fadvise( fd, readPos, bytesThisPass, POSIX_FADV_DONTNEED );
+#endif */
             }
         }
 

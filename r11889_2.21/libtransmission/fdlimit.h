@@ -92,6 +92,13 @@ int tr_fdFileGetCached( tr_session             * session,
                         tr_fd_index_type         indexType,
                         tr_bool                  doWrite );
 
+tr_bool 
+tr_fdFileGetCachedMTime( tr_session            * session,
+			 int                     torrentId,
+                         uint32_t                indexNum,
+                         tr_fd_index_type        indexType,
+                         time_t                * mtime );
+			
 /**
  * Closes a file that's being held by our file repository.
  *
@@ -102,16 +109,16 @@ int tr_fdFileGetCached( tr_session             * session,
  *
  * @see tr_fdFileCheckout
  */
-void tr_fdFileClose( tr_session        * session,
-                     const tr_torrent  * tor,
-                     uint32_t            indexNum,
-                     tr_fd_index_type    indexType );
-
+void tr_fdFileClose( tr_session                * session,
+                     const tr_torrent          * tor,
+                     uint32_t                    indexNum,
+                     tr_fd_index_type            indexType,
+                     tr_bool                     isDeleting );
 
 /**
  * Closes all the files associated with a given torrent id
  */
-void tr_fdTorrentClose( tr_session * session, int torrentId );
+void tr_fdTorrentClose( tr_session * session, int torrentId, tr_bool isDeleting );
 
 
 /***********************************************************************
