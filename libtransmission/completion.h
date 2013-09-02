@@ -99,12 +99,14 @@ tr_cpLeftUntilComplete( const tr_completion * cp )
 
 static inline bool tr_cpHasAll( const tr_completion * cp )
 {
-    return tr_bitfieldHasAll( &cp->blockBitfield );
+    return tr_torrentHasMetadata (cp->tor)
+        && tr_bitfieldHasAll (&cp->blockBitfield);
 }
 
 static inline bool tr_cpHasNone( const tr_completion * cp )
 {
-    return tr_bitfieldHasNone( &cp->blockBitfield );
+    return !tr_torrentHasMetadata (cp->tor)
+        || tr_bitfieldHasNone (&cp->blockBitfield);
 }
 
 /**
