@@ -196,6 +196,7 @@ struct PACKED_ATTRIBUTE PackedSockAddr {
 			while (*++i) {}
 			*i++ = ']';
 		}
+        extern int snprintf(char *, size_t, const char *, ...);
 		snprintf(i, len - (i-s), ":%u", _port);
 		return s;
 	}
