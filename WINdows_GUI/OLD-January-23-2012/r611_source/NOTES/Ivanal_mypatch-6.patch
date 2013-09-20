@@ -1,0 +1,2702 @@
+Index: transgui.lpi
+===================================================================
+--- transgui.lpi	(revision 611)
++++ transgui.lpi	(working copy)
+@@ -5,7 +5,6 @@
+     <PathDelim Value="\"/>
+     <General>
+       <Flags>
+-        <AlwaysBuild Value="False"/>
+         <LRSInOutputDirectory Value="False"/>
+       </Flags>
+       <SessionStorage Value="InProjectDir"/>
+@@ -18,7 +17,8 @@
+       <UseVersionInfo Value="True"/>
+       <MajorVersionNr Value="3"/>
+       <MinorVersionNr Value="2"/>
+-      <StringTable CompanyName="Yury Sidorov" FileDescription="Transmission Remote GUI" InternalName="transgui" LegalCopyright="Copyright (c) 2008-2011 by Yury Sidorov" OriginalFilename="transgui.exe" ProductName="Transmission Remote GUI" ProductVersion=""/>
++      <RevisionNr Value="1"/>
++      <StringTable CompanyName="Yury Sidorov" ProductName="Transmission Remote GUI" InternalName="transgui" LegalCopyright="Copyright (c) 2008-2011 by Yury Sidorov" ProductVersion="" FileDescription="Transmission Remote GUI" OriginalFilename="transgui.exe"/>
+     </VersionInfo>
+     <BuildModes Count="1">
+       <Item1 Name="default" Default="True"/>
+@@ -163,7 +163,7 @@
+     </Units>
+   </ProjectOptions>
+   <CompilerOptions>
+-    <Version Value="9"/>
++    <Version Value="10"/>
+     <PathDelim Value="\"/>
+     <SearchPaths>
+       <IncludeFiles Value="synapse\source\lib"/>
+@@ -189,6 +189,7 @@
+     <Linking>
+       <Debugging>
+         <GenerateDebugInfo Value="True"/>
++        <DebugInfoType Value="dsStabs"/>
+       </Debugging>
+       <Options>
+         <Win32>
+Index: addtorrent.pas
+===================================================================
+--- addtorrent.pas	(revision 611)
++++ addtorrent.pas	(working copy)
+@@ -39,6 +39,7 @@
+     btSelectNone: TButton;
+     btBrowse: TButton;
+     Buttons: TButtonPanel;
++    cbSkipMultiTorrents: TCheckBox;
+     cbStartTorrent: TCheckBox;
+     cbDestFolder: TComboBox;
+     gbSaveAs: TGroupBox;
+Index: daemonoptions.lfm
+===================================================================
+--- daemonoptions.lfm	(revision 611)
++++ daemonoptions.lfm	(working copy)
+@@ -15,16 +15,16 @@
+   Constraints.MinWidth = 400
+   OnCreate = FormCreate
+   Position = poMainFormCenter
+-  LCLVersion = '0.9.30.1'
++  LCLVersion = '0.9.31'
+   object Page: TPageControl
+     Left = 8
+     Height = 299
+     Top = 8
+     Width = 570
+-    ActivePage = tabDownload
++    ActivePage = TabQueue
+     Align = alClient
+     BorderSpacing.Around = 8
+-    TabIndex = 0
++    TabIndex = 3
+     TabOrder = 0
+     object tabDownload: TTabSheet
+       Caption = 'Download'
+@@ -74,7 +74,7 @@
+         Left = 8
+         Height = 17
+         Top = 80
+-        Width = 159
++        Width = 161
+         Caption = 'Directory for incomplete files:'
+         OnClick = cbIncompleteDirClick
+         TabOrder = 2
+@@ -91,7 +91,7 @@
+         Left = 8
+         Height = 17
+         Top = 56
+-        Width = 203
++        Width = 205
+         Caption = 'Add .part extension to incomplete files'
+         TabOrder = 1
+       end
+@@ -99,7 +99,7 @@
+         Left = 8
+         Height = 17
+         Top = 134
+-        Width = 71
++        Width = 73
+         Caption = 'Seed ratio:'
+         OnClick = cbSeedRatioClick
+         TabOrder = 4
+@@ -127,7 +127,7 @@
+         Left = 8
+         Height = 17
+         Top = 163
+-        Width = 170
++        Width = 172
+         Caption = 'Stop seeding when inactive for:'
+         OnClick = cbIdleSeedLimitClick
+         TabOrder = 6
+@@ -195,7 +195,7 @@
+         Left = 292
+         Height = 17
+         Top = 38
+-        Width = 128
++        Width = 130
+         Caption = 'Enable port forwarding'
+         TabOrder = 3
+       end
+@@ -203,7 +203,7 @@
+         Left = 192
+         Height = 17
+         Top = 126
+-        Width = 125
++        Width = 127
+         Caption = 'Enable Peer Exchange'
+         TabOrder = 6
+       end
+@@ -221,7 +221,7 @@
+         Left = 192
+         Height = 17
+         Top = 146
+-        Width = 73
++        Width = 75
+         Caption = 'Enable DHT'
+         TabOrder = 7
+       end
+@@ -229,7 +229,7 @@
+         Left = 292
+         Height = 17
+         Top = 13
+-        Width = 193
++        Width = 195
+         Caption = 'Peek random port on daemon launch'
+         OnClick = cbRandomPortClick
+         TabOrder = 1
+@@ -247,7 +247,7 @@
+         Left = 8
+         Height = 17
+         Top = 210
+-        Width = 94
++        Width = 96
+         Caption = 'Enable blocklist:'
+         OnClick = cbBlocklistClick
+         TabOrder = 10
+@@ -264,7 +264,7 @@
+         Left = 192
+         Height = 17
+         Top = 166
+-        Width = 152
++        Width = 154
+         Caption = 'Enable Local Peer Discovery'
+         TabOrder = 8
+       end
+@@ -272,7 +272,7 @@
+         Left = 192
+         Height = 17
+         Top = 186
+-        Width = 71
++        Width = 73
+         Caption = 'Enable µTP'
+         TabOrder = 9
+       end
+@@ -313,7 +313,7 @@
+           Left = 8
+           Height = 17
+           Top = 4
+-          Width = 147
++          Width = 149
+           Caption = 'Maximum download speed:'
+           OnClick = cbMaxDownClick
+           TabOrder = 0
+@@ -332,7 +332,7 @@
+           Left = 8
+           Height = 17
+           Top = 30
+-          Width = 133
++          Width = 135
+           Caption = 'Maximum upload speed:'
+           OnClick = cbMaxUpClick
+           TabOrder = 2
+@@ -442,7 +442,7 @@
+           Left = 8
+           Height = 17
+           Top = 54
+-          Width = 177
++          Width = 179
+           Caption = 'Use alternate bandwidth settings'
+           TabOrder = 2
+         end
+@@ -450,7 +450,7 @@
+           Left = 8
+           Height = 17
+           Top = 76
+-          Width = 252
++          Width = 254
+           Caption = 'Apply alternate bandwidth settings automatically'
+           OnClick = cbAutoAltClick
+           TabOrder = 3
+@@ -481,6 +481,97 @@
+         end
+       end
+     end
++    object TabQueue: TTabSheet
++      Caption = 'Queue'
++      ClientHeight = 273
++      ClientWidth = 562
++      object txQueueDownSize: TLabel
++        Left = 196
++        Height = 14
++        Top = 19
++        Width = 85
++        Caption = 'Queue Down Size'
++        ParentColor = False
++      end
++      object txQueueUpSize: TLabel
++        Left = 196
++        Height = 14
++        Top = 77
++        Width = 71
++        Caption = 'Queue Up Size'
++        ParentColor = False
++      end
++      object txStalledMinTime: TLabel
++        Left = 14
++        Height = 14
++        Top = 164
++        Width = 58
++        Caption = 'Stalled Time'
++        ParentColor = False
++      end
++      object cbQueueDownEnabled: TCheckBox
++        Left = 11
++        Height = 17
++        Top = 19
++        Width = 123
++        Caption = 'Queue Down Enabled'
++        TabOrder = 0
++      end
++      object cbQueueUpEnabled: TCheckBox
++        Left = 11
++        Height = 17
++        Top = 77
++        Width = 109
++        Caption = 'Queue Up Enabled'
++        TabOrder = 2
++      end
++      object edQueueDown: TSpinEdit
++        Left = 300
++        Height = 21
++        Top = 15
++        Width = 66
++        MaxValue = 999999
++        MinValue = 1
++        TabOrder = 1
++        Value = 1
++      end
++      object edIdleStalled: TSpinEdit
++        Left = 300
++        Height = 21
++        Top = 162
++        Width = 66
++        MaxValue = 999999
++        MinValue = 1
++        TabOrder = 5
++        Value = 1
++      end
++      object txMinutes2: TLabel
++        Left = 372
++        Height = 14
++        Top = 164
++        Width = 38
++        Caption = 'minutes'
++        ParentColor = False
++      end
++      object edQueueUp: TSpinEdit
++        Left = 300
++        Height = 21
++        Top = 70
++        Width = 66
++        MaxValue = 999999
++        MinValue = 1
++        TabOrder = 3
++        Value = 1
++      end
++      object cbQueueStalledEnabled: TCheckBox
++        Left = 11
++        Height = 17
++        Top = 138
++        Width = 128
++        Caption = 'Queue Stalled Enabled'
++        TabOrder = 4
++      end
++    end
+   end
+   object Buttons: TButtonPanel
+     Left = 0
+Index: main.lfm
+===================================================================
+--- main.lfm	(revision 611)
++++ main.lfm	(working copy)
+@@ -9,7 +9,7 @@
+   ActiveControl = panTop
+   AllowDropFiles = True
+   Caption = ' '
+-  ClientHeight = 486
++  ClientHeight = 487
+   ClientWidth = 780
+   Constraints.MinHeight = 300
+   Constraints.MinWidth = 300
+@@ -21,21 +21,21 @@
+   OnResize = FormResize
+   OnShow = FormShow
+   OnWindowStateChange = FormWindowStateChange
+-  LCLVersion = '0.9.30.1'
++  LCLVersion = '0.9.31'
+   object panTop: TPanel
+     Left = 0
+-    Height = 128
++    Height = 132
+     Top = 24
+     Width = 780
+     Align = alClient
+     BevelOuter = bvNone
+-    ClientHeight = 128
++    ClientHeight = 132
+     ClientWidth = 780
+     Constraints.MinHeight = 80
+     TabOrder = 0
+     object HSplitter: TSplitter
+       Left = 130
+-      Height = 128
++      Height = 132
+       Top = 0
+       Width = 5
+       AutoSnap = False
+@@ -43,18 +43,18 @@
+     end
+     object panFilter: TPanel
+       Left = 0
+-      Height = 128
++      Height = 132
+       Top = 0
+       Width = 130
+       Align = alLeft
+       BevelOuter = bvNone
+-      ClientHeight = 128
++      ClientHeight = 132
+       ClientWidth = 130
+       TabOrder = 2
+       object panSearch: TPanel
+         Left = 0
+         Height = 21
+-        Top = 105
++        Top = 109
+         Width = 130
+         Align = alBottom
+         AutoSize = True
+@@ -131,13 +131,14 @@
+       end
+       object lvFilter: TVarGrid
+         Left = 0
+-        Height = 103
++        Height = 107
+         Top = 0
+         Width = 130
+         Align = alClient
+         Columns = <        
+           item
+             Title.Caption = 'Title'
++            Title.PrefixOption = poNone
+             Width = 10
+           end>
+         Constraints.MinWidth = 50
+@@ -156,113 +157,139 @@
+     end
+     object gTorrents: TVarGrid
+       Left = 135
+-      Height = 128
++      Height = 132
+       Top = 0
+       Width = 645
+       Align = alClient
+       Columns = <      
+         item
+           Title.Caption = 'Name'
++          Title.PrefixOption = poNone
+           Width = 200
+         end      
+         item
+           Alignment = taRightJustify
+           Title.Caption = 'Size'
++          Title.PrefixOption = poNone
+           Width = 60
+         end      
+         item
+           Alignment = taCenter
+           Title.Caption = 'Done'
++          Title.PrefixOption = poNone
+         end      
+         item
+           Title.Caption = 'Status'
++          Title.PrefixOption = poNone
+           Width = 70
+         end      
+         item
+           Alignment = taRightJustify
+           Title.Caption = 'Seeds'
++          Title.PrefixOption = poNone
+           Width = 55
+         end      
+         item
+           Alignment = taRightJustify
+           Title.Caption = 'Peers'
++          Title.PrefixOption = poNone
+           Width = 55
+         end      
+         item
+           Alignment = taRightJustify
+           Title.Caption = 'Down speed'
++          Title.PrefixOption = poNone
+           Width = 75
+         end      
+         item
+           Alignment = taRightJustify
+           Title.Caption = 'Up speed'
++          Title.PrefixOption = poNone
+           Width = 75
+         end      
+         item
+           Title.Caption = 'ETA'
++          Title.PrefixOption = poNone
+           Width = 80
+         end      
+         item
+           Title.Caption = 'Ratio'
++          Title.PrefixOption = poNone
+         end      
+         item
+           Alignment = taRightJustify
+           Title.Caption = 'Downloaded'
++          Title.PrefixOption = poNone
+           Width = 0
+           Visible = False
+         end      
+         item
+           Alignment = taRightJustify
+           Title.Caption = 'Uploaded'
++          Title.PrefixOption = poNone
+           Width = 0
+           Visible = False
+         end      
+         item
+           Title.Caption = 'Tracker'
++          Title.PrefixOption = poNone
+           Width = 0
+           Visible = False
+         end      
+         item
+           Title.Caption = 'Tracker status'
++          Title.PrefixOption = poNone
+           Width = 0
+           Visible = False
+         end      
+         item
+           Title.Caption = 'Added on'
++          Title.PrefixOption = poNone
+           Width = 0
+           Visible = False
+         end      
+         item
+           Title.Caption = 'Completed on'
++          Title.PrefixOption = poNone
+           Width = 0
+           Visible = False
+         end      
+         item
+           Title.Caption = 'Last active'
++          Title.PrefixOption = poNone
+           Width = 0
+           Visible = False
+         end      
+         item
+           Title.Caption = 'Path'
++          Title.PrefixOption = poNone
+           Width = 0
+           Visible = False
+         end      
+         item
+           Title.Caption = 'Priority'
++          Title.PrefixOption = poNone
+           Width = 0
+           Visible = False
+         end      
+         item
+           Alignment = taRightJustify
+           Title.Caption = 'Size to download'
++          Title.PrefixOption = poNone
+           Width = 0
+           Visible = False
+         end      
+         item
+           Alignment = taRightJustify
+           Title.Caption = 'ID'
++          Title.PrefixOption = poNone
+           Width = 0
+           Visible = False
++        end      
++        item
++          Title.Caption = 'Queue'
++          Title.PrefixOption = poNone
++          Visible = False
+         end>
+       FixedCols = 0
+       Options = [goFixedVertLine, goFixedHorzLine, goColSizing, goColMoving, goRowSelect, goThumbTracking, goDblClickAutoSize, goHeaderHotTracking, goHeaderPushedLook]
+@@ -282,8 +309,8 @@
+   end
+   object StatusBar: TStatusBar
+     Left = 0
+-    Height = 23
+-    Top = 463
++    Height = 20
++    Top = 467
+     Width = 780
+     Panels = <    
+       item
+@@ -300,6 +327,10 @@
+       end    
+       item
+         Width = 50
++      end    
++      item
++        Text = 'T:0/0 B '
++        Width = 100
+       end>
+     SimplePanel = False
+     OnMouseDown = StatusBarMouseDown
+@@ -307,13 +338,13 @@
+   object PageInfo: TPageControl
+     Left = 0
+     Height = 306
+-    Top = 157
++    Top = 161
+     Width = 780
+-    ActivePage = tabGeneral
++    ActivePage = tabGraph
+     Align = alBottom
+     Constraints.MinHeight = 50
+     Images = ImageList16
+-    TabIndex = 0
++    TabIndex = 4
+     TabOrder = 1
+     OnChange = PageInfoChange
+     OnPageChanged = PageInfoChange
+@@ -327,6 +358,8 @@
+         Height = 253
+         Top = 26
+         Width = 772
++        HorzScrollBar.Page = 772
++        VertScrollBar.Page = 253
+         Align = alClient
+         ClientHeight = 249
+         ClientWidth = 768
+@@ -672,18 +705,20 @@
+             Caption = 'txUpLimit'
+             ParentColor = False
+           end
+-          object txDummy1: TLabel
++          object txQueueLabel: TLabel
+             Left = 541
+-            Height = 1
++            Height = 14
+             Top = 58
+-            Width = 1
++            Width = 77
++            Caption = 'Queue Position:'
+             ParentColor = False
+           end
+-          object txDummy2: TLabel
+-            Left = 651
+-            Height = 1
+-            Top = 58
+-            Width = 1
++          object txQueue: TLabel
++            Left = 652
++            Height = 14
++            Top = 57
++            Width = 43
++            Caption = 'txQueue'
+             ParentColor = False
+           end
+           object txSeedsLabel: TLabel
+@@ -876,18 +911,22 @@
+         Columns = <        
+           item
+             Title.Caption = 'Name'
++            Title.PrefixOption = poNone
+             Width = 200
+           end        
+           item
+             Title.Caption = 'Status'
++            Title.PrefixOption = poNone
+             Width = 200
+           end        
+           item
+             Title.Caption = 'Update in'
++            Title.PrefixOption = poNone
+             Width = 80
+           end        
+           item
+             Title.Caption = 'Seeds'
++            Title.PrefixOption = poNone
+           end>
+         FixedCols = 0
+         Options = [goFixedVertLine, goFixedHorzLine, goColSizing, goColMoving, goRowSelect, goThumbTracking, goDblClickAutoSize, goHeaderHotTracking, goHeaderPushedLook]
+@@ -915,38 +954,46 @@
+         Columns = <        
+           item
+             Title.Caption = 'Host'
++            Title.PrefixOption = poNone
+             Width = 150
+           end        
+           item
+             Alignment = taRightJustify
+             Title.Caption = 'Port'
++            Title.PrefixOption = poNone
+             Width = 0
+             Visible = False
+           end        
+           item
+             Title.Caption = 'Country'
++            Title.PrefixOption = poNone
+             Width = 100
+           end        
+           item
+             Title.Caption = 'Client'
++            Title.PrefixOption = poNone
+             Width = 150
+           end        
+           item
+             Title.Caption = 'Flags'
++            Title.PrefixOption = poNone
+             Width = 70
+           end        
+           item
+             Alignment = taRightJustify
+             Title.Caption = 'Have'
++            Title.PrefixOption = poNone
+           end        
+           item
+             Alignment = taRightJustify
+             Title.Caption = 'Up speed'
++            Title.PrefixOption = poNone
+             Width = 80
+           end        
+           item
+             Alignment = taRightJustify
+             Title.Caption = 'Down speed'
++            Title.PrefixOption = poNone
+             Width = 80
+           end>
+         FixedCols = 0
+@@ -974,26 +1021,31 @@
+         Columns = <        
+           item
+             Title.Caption = 'File name'
++            Title.PrefixOption = poNone
+             Width = 350
+           end        
+           item
+             Alignment = taRightJustify
+             Title.Caption = 'Size'
++            Title.PrefixOption = poNone
+             Width = 80
+           end        
+           item
+             Alignment = taCenter
+             Title.Caption = 'Done'
++            Title.PrefixOption = poNone
+             Width = 70
+           end        
+           item
+             Alignment = taCenter
+             Title.Alignment = taCenter
+             Title.Caption = '%'
++            Title.PrefixOption = poNone
+             Width = 70
+           end        
+           item
+             Title.Caption = 'Priority'
++            Title.PrefixOption = poNone
+             Width = 100
+           end>
+         FixedCols = 0
+@@ -1011,12 +1063,54 @@
+         OnDrawCell = lvFilesDrawCell
+       end
+     end
++    object tabGraph: TTabSheet
++      Caption = 'Graph'
++      ClientHeight = 279
++      ClientWidth = 772
++      ImageIndex = 20
++      object pbGraph: TPaintBox
++        Left = 0
++        Height = 255
++        Top = 24
++        Width = 772
++        Align = alClient
++        OnPaint = pbGraphPaint
++      end
++      object Panel1: TPanel
++        Left = 0
++        Height = 24
++        Top = 0
++        Width = 772
++        Align = alTop
++        ClientHeight = 24
++        ClientWidth = 772
++        TabOrder = 0
++        object cbInterval: TComboBox
++          Left = 4
++          Height = 21
++          Top = 0
++          Width = 100
++          ItemHeight = 13
++          ItemIndex = 0
++          Items.Strings = (
++            '1 m'
++            '5 m'
++            '30 m'
++            '2 h'
++            '12 h'
++          )
++          Style = csDropDownList
++          TabOrder = 0
++          Text = '1 m'
++        end
++      end
++    end
+   end
+   object VSplitter: TSplitter
+     Cursor = crVSplit
+     Left = 0
+     Height = 5
+-    Top = 152
++    Top = 156
+     Width = 780
+     Align = alBottom
+     AutoSnap = False
+@@ -1035,53 +1129,53 @@
+     ShowHint = True
+     TabOrder = 2
+     object ToolButton1: TToolButton
+-      Left = 40
++      Left = 41
+       Top = 2
+       Action = acAddTorrent
+     end
+     object ToolButton2: TToolButton
+-      Left = 86
++      Left = 87
+       Top = 2
+-      Width = 4
++      Width = 5
+       Caption = 'ToolButton2'
+       Style = tbsDivider
+     end
+     object ToolButton3: TToolButton
+-      Left = 90
++      Left = 92
+       Top = 2
+       Action = acStartTorrent
+     end
+     object ToolButton4: TToolButton
+-      Left = 113
++      Left = 138
+       Top = 2
+       Action = acStopTorrent
+     end
+     object ToolButton5: TToolButton
+-      Left = 136
++      Left = 161
+       Top = 2
+       Action = acRemoveTorrent
+     end
+     object ToolButton6: TToolButton
+       Left = 36
+       Top = 2
+-      Width = 4
++      Width = 5
+       Caption = 'ToolButton6'
+       Style = tbsDivider
+     end
+     object ToolButton7: TToolButton
+-      Left = 186
++      Left = 268
+       Top = 2
+-      Width = 4
++      Width = 10
+       Caption = 'ToolButton7'
+-      Style = tbsDivider
++      Style = tbsSeparator
+     end
+     object ToolButton8: TToolButton
+-      Left = 190
++      Left = 278
+       Top = 2
+       Action = acDaemonOptions
+     end
+     object ToolButton9: TToolButton
+-      Left = 63
++      Left = 64
+       Top = 2
+       Action = acAddLink
+     end
+@@ -1102,17 +1196,42 @@
+       Style = tbsDropDown
+     end
+     object ToolButton10: TToolButton
+-      Left = 163
++      Left = 189
+       Top = 2
+       Action = acAltSpeed
+     end
+     object sepAltSpeed: TToolButton
+-      Left = 159
++      Left = 184
+       Top = 2
+-      Width = 4
++      Width = 5
+       Caption = 'sepAltSpeed'
+       Style = tbsDivider
+     end
++    object tbForceStart: TToolButton
++      Left = 115
++      Hint = 'Start Torrent Now'
++      Top = 2
++      Action = acForceStartTorrent
++    end
++    object tbQueueUp: TToolButton
++      Left = 222
++      Hint = 'Queue Up'
++      Top = 2
++      Action = acQueueUp
++    end
++    object tbSep1: TToolButton
++      Left = 212
++      Top = 2
++      Width = 10
++      Caption = 'tbSep1'
++      Style = tbsSeparator
++    end
++    object tbQueueDown: TToolButton
++      Left = 245
++      Hint = 'Queue Down'
++      Top = 2
++      Action = acQueueDown
++    end
+   end
+   object panReconnect: TPanel
+     Left = 532
+@@ -1402,6 +1521,46 @@
+         }
+         OnClick = acStartTorrentExecute
+       end
++      object miForceStart: TMenuItem
++        Action = acForceStartTorrent
++        Caption = 'Start Torrent Now'
++        Bitmap.Data = {
++          36040000424D3604000000000000360000002800000010000000100000000100
++          2000000000000004000064000000640000000000000000000000FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00005A00FF005A00FF005A00FFFF00FF00FF00FF00005A00FF005A00FF005A
++          00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00007300FF08BD21FF007300FF005A00FFFF00FF00007300FF08BD21FF0073
++          00FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00007300FF10BD21FF08BD21FF007300FF005A00FF007300FF10BD21FF08BD
++          21FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00007300FF10C631FF10C631FF08BD21FF007300FF007300FF10C631FF10C6
++          31FF08BD21FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00007300FF10DE42FF10C631FF08BD21FF08BD21FF007300FF10DE42FF10C6
++          31FF08BD21FF08BD21FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00
++          FF00007300FF18DE5AFF10CE42FF10CE42FF10CE42FF007300FF18DE5AFF10CE
++          42FF10CE42FF10CE42FF10C631FF007300FF006300FFFF00FF00FF00FF00FF00
++          FF00007300FF63E763FF6BE763FF5AE763FF5AE763FF007300FF63E763FF6BE7
++          63FF5AE763FF5AE763FF5AE763FF007300FF006300FFFF00FF00FF00FF00FF00
++          FF00007300FF6BEF6BFF84EF84FF84EF73FF5AE763FF007300FF6BEF6BFF84EF
++          84FF84EF73FF5AE763FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00
++          FF00007300FF84EF84FF94FF94FF94FF94FF007300FF007300FF84EF84FF94FF
++          94FF94FF94FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00007300FF73EF73FFADFFADFF007300FF005A00FF007300FF73EF73FFADFF
++          ADFF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00007300FF42CE42FF007300FF005A00FFFF00FF00007300FF42CE42FF0073
++          00FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00005A00FF005A00FF005A00FFFF00FF00FF00FF00005A00FF005A00FF005A
++          00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++        }
++      end
+       object MenuItem22: TMenuItem
+         Action = acStartAllTorrents
+         OnClick = acStartAllTorrentsExecute
+@@ -1982,6 +2141,36 @@
+       ImageIndex = 38
+       OnExecute = acAltSpeedExecute
+     end
++    object acForceStartTorrent: TAction
++      Category = 'Torrent'
++      Caption = 'acForceStartTorrent'
++      ImageIndex = 44
++      OnExecute = acForceStartTorrentExecute
++    end
++    object acQueueUp: TAction
++      Category = 'Torrent'
++      Caption = 'Queue Up'
++      ImageIndex = 41
++      OnExecute = acQueueUpExecute
++    end
++    object acQueueDown: TAction
++      Category = 'Torrent'
++      Caption = 'Queue Down'
++      ImageIndex = 42
++      OnExecute = acQueueDownExecute
++    end
++    object acQueueTOP: TAction
++      Category = 'Torrent'
++      Caption = 'Queue TOP'
++      ImageIndex = 40
++      OnExecute = acQueueTOPExecute
++    end
++    object acQueueBottom: TAction
++      Category = 'Torrent'
++      Caption = 'Queue BOTTOM'
++      ImageIndex = 43
++      OnExecute = acQueueBottomExecute
++    end
+   end
+   object TorrentsListTimer: TTimer
+     Enabled = False
+@@ -1993,6 +2182,7 @@
+   object OpenTorrentDlg: TOpenDialog
+     Title = 'Select a .torrent to open'
+     Filter = 'Torrents (*.torrent)|*.torrent|All files (*.*)|*.*'
++    Options = [ofHideReadOnly, ofAllowMultiSelect, ofEnableSizing, ofViewDetail]
+     left = 213
+     top = 55
+   end
+@@ -2084,6 +2274,46 @@
+       }
+       OnClick = acStartTorrentExecute
+     end
++    object MenuItem64: TMenuItem
++      Action = acForceStartTorrent
++      Caption = 'Start Torrent Now'
++      Bitmap.Data = {
++        36040000424D3604000000000000360000002800000010000000100000000100
++        2000000000000004000064000000640000000000000000000000FF00FF00FF00
++        FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++        FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++        FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++        FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++        FF00005A00FF005A00FF005A00FFFF00FF00FF00FF00005A00FF005A00FF005A
++        00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++        FF00007300FF08BD21FF007300FF005A00FFFF00FF00007300FF08BD21FF0073
++        00FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++        FF00007300FF10BD21FF08BD21FF007300FF005A00FF007300FF10BD21FF08BD
++        21FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++        FF00007300FF10C631FF10C631FF08BD21FF007300FF007300FF10C631FF10C6
++        31FF08BD21FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00
++        FF00007300FF10DE42FF10C631FF08BD21FF08BD21FF007300FF10DE42FF10C6
++        31FF08BD21FF08BD21FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00
++        FF00007300FF18DE5AFF10CE42FF10CE42FF10CE42FF007300FF18DE5AFF10CE
++        42FF10CE42FF10CE42FF10C631FF007300FF006300FFFF00FF00FF00FF00FF00
++        FF00007300FF63E763FF6BE763FF5AE763FF5AE763FF007300FF63E763FF6BE7
++        63FF5AE763FF5AE763FF5AE763FF007300FF006300FFFF00FF00FF00FF00FF00
++        FF00007300FF6BEF6BFF84EF84FF84EF73FF5AE763FF007300FF6BEF6BFF84EF
++        84FF84EF73FF5AE763FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00
++        FF00007300FF84EF84FF94FF94FF94FF94FF007300FF007300FF84EF84FF94FF
++        94FF94FF94FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00
++        FF00007300FF73EF73FFADFFADFF007300FF005A00FF007300FF73EF73FFADFF
++        ADFF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++        FF00007300FF42CE42FF007300FF005A00FFFF00FF00007300FF42CE42FF0073
++        00FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++        FF00005A00FF005A00FF005A00FFFF00FF00FF00FF00005A00FF005A00FF005A
++        00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++        FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++        FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++        FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++        FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      }
++    end
+     object MenuItem9: TMenuItem
+       Action = acStopTorrent
+       Bitmap.Data = {
+@@ -2294,6 +2524,165 @@
+         OnClick = acSetLowPriorityExecute
+       end
+     end
++    object miQueue: TMenuItem
++      Caption = 'Queue'
++      object miMoveTOP: TMenuItem
++        Action = acQueueTOP
++        Bitmap.Data = {
++          36040000424D3604000000000000360000002800000010000000100000000100
++          2000000000000004000064000000640000000000000000000000FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00005A00FF007300FF007300FF007300FF007300FF007300FF007300FF0073
++          00FF007300FF007300FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00
++          FF00005A00FF42CE42FF73EF73FF84EF84FF6BEF6BFF63E763FF18DE5AFF10DE
++          42FF10C631FF10BD21FF08BD21FF005A00FFFF00FF00FF00FF00FF00FF00FF00
++          FF00005A00FF007300FFADFFADFF94FF94FF84EF84FF6BE763FF10CE42FF10C6
++          31FF10C631FF08BD21FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00005A00FF007300FF94FF94FF84EF73FF5AE763FF10CE42FF08BD
++          21FF08BD21FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00005A00FF007300FF5AE763FF5AE763FF10CE42FF08BD
++          21FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00005A00FF007300FF5AE763FF10C631FF0073
++          00FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00005A00FF007300FF007300FF005A
++          00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00006300FF006300FF006300FF006300FF006300FF006300FF006300FF0063
++          00FF006300FF006300FF006300FF006300FFFF00FF00FF00FF00FF00FF00FF00
++          FF00006300FF006300FF006300FF006300FF006300FF006300FF006300FF0063
++          00FF006300FF006300FF006300FF006300FFFF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++        }
++      end
++      object miMoveUP: TMenuItem
++        Action = acQueueUp
++        Bitmap.Data = {
++          36040000424D3604000000000000360000002800000010000000100000000100
++          2000000000000004000064000000640000000000000000000000FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00005A00FF007300FF007300FF007300FF007300FF007300FF007300FF0073
++          00FF007300FF007300FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00
++          FF00005A00FF42CE42FF73EF73FF84EF84FF6BEF6BFF63E763FF18DE5AFF10DE
++          42FF10C631FF10BD21FF08BD21FF005A00FFFF00FF00FF00FF00FF00FF00FF00
++          FF00005A00FF007300FFADFFADFF94FF94FF84EF84FF6BE763FF10CE42FF10C6
++          31FF10C631FF08BD21FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00005A00FF007300FF94FF94FF84EF73FF5AE763FF10CE42FF08BD
++          21FF08BD21FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00005A00FF007300FF5AE763FF5AE763FF10CE42FF08BD
++          21FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00005A00FF007300FF5AE763FF10C631FF0073
++          00FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00005A00FF007300FF007300FF005A
++          00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00006300FF006300FFFF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++        }
++      end
++      object miMoveDown: TMenuItem
++        Action = acQueueDown
++        Bitmap.Data = {
++          36040000424D3604000000000000360000002800000010000000100000000100
++          2000000000000004000064000000640000000000000000000000FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00006300FF006300FFFF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00005A00FF007300FF007300FF005A
++          00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00005A00FF007300FF5AE763FF10C631FF0073
++          00FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00005A00FF007300FF5AE763FF5AE763FF10CE42FF08BD
++          21FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00005A00FF007300FF94FF94FF84EF73FF5AE763FF10CE42FF08BD
++          21FF08BD21FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00005A00FF007300FFADFFADFF94FF94FF84EF84FF6BE763FF10CE42FF10C6
++          31FF10C631FF08BD21FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00
++          FF00005A00FF42CE42FF73EF73FF84EF84FF6BEF6BFF63E763FF18DE5AFF10DE
++          42FF10C631FF10BD21FF08BD21FF005A00FFFF00FF00FF00FF00FF00FF00FF00
++          FF00005A00FF007300FF007300FF007300FF007300FF007300FF007300FF0073
++          00FF007300FF007300FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++        }
++      end
++      object miMoveBottom: TMenuItem
++        Action = acQueueBottom
++        Bitmap.Data = {
++          36040000424D3604000000000000360000002800000010000000100000000100
++          2000000000000004000064000000640000000000000000000000FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00006300FF006300FF006300FF006300FF006300FF006300FF006300FF0063
++          00FF006300FF006300FF006300FF006300FFFF00FF00FF00FF00FF00FF00FF00
++          FF00006300FF006300FF006300FF006300FF006300FF006300FF006300FF0063
++          00FF006300FF006300FF006300FF006300FFFF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00005A00FF007300FF007300FF005A
++          00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00005A00FF007300FF5AE763FF10C631FF0073
++          00FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00005A00FF007300FF5AE763FF5AE763FF10CE42FF08BD
++          21FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00005A00FF007300FF94FF94FF84EF73FF5AE763FF10CE42FF08BD
++          21FF08BD21FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00005A00FF007300FFADFFADFF94FF94FF84EF84FF6BE763FF10CE42FF10C6
++          31FF10C631FF08BD21FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00
++          FF00005A00FF42CE42FF73EF73FF84EF84FF6BEF6BFF63E763FF18DE5AFF10DE
++          42FF10C631FF10BD21FF08BD21FF005A00FFFF00FF00FF00FF00FF00FF00FF00
++          FF00005A00FF007300FF007300FF007300FF007300FF007300FF007300FF0073
++          00FF007300FF007300FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++        }
++      end
++    end
+     object MenuItem50: TMenuItem
+       Action = acReannounceTorrent
+       OnClick = acReannounceTorrentExecute
+@@ -2602,7 +2991,7 @@
+     left = 412
+     top = 92
+     Bitmap = {
+-      4C69270000001000000010000000000000000000000000000000000000000000
++      4C692D0000001000000010000000000000000000000000000000000000000000
+       0000000000000000000000000000000000000000000000000000000000000000
+       0000000000000000000000000000000000000000000000000000000000000000
+       00000000000000000000007308FF087B08FF088C10FF088C10FF087B08FF0000
+@@ -3850,7 +4239,199 @@
+       0000000000000000000000000000000000000000000000000000000000000000
+       0000000000000000000000000000000000000000000000000000000000000000
+       0000000000000000000000000000000000000000000000000000000000000000
+-      0000000000000000000000000000
++      0000000000000000000000000000FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00C3FFC3FFC3FF
++      C3FFC3FFC3FFC3FFC3FFC3FFC3FFC3FFC3FFC3FFC3FFC3FFC3FFC3FFC3FFFF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00C3FFC3FF89C589FF84BD
++      84FF7FB67FFF79AD79FF74A674FF6E9E6EFF679467FF628C62FF5A805AFFC3FF
++      C3FFFF00FF00FF00FF00FF00FF00FF00FF00C3FFC3FF98D998FF91CF91FF89C5
++      89FF84BD84FF7FB67FFF79AD79FF74A674FF6E9E6EFF679467FF628C62FF5A80
++      5AFF598E59FFFF00FF00FF00FF00FF00FF00C3FFC3FF98D998FF98D998FF91CF
++      91FF89C589FF84BD84FFFFFFFFFF79AD79FF74A674FF6E9E6EFF679467FF628C
++      62FF598E59FFFF00FF00FF00FF00FF00FF00C3FFC3FFA2E8A2FF98D998FF98D9
++      98FF91CF91FFFFFFFFFFFFFFFFFFFFFFFFFF628C62FF74A674FF6E9E6EFF6794
++      67FF598E59FFFF00FF00FF00FF00FF00FF00C3FFC3FFA7F0A7FFA2E8A2FF98D9
++      98FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF628C62FF74A674FF6E9E
++      6EFF598E59FFFF00FF00FF00FF00FF00FF00C3FFC3FFA7F0A7FFA2E8A2FFFFFF
++      FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF628C62FF74A6
++      74FF598E59FFFF00FF00FF00FF00FF00FF00C3FFC3FFADF7ADFFA7F0A7FFA2E8
++      A2FF84BD84FFFFFFFFFFFFFFFFFFFFFFFFFF4E6A4EFF4E6A4EFF679467FF79AD
++      79FF598E59FFFF00FF00FF00FF00FF00FF00C3FFC3FFB2FFB2FFADF7ADFFA7F0
++      A7FFA2E8A2FFFFFFFFFFFFFFFFFFFFFFFFFF5A805AFF6E9E6EFF84BD84FF7EB4
++      7EFF598E59FFFF00FF00FF00FF00FF00FF00C3FFC3FFB2FFB2FFB2FFB2FFADF7
++      ADFFA7F0A7FFFFFFFFFFFFFFFFFFFFFFFFFF5A805AFF91CF91FF89C589FF84BD
++      84FF598E59FFFF00FF00FF00FF00FF00FF00C3FFC3FFB9FFB9FFB2FFB2FFB2FF
++      B2FFADF7ADFFA7F0A7FF628C62FF628C62FF5A805AFF91CF91FF91CF91FF89C5
++      89FF598E59FFFF00FF00FF00FF00FF00FF00FF00FF00598E59FFB9FFB9FFB2FF
++      B2FFB2FFB2FFADF7ADFFA7F0A7FFA2E8A2FFA2E8A2FF98D998FF91CF91FF598E
++      59FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00598E59FF598E
++      59FF598E59FF598E59FF598E59FF598E59FF598E59FF598E59FF598E59FFFF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00006300FF006300FF0063
++      00FF006300FF006300FF006300FF006300FF006300FF006300FF006300FF0063
++      00FF006300FFFF00FF00FF00FF00FF00FF00FF00FF00006300FF006300FF0063
++      00FF006300FF006300FF006300FF006300FF006300FF006300FF006300FF0063
++      00FF006300FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00005A00FF007300FF007300FF005A00FFFF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00005A00FF007300FF5AE763FF10C631FF007300FF005A00FFFF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00005A
++      00FF007300FF5AE763FF5AE763FF10CE42FF08BD21FF007300FF005A00FFFF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00005A00FF0073
++      00FF94FF94FF84EF73FF5AE763FF10CE42FF08BD21FF08BD21FF007300FF005A
++      00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00005A00FF007300FFADFF
++      ADFF94FF94FF84EF84FF6BE763FF10CE42FF10C631FF10C631FF08BD21FF0073
++      00FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00005A00FF42CE42FF73EF
++      73FF84EF84FF6BEF6BFF63E763FF18DE5AFF10DE42FF10C631FF10BD21FF08BD
++      21FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00005A00FF007300FF0073
++      00FF007300FF007300FF007300FF007300FF007300FF007300FF007300FF0073
++      00FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00006300FF006300FFFF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00005A00FF007300FF007300FF005A00FFFF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00005A00FF007300FF5AE763FF10C631FF007300FF005A00FFFF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00005A
++      00FF007300FF5AE763FF5AE763FF10CE42FF08BD21FF007300FF005A00FFFF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00005A00FF0073
++      00FF94FF94FF84EF73FF5AE763FF10CE42FF08BD21FF08BD21FF007300FF005A
++      00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00005A00FF007300FFADFF
++      ADFF94FF94FF84EF84FF6BE763FF10CE42FF10C631FF10C631FF08BD21FF0073
++      00FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00005A00FF42CE42FF73EF
++      73FF84EF84FF6BEF6BFF63E763FF18DE5AFF10DE42FF10C631FF10BD21FF08BD
++      21FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00005A00FF007300FF0073
++      00FF007300FF007300FF007300FF007300FF007300FF007300FF007300FF0073
++      00FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00005A00FF007300FF0073
++      00FF007300FF007300FF007300FF007300FF007300FF007300FF007300FF0073
++      00FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00005A00FF42CE42FF73EF
++      73FF84EF84FF6BEF6BFF63E763FF18DE5AFF10DE42FF10C631FF10BD21FF08BD
++      21FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00005A00FF007300FFADFF
++      ADFF94FF94FF84EF84FF6BE763FF10CE42FF10C631FF10C631FF08BD21FF0073
++      00FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00005A00FF0073
++      00FF94FF94FF84EF73FF5AE763FF10CE42FF08BD21FF08BD21FF007300FF005A
++      00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00005A
++      00FF007300FF5AE763FF5AE763FF10CE42FF08BD21FF007300FF005A00FFFF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00005A00FF007300FF5AE763FF10C631FF007300FF005A00FFFF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00005A00FF007300FF007300FF005A00FFFF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00006300FF006300FFFF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00005A00FF007300FF0073
++      00FF007300FF007300FF007300FF007300FF007300FF007300FF007300FF0073
++      00FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00005A00FF42CE42FF73EF
++      73FF84EF84FF6BEF6BFF63E763FF18DE5AFF10DE42FF10C631FF10BD21FF08BD
++      21FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00005A00FF007300FFADFF
++      ADFF94FF94FF84EF84FF6BE763FF10CE42FF10C631FF10C631FF08BD21FF0073
++      00FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00005A00FF0073
++      00FF94FF94FF84EF73FF5AE763FF10CE42FF08BD21FF08BD21FF007300FF005A
++      00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00005A
++      00FF007300FF5AE763FF5AE763FF10CE42FF08BD21FF007300FF005A00FFFF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00005A00FF007300FF5AE763FF10C631FF007300FF005A00FFFF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00005A00FF007300FF007300FF005A00FFFF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00006300FF006300FF0063
++      00FF006300FF006300FF006300FF006300FF006300FF006300FF006300FF0063
++      00FF006300FFFF00FF00FF00FF00FF00FF00FF00FF00006300FF006300FF0063
++      00FF006300FF006300FF006300FF006300FF006300FF006300FF006300FF0063
++      00FF006300FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00005A00FF005A00FF005A
++      00FFFF00FF00FF00FF00005A00FF005A00FF005A00FFFF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00007300FF42CE42FF0073
++      00FF005A00FFFF00FF00007300FF42CE42FF007300FF005A00FFFF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00007300FF73EF73FFADFF
++      ADFF007300FF005A00FF007300FF73EF73FFADFFADFF007300FF005A00FFFF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00007300FF84EF84FF94FF
++      94FF94FF94FF007300FF007300FF84EF84FF94FF94FF94FF94FF007300FF005A
++      00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00007300FF6BEF6BFF84EF
++      84FF84EF73FF5AE763FF007300FF6BEF6BFF84EF84FF84EF73FF5AE763FF0073
++      00FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00007300FF63E763FF6BE7
++      63FF5AE763FF5AE763FF007300FF63E763FF6BE763FF5AE763FF5AE763FF5AE7
++      63FF007300FF006300FFFF00FF00FF00FF00FF00FF00007300FF18DE5AFF10CE
++      42FF10CE42FF10CE42FF007300FF18DE5AFF10CE42FF10CE42FF10CE42FF10C6
++      31FF007300FF006300FFFF00FF00FF00FF00FF00FF00007300FF10DE42FF10C6
++      31FF08BD21FF08BD21FF007300FF10DE42FF10C631FF08BD21FF08BD21FF0073
++      00FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00007300FF10C631FF10C6
++      31FF08BD21FF007300FF007300FF10C631FF10C631FF08BD21FF007300FF005A
++      00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00007300FF10BD21FF08BD
++      21FF007300FF005A00FF007300FF10BD21FF08BD21FF007300FF005A00FFFF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00007300FF08BD21FF0073
++      00FF005A00FFFF00FF00007300FF08BD21FF007300FF005A00FFFF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00005A00FF005A00FF005A
++      00FFFF00FF00FF00FF00005A00FF005A00FF005A00FFFF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00
+     }
+   end
+   object pmLabels: TPopupMenu
+Index: rpc.pas
+===================================================================
+--- rpc.pas	(revision 611)
++++ rpc.pas	(working copy)
+@@ -349,6 +349,8 @@
+       if i >= 0 then
+         sl.Delete(i);
+ 
++    if FRpc.RPCVersion>=14 then sl.Add('isStalled');
++
+     SetLength(ExtraFields, sl.Count);
+     for i:=0 to sl.Count - 1 do
+       ExtraFields[i]:=sl[i];
+@@ -437,14 +439,16 @@
+ var
+   args: TJSONObject;
+   t: TJSONArray;
++  ExtraFields: array of string;
+ begin
++  if FRpc.RPCVersion >=14 then begin SetLength(ExtraFields,2);ExtraFields[0]:='isStalled';ExtraFields[1]:='queuePosition';end;
+   args:=FRpc.RequestInfo(TorrentId, ['totalSize', 'sizeWhenDone', 'leftUntilDone', 'pieceCount', 'pieceSize', 'haveValid',
+                                      'hashString', 'comment', 'downloadedEver', 'uploadedEver', 'corruptEver', 'errorString',
+                                      'announceResponse', 'downloadLimit', 'downloadLimitMode', 'uploadLimit', 'uploadLimitMode',
+                                      'maxConnectedPeers', 'nextAnnounceTime', 'dateCreated', 'creator', 'eta', 'peersSendingToUs',
+                                      'seeders','peersGettingFromUs','leechers', 'uploadRatio', 'addedDate', 'doneDate',
+-                                     'activityDate', 'downloadLimited', 'uploadLimited', 'downloadDir', 'id', 'pieces',
+-                                     'trackerStats', 'secondsDownloading']);
++                                     'activityDate', 'downloadLimited', 'uploadLimited', 'downloadDir', 'id','pieces',
++                                     'trackerStats', 'secondsDownloading'],ExtraFields);
+   try
+     if args <> nil then begin
+       t:=args.Arrays['torrents'];
+Index: json/fpjson.pp
+===================================================================
+--- json/fpjson.pp	(revision 611)
++++ json/fpjson.pp	(working copy)
+@@ -1077,6 +1077,9 @@
+       vtString     : Result:=TJSONString.Create(vString^);
+       vtAnsiString : Result:=TJSONString.Create(AnsiString(vAnsiString));
+       vtWideString : Result:=TJSONString.Create(WideString(VWideString));
++{$IFDEF VER2_5_1}
++    vtUnicodeString: Result:=TJSONString.Create(UnicodeString(VUnicodeString));
++{$ENDIF}
+       vtPChar      : Result:=TJSONString.Create(StrPas(VPChar));
+       vtPointer    : If (VPointer<>Nil) then
+                        Raise EJSON.CreateFmt(SErrPointerNotNil,[SourceType])
+Index: addtorrent.lfm
+===================================================================
+--- addtorrent.lfm	(revision 611)
++++ addtorrent.lfm	(working copy)
+@@ -1,6 +1,6 @@
+ object AddTorrentForm: TAddTorrentForm
+   Left = 376
+-  Height = 440
++  Height = 478
+   Top = 186
+   Width = 497
+   HorzScrollBar.Page = 505
+@@ -8,14 +8,14 @@
+   VertScrollBar.Range = 92
+   BorderIcons = [biSystemMenu]
+   Caption = 'Add new torrent'
+-  ClientHeight = 440
++  ClientHeight = 478
+   ClientWidth = 497
+   Constraints.MinHeight = 300
+   Constraints.MinWidth = 470
+   OnCreate = FormCreate
+   OnShow = FormShow
+   Position = poMainFormCenter
+-  LCLVersion = '0.9.30.1'
++  LCLVersion = '0.9.31'
+   object gbSaveAs: TGroupBox
+     Left = 8
+     Height = 92
+@@ -60,7 +60,7 @@
+       Left = 10
+       Height = 17
+       Top = 47
+-      Width = 79
++      Width = 81
+       Caption = 'Start torrent'
+       Checked = True
+       State = cbChecked
+@@ -90,7 +90,7 @@
+   end
+   object gbContents: TGroupBox
+     Left = 8
+-    Height = 294
++    Height = 366
+     Top = 104
+     Width = 481
+     Align = alClient
+@@ -99,7 +99,7 @@
+     BorderSpacing.Right = 8
+     BorderSpacing.Bottom = 8
+     Caption = 'Torrent contents'
+-    ClientHeight = 276
++    ClientHeight = 348
+     ClientWidth = 477
+     TabOrder = 1
+     object txDiskSpace: TLabel
+@@ -119,7 +119,7 @@
+     end
+     object lvFiles: TVarGrid
+       Left = 10
+-      Height = 223
++      Height = 271
+       Top = 40
+       Width = 456
+       Anchors = [akTop, akLeft, akRight, akBottom]
+@@ -127,15 +127,18 @@
+         item
+           ReadOnly = True
+           Title.Caption = 'File name'
++          Title.PrefixOption = poNone
+           Width = 350
+         end      
+         item
+           ReadOnly = True
+           Title.Caption = 'Size'
++          Title.PrefixOption = poNone
+           Width = 80
+         end      
+         item
+           Title.Caption = ' '
++          Title.PrefixOption = poNone
+           Visible = False
+         end>
+       FixedCols = 0
+@@ -169,25 +172,35 @@
+       OnClick = btSelectNoneClick
+       TabOrder = 2
+     end
++    object Buttons: TButtonPanel
++      Left = 0
++      Height = 26
++      Top = 314
++      Width = 477
++      BorderSpacing.Bottom = 8
++      BorderSpacing.Around = 0
++      OKButton.Name = 'OKButton'
++      OKButton.Caption = '&OK'
++      HelpButton.Name = 'HelpButton'
++      HelpButton.Caption = '&Help'
++      CloseButton.Name = 'CloseButton'
++      CloseButton.Caption = '&Close'
++      CancelButton.Name = 'CancelButton'
++      CancelButton.Caption = 'Cancel'
++      TabOrder = 3
++      Spacing = 8
++      ShowButtons = [pbOK, pbCancel]
++      ShowBevel = False
++      object cbSkipMultiTorrents: TCheckBox
++        Left = 135
++        Height = 26
++        Top = 0
++        Width = 174
++        Align = alCustom
++        Caption = 'Skip this dialog for next torrents'
++        TabOrder = 4
++        Visible = False
++      end
++    end
+   end
+-  object Buttons: TButtonPanel
+-    Left = 0
+-    Height = 26
+-    Top = 406
+-    Width = 497
+-    BorderSpacing.Bottom = 8
+-    BorderSpacing.Around = 0
+-    OKButton.Name = 'OKButton'
+-    OKButton.Caption = '&OK'
+-    HelpButton.Name = 'HelpButton'
+-    HelpButton.Caption = '&Help'
+-    CloseButton.Name = 'CloseButton'
+-    CloseButton.Caption = '&Close'
+-    CancelButton.Name = 'CancelButton'
+-    CancelButton.Caption = 'Cancel'
+-    TabOrder = 2
+-    Spacing = 8
+-    ShowButtons = [pbOK, pbCancel]
+-    ShowBevel = False
+-  end
+ end
+Index: transgui.res
+===================================================================
+Cannot display: file marked as a binary type.
+svn:mime-type = application/octet-stream
+Index: daemonoptions.pas
+===================================================================
+--- daemonoptions.pas	(revision 611)
++++ daemonoptions.pas	(working copy)
+@@ -61,7 +61,15 @@
+     cbAltEnabled: TCheckBox;
+     cbAutoAlt: TCheckBox;
+     cbUTP: TCheckBox;
++    cbQueueDownEnabled: TCheckBox;
++    cbQueueStalledEnabled: TCheckBox;
++    edQueueDown: TSpinEdit;
++    edQueueUp: TSpinEdit;
++    edIdleStalled: TSpinEdit;
++    txMinutes2: TLabel;
++    cbQueueUpEnabled: TCheckBox;
+     edAltTimeEnd: TMaskEdit;
++    TabQueue: TTabSheet;
+     txDays: TLabel;
+     txFrom: TLabel;
+     edDownloadDir: TEdit;
+@@ -80,6 +88,9 @@
+     edAltTimeBegin: TMaskEdit;
+     txAltUp: TLabel;
+     txAltDown: TLabel;
++    txQueueDownSize: TLabel;
++    txQueueUpSize: TLabel;
++    txStalledMinTime: TLabel;
+     txTo: TLabel;
+     txKbs3: TLabel;
+     txKbs4: TLabel;
+Index: main.pas
+===================================================================
+--- main.pas	(revision 611)
++++ main.pas	(working copy)
+@@ -30,7 +30,7 @@
+ 
+ const
+   AppName = 'Transmission Remote GUI';
+-  AppVersion = '3.2';
++  AppVersion = '3.2.1';
+ 
+ resourcestring
+   sAll = 'All';
+@@ -40,6 +40,10 @@
+   sSeeding = 'Seeding';
+   sFinished = 'Finished';
+   sStopped = 'Stopped';
++  sError = 'Error';
++  sQueuedDown = 'Queued(Down)';
++  sQueuedUp = 'Queued(Up)';
++  sStalled = 'Stalled';
+   sUnknown = 'Unknown';
+   sCompleted = 'Completed';
+   sConnected = 'connected';
+@@ -62,6 +66,7 @@
+   sDownSpeed = 'D: %s/s';
+   sUpSpeed = 'U: %s/s';
+   SFreeSpace = 'Free: %s';
++  STotal = 'Total: %s / %s %s (%s / %s %s)';
+   sNoPathMapping = 'Unable to find path mapping.'+LineEnding+'Use program''s options to setup path mappings.';
+   sGeoIPConfirm = 'Geo IP database is needed to resolve country by IP address.' + LineEnding + 'Download this database now?';
+   sFlagArchiveConfirm = 'Flag images archive is needed to display country flags.' + LineEnding + 'Download this archive now?';
+@@ -101,6 +106,12 @@
+   SAverage = 'average';
+ 
+ type
++  TSpeedRecord=record
++                 id:Integer;
++               Time:TDateTime;
++              UpSpd:Double;
++            DownSpd:Double;
++  end;
+ 
+   { TMainForm }
+ 
+@@ -139,17 +150,39 @@
+     acNewConnection: TAction;
+     acDisconnect: TAction;
+     acAltSpeed: TAction;
++    acForceStartTorrent: TAction;
++    acQueueUp: TAction;
++    acQueueDown: TAction;
++    acQueueTOP: TAction;
++    acQueueBottom: TAction;
+     acUpdateBlocklist: TAction;
+     acUpdateGeoIP: TAction;
+     acTorrentProps: TAction;
+     acVerifyTorrent: TAction;
+     ActionList: TActionList;
+     ApplicationProperties: TApplicationProperties;
++    cbInterval: TComboBox;
+     edSearch: TEdit;
+     imgSearch: TImage;
+     imgFlags: TImageList;
+     ImageList16: TImageList;
+     FilterTimer: TTimer;
++    MenuItem64: TMenuItem;
++    miForceStart: TMenuItem;
++    miQueue: TMenuItem;
++    miMoveTOP: TMenuItem;
++    miMoveBottom: TMenuItem;
++    miMoveDown: TMenuItem;
++    miMoveUP: TMenuItem;
++    Panel1: TPanel;
++    pbGraph: TPaintBox;
++    tabGraph: TTabSheet;
++    tbForceStart: TToolButton;
++    tbQueueUp: TToolButton;
++    tbSep1: TToolButton;
++    tbQueueDown: TToolButton;
++    txQueue: TLabel;
++    txQueueLabel: TLabel;
+     lvFilter: TVarGrid;
+     lvTrackers: TVarGrid;
+     MenuItem25: TMenuItem;
+@@ -267,9 +300,7 @@
+     txPeersLabel: TLabel;
+     txSeeds: TLabel;
+     txSeedsLabel: TLabel;
+-    txDummy2: TLabel;
+     txTrackerUpdate: TLabel;
+-    txDummy1: TLabel;
+     txRemaining: TLabel;
+     txRemainingLabel: TLabel;
+     txStatus: TLabel;
+@@ -361,6 +392,7 @@
+     procedure acConnOptionsExecute(Sender: TObject);
+     procedure acDelTrackerExecute(Sender: TObject);
+     procedure acEditTrackerExecute(Sender: TObject);
++    procedure acForceStartTorrentExecute(Sender: TObject);
+     procedure acHideAppExecute(Sender: TObject);
+     procedure acMoveTorrentExecute(Sender: TObject);
+     procedure acNewConnectionExecute(Sender: TObject);
+@@ -370,6 +402,10 @@
+     procedure acDisconnectExecute(Sender: TObject);
+     procedure acExitExecute(Sender: TObject);
+     procedure acDaemonOptionsExecute(Sender: TObject);
++    procedure acQueueBottomExecute(Sender: TObject);
++    procedure acQueueDownExecute(Sender: TObject);
++    procedure acQueueTOPExecute(Sender: TObject);
++    procedure acQueueUpExecute(Sender: TObject);
+     procedure acReannounceTorrentExecute(Sender: TObject);
+     procedure acRemoveTorrentAndDataExecute(Sender: TObject);
+     procedure acRemoveTorrentExecute(Sender: TObject);
+@@ -416,6 +452,7 @@
+     procedure lvTrackersCellAttributes(Sender: TVarGrid; ACol, ARow, ADataCol: integer; AState: TGridDrawState; var CellAttribs: TCellAttributes);
+     procedure lvTrackersDblClick(Sender: TObject);
+     procedure lvTrackersKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
++    procedure pbGraphPaint(Sender: TObject);
+     procedure pbStatusPaint(Sender: TObject);
+     procedure panReconnectResize(Sender: TObject);
+     procedure pbDownloadedPaint(Sender: TObject);
+@@ -458,6 +495,11 @@
+     FCurDownSpeedLimit: integer;
+     FCurUpSpeedLimit: integer;
+ 
++    FSpeedCount:Integer;
++    FSpeedData:Array of TSpeedRecord;
++    FSpeedMax:Double;
++    FSpeedBitmap: TBitmap;
++
+     procedure DoConnect;
+     procedure DoDisconnect;
+     procedure UpdateUI;
+@@ -491,6 +533,7 @@
+     procedure CenterReconnectWindow;
+     procedure DrawProgressCell(Sender: TVarGrid; ACol, ARow, ADataCol: integer; AState: TGridDrawState; const ACellRect: TRect);
+     procedure ProcessPieces(const Pieces: string; PieceCount: integer; const Done: double);
++    procedure ProcessGraph(downSpeed,upSpeed:Double);
+     function ExecRemoteFile(const FileName: string; SelectFile: boolean): boolean;
+     function GetSelectedTorrents: variant;
+     procedure FillDownloadDirs(CB: TComboBox);
+@@ -505,6 +548,7 @@
+     procedure SetSpeedLimit(const Dir: string; Speed: integer);
+     function FixSeparators(const p: string): string;
+     function MapRemoteToLocal(const RemotePath: string): string;
++    procedure QueueMove(act:string);
+   public
+     procedure FillTorrentsList(list: TJSONArray);
+     procedure FillPeersList(list: TJSONArray);
+@@ -556,6 +600,7 @@
+   idxPriority = 18;
+   idxSizeToDowload = 19;
+   idxTorrentId = 20;
++  idxQueue = 21;
+ 
+   idxTag = -1;
+   idxSeedsTotal = -2;
+@@ -605,43 +650,68 @@
+   fltActive   = 3;
+   fltInactive = 4;
+   fltStopped  = 5;
++  fltError    = 6;
+ 
+   // Status images
+-  imgDown      = 9;
+-  imgSeed      = 10;
+-  imgDownError = 11;
+-  imgSeedError = 12;
+-  imgError     = 13;
+-  imgDone      = 14;
+-  imgStopped   = 29;
+-  imgDownQueue = 16;
+-  imgSeedQueue = 17;
+-  imgAll       = 19;
+-  imgActive    = 20;
++  imgDown         = 9;
++  imgSeed         = 10;
++  imgDownError    = 11;
++  imgSeedError    = 12;
++  imgError        = 13;
++  imgDone         = 14;
++  imgStopped      = 29;
++  imgDownQueue    = 16;
++  imgSeedQueue    = 17;
++  imgAll          = 19;
++  imgActive       = 20;
++  imgInactive     = 15;
++  imgSeedStalled  = 39;
++  imgTrackers     = 5;
++  imgOpen         = 22;
++  imgSkip         = 23;
++  imgLow          = 24;
++  imgNormal       = 25;
++  imgHigh         = 26;
++  imgQTOP         = 40;
++  imgQUP          = 41;
++  imgQDOWN        = 42;
++  imgQBOTTOM      = 43;
++  imgForceStart   = 44;
+ 
+-  StatusFiltersCount = 6;
++  StatusFiltersCount = 7;
+ 
+-  TorrentFieldsMap: array[idxName..idxTorrentId] of string =
++  TorrentFieldsMap: array[idxName..idxQueue] of string =
+     ('', 'totalSize', '', 'status', 'peersSendingToUs,seeders',
+      'peersGettingFromUs,leechers', 'rateDownload', 'rateUpload', 'eta', 'uploadRatio',
+      'downloadedEver', 'uploadedEver', '', '', 'addedDate', 'doneDate', 'activityDate', '', 'bandwidthPriority',
+-     '', '');
++     '', '','queuePosition');
+ 
+ implementation
+ 
+ uses
+   AddTorrent, synacode, ConnOptions, clipbrd, DateUtils, utils, TorrProps, DaemonOptions, About,
+   ToolWin, download, ColSetup, types, AddLink, MoveTorrent, ssl_openssl_lib, AddTracker, lcltype,
+-  Options, ButtonPanel;
++  Options, ButtonPanel, math;
+ 
+ const
+-  TR_STATUS_CHECK_WAIT   = ( 1 shl 0 ); // Waiting in queue to check files
+-  TR_STATUS_CHECK        = ( 1 shl 1 ); // Checking files
+-  TR_STATUS_DOWNLOAD     = ( 1 shl 2 ); // Downloading
+-  TR_STATUS_SEED         = ( 1 shl 3 ); // Seeding
+-  TR_STATUS_STOPPED      = ( 1 shl 4 ); // Torrent is stopped
+-  TR_STATUS_FINISHED     = ( 1 shl 8 ); // Torrent is finished (pseudo status)
++  TR_STATUS_23_CHECK_WAIT   = ( 1 shl 0 ); // Waiting in queue to check files
++  TR_STATUS_23_CHECK        = ( 1 shl 1 ); // Checking files
++  TR_STATUS_23_DOWNLOAD     = ( 1 shl 2 ); // Downloading
++  TR_STATUS_23_SEED         = ( 1 shl 3 ); // Seeding
++  TR_STATUS_23_STOPPED      = ( 1 shl 4 ); // Torrent is stopped
+ 
++   //2.4b change (incompatible with 2.3*...
++  TR_STATUS_STOPPED        = 0; //* Torrent is stopped */
++  TR_STATUS_CHECK_WAIT     = 1; //* Queued to check files */
++  TR_STATUS_CHECK          = 2; //* Checking files */
++  TR_STATUS_DOWNLOAD_WAIT  = 3; //* Queued to download */
++  TR_STATUS_DOWNLOAD       = 4; //* Downloading */
++  TR_STATUS_SEED_WAIT      = 5; //* Queued to seed */
++  TR_STATUS_SEED           = 6;  //* Seeding */
++
++  TR_STATUS_FINISHED     = ( 1 shl 6 ); // Torrent is finished (pseudo status)
++  TR_STATUS_STALLED      = ( 1 shl 7 ); // Torrent is stalled (psevdo status)
++
+   TR_SPEEDLIMIT_GLOBAL    = 0;    // only follow the overall speed limit
+   TR_SPEEDLIMIT_SINGLE    = 1;    // only follow the per-torrent limit
+   TR_SPEEDLIMIT_UNLIMITED = 2;    // no limits at all
+@@ -651,9 +721,14 @@
+   TR_PRI_NORMAL =  0;
+   TR_PRI_HIGH   =  1;
+ 
++  Var MultiTorrentsSkipParams:boolean = False;
++    MultiTorrentsCount:Integer = 1;
++
+ const
+   SizeNames: array[1..5] of string = (sByte, sKByte, sMByte, sGByte, sTByte);
+ 
++
++
+ function GetHumanSize(sz: double; RoundTo: integer = 0): string;
+ var
+   i: integer;
+@@ -969,7 +1044,9 @@
+   lvPeers.AlternateColor:=FAlterColor;
+   lvTrackers.AlternateColor:=FAlterColor;
+   FStatusImgIndex:=30;
+-
++  gTorrents.DoubleBuffered:=True;
++  lvPeers.DoubleBuffered:=True;
++  lvFiles.DoubleBuffered:=True;
+   DoDisconnect;
+   PageInfo.ActivePageIndex:=0;
+   PageInfoChange(nil);
+@@ -1037,6 +1114,7 @@
+   FUnZip.Free;
+   RpcObj.Free;
+   FTorrentProgress.Free;
++  FSpeedBitmap.Free;
+   FStatusBmp.Free;
+   FPathMap.Free;
+   FTorrents.Free;
+@@ -1139,6 +1217,12 @@
+   AddTracker(True);
+ end;
+ 
++procedure TMainForm.acForceStartTorrentExecute(Sender: TObject);
++begin
++   if gTorrents.Items.Count = 0 then exit;
++  TorrentAction(GetSelectedTorrents, 'start-now');
++end;
++
+ procedure TMainForm.acHideAppExecute(Sender: TObject);
+ begin
+   HideApp;
+@@ -1324,9 +1408,17 @@
+ end;
+ 
+ procedure TMainForm.acAddTorrentExecute(Sender: TObject);
++var i:integer;
+ begin
+   if not OpenTorrentDlg.Execute then exit;
+-  DoAddTorrent(OpenTorrentDlg.FileName);
++  MultiTorrentsSkipParams:=False;
++  MultiTorrentsCount:=OpenTorrentDlg.Files.Count;
++  for i := 0  to OpenTorrentDlg.Files.Count-1 do
++    Begin
++      DoAddTorrent(OpenTorrentDlg.Files[i]);
++
++    end;
++
+ end;
+ 
+ procedure TMainForm.acAddTrackerExecute(Sender: TObject);
+@@ -1486,6 +1578,9 @@
+       Width:=Ini.ReadInteger('AddTorrent', 'Width', Width);
+       Height:=Ini.ReadInteger('AddTorrent', 'Height', Height);
+ 
++      cbSkipMultiTorrents.Visible:=MultiTorrentsCount>1;
++      cbSkipMultiTorrents.Checked:=MultiTorrentsSkipParams;
++
+       IniSec:='AddTorrent.' + FCurConn;
+       FillDownloadDirs(cbDestFolder);
+ 
+@@ -1569,9 +1664,11 @@
+       OldDownloadDir:=cbDestFolder.Text;
+       AppNormal;
+ 
+-      ok:=not FIni.ReadBool('Interface', 'ShowAddTorrentWindow', True);
++      ok:=(not FIni.ReadBool('Interface', 'ShowAddTorrentWindow', True)) or MultiTorrentsSkipParams;
+       if ok then
++      begin
+         btSelectAllClick(nil)
++      end
+       else begin
+         ok:=ShowModal = mrOk;
+         Ini.WriteInteger('AddTorrent', 'Width', Width);
+@@ -1582,6 +1679,8 @@
+         AppBusy;
+         Self.Update;
+ 
++        MultiTorrentsSkipParams:=cbSkipMultiTorrents.Checked;
++
+         if OldDownloadDir <> cbDestFolder.Text then begin
+           TorrentAction(VarArrayOf([id]), 'remove');
+           id:=0;
+@@ -1887,24 +1986,51 @@
+     Result:=SecondsToString(ETA);
+ end;
+ 
++{getTorrentStatus - get string for tor status}
+ function TMainForm.GetTorrentStatus(TorrentIdx: integer): string;
+ begin
+-  case integer(gTorrents.Items[idxStatus, TorrentIdx]) of
+-    TR_STATUS_CHECK_WAIT:
+-      Result:=sWaiting;
+-    TR_STATUS_CHECK:
+-      Result:=sVerifying;
+-    TR_STATUS_DOWNLOAD:
+-      Result:=sDownloading;
+-    TR_STATUS_SEED:
+-      Result:=sSeeding;
+-    TR_STATUS_STOPPED:
+-      Result:=sStopped;
+-    TR_STATUS_FINISHED:
+-      Result:=sFinished;
+-    else
+-      Result:=sUnknown;
+-  end;
++  //DONE:2.4+
++  if RpcObj.RPCVersion>= 14 then
++    case integer(gTorrents.Items[idxStatus, TorrentIdx]) of
++     TR_STATUS_CHECK_WAIT:
++       Result:=sWaiting;
++     TR_STATUS_CHECK:
++       Result:=sVerifying;
++     TR_STATUS_DOWNLOAD:
++       Result:=sDownloading;
++     TR_STATUS_SEED:
++       Result:=sSeeding;
++     TR_STATUS_STOPPED:
++       Result:=sStopped;
++     TR_STATUS_FINISHED:
++       Result:=sFinished;
++     TR_STATUS_DOWNLOAD_WAIT:
++       Result:=sQueuedDown;
++     TR_STATUS_SEED_WAIT:
++       Result:=sQueuedUp;
++     TR_STATUS_STALLED:
++       Result:=sStalled;
++     else
++       Result:=sUnknown;
++    end
++  else
++    case integer(gTorrents.Items[idxStatus, TorrentIdx]) of
++     TR_STATUS_23_CHECK_WAIT:
++       Result:=sWaiting;
++     TR_STATUS_23_CHECK:
++       Result:=sVerifying;
++     TR_STATUS_23_DOWNLOAD:
++       Result:=sDownloading;
++     TR_STATUS_23_SEED:
++       Result:=sSeeding;
++     TR_STATUS_23_STOPPED:
++       Result:=sStopped;
++     TR_STATUS_FINISHED:
++       Result:=sFinished;
++     else
++       Result:=sUnknown;
++    end;
++
+ end;
+ 
+ function TMainForm.GetSeedsText(Seeds, SeedsTotal: integer): string;
+@@ -2067,6 +2193,21 @@
+           else
+             cbUTP.Visible:=False;
+ 
++          //DONE: 2.4+
++          //Queue's
++          if RpcObj.RPCVersion >= 14 then
++           Begin
++            TabQueue.TabVisible:=true;
++            cbQueueDownEnabled.Checked:=args.Integers['download-queue-enabled']<>0;
++            cbQueueUpEnabled.Checked:=args.Integers['seed-queue-enabled']<>0;
++            cbQueueStalledEnabled.Checked:=args.Integers['queue-stalled-enabled']<>0;
++            edQueueDown.Value:=args.Integers['download-queue-size'];
++            edQueueUp.Value:=args.Integers['seed-queue-size'];
++            edIdleStalled.Value:=args.Integers['queue-stalled-minutes'];
++           end
++          else
++            TabQueue.TabVisible:=False;
++
+           cbPortForwarding.Checked:=args.Integers['port-forwarding-enabled'] <> 0;
+           s:=args.Strings['encryption'];
+           if s = 'preferred' then
+@@ -2168,6 +2309,18 @@
+         if RpcObj.RPCVersion >= 13 then
+           args.Add('utp-enabled', integer(cbUTP.Checked) and 1);
+ 
++        //DONE: 2.4+
++        //queue's
++        if RpcObj.RPCVersion >= 14 then
++          begin
++            args.Add('download-queue-enabled',Integer(cbQueueDownEnabled.Checked) and 1);
++            args.Add('seed-queue-enabled',Integer(cbQueueUpEnabled.Checked) and 1);
++            args.Add('queue-stalled-enabled',Integer(cbQueueStalledEnabled.Checked) and 1);
++            args.Add('download-queue-size',edQueueDown.Value);
++            args.Add('seed-queue-size',edQueueUp.Value);
++            args.Add('queue-stalled-minutes',edIdleStalled.Value);
++          end;
++
+         req.Add('arguments', args);
+         args:=RpcObj.SendRequest(req, False);
+         if args = nil then begin
+@@ -2186,6 +2339,9 @@
+   end;
+ end;
+ 
++
++
++
+ procedure TMainForm.acReannounceTorrentExecute(Sender: TObject);
+ begin
+   TorrentAction(GetSelectedTorrents, 'reannounce');
+@@ -2774,14 +2930,15 @@
+       1: ImageIndex:=imgDown;
+       2: ImageIndex:=imgSeed;
+       3: ImageIndex:=imgActive;
+-      4: ImageIndex:=15;
++      4: ImageIndex:=imgInactive;
+       5: ImageIndex:=imgStopped;
++      6: ImageIndex:=imgError;
+       else
+         if Text <> '' then
+           if ARow >= Sender.Items.Count - FTrackers.Count then
+-            ImageIndex:=5
++            ImageIndex:=imgTrackers
+           else
+-            ImageIndex:=22;
++            ImageIndex:=imgOpen;
+     end;
+   end;
+ end;
+@@ -2886,6 +3043,56 @@
+   end;
+ end;
+ 
++
++
++procedure TMainForm.QueueMove(act:string);
++var
++ args: TJSONObject;
++ req : TJSONObject;
++ TorrentIds:Variant;
++ ids:TJSONArray;
++ i:Integer;
++begin
++ if gTorrents.Items.Count = 0 then exit;
++ if act=''  then exit;
++ if not ((act = 'top') or (act = 'up') or (act = 'down') or (act = 'bottom')) then exit;
++  req:=TJSONObject.Create;
++  req.Add('method', 'queue-move-'+act);
++
++  args:=TJSONObject.Create;
++  TorrentIds:=GetSelectedTorrents;
++  if not VarIsNull(TorrentIds) then begin
++      ids:=TJSONArray.Create;
++      for i:=VarArrayLowBound(TorrentIds, 1) to VarArrayHighBound(TorrentIds, 1) do
++        ids.Add(integer(TorrentIds[i]));
++      args.Add('ids', ids);
++    end;
++    req.Add('arguments', args);
++    args:=RpcObj.SendRequest(req, False, 30000);
++end;
++
++procedure TMainForm.acQueueUpExecute(Sender: TObject);
++begin
++ QueueMove('up');
++end;
++
++procedure TMainForm.acQueueDownExecute(Sender: TObject);
++begin
++ QueueMove('down');
++end;
++
++procedure TMainForm.acQueueTOPExecute(Sender: TObject);
++begin
++ QueueMove('top');
++end;
++
++procedure TMainForm.acQueueBottomExecute(Sender: TObject);
++begin
++ QueueMove('bottom');
++end;
++
++
++
+ procedure TMainForm.pbStatusPaint(Sender: TObject);
+ begin
+   if FStatusBmp = nil then begin
+@@ -3213,6 +3420,7 @@
+     Items[0, 3]:=UTF8Decode(SActive);
+     Items[0, 4]:=UTF8Decode(SInactive);
+     Items[0, 5]:=UTF8Decode(sStopped);
++    Items[0, 6]:=UTF8Decode(sError);
+   end;
+   edSearch.Enabled:=False;
+   edSearch.Color:=gTorrents.Color;
+@@ -3557,7 +3765,7 @@
+   FilterIdx, OldId: integer;
+   TrackerFilter, PathFilter: string;
+   UpSpeed, DownSpeed: double;
+-  DownCnt, SeedCnt, CompletedCnt, ActiveCnt, StoppedCnt: integer;
++  DownCnt, SeedCnt, CompletedCnt, ActiveCnt, StoppedCnt, ErrCnt: integer;
+   IsActive: boolean;
+   Paths: TStringList;
+   v: variant;
+@@ -3605,6 +3813,7 @@
+   CompletedCnt:=0;
+   ActiveCnt:=0;
+   StoppedCnt:=0;
++  ErrCnt:=0;
+ 
+   FilterIdx:=lvFilter.Row;
+   if VarIsNull(lvFilter.Items[0, FilterIdx]) then
+@@ -3638,19 +3847,39 @@
+ 
+     if t.IndexOfName('name') >= 0 then
+       FTorrents[idxName, row]:=t.Strings['name'];
+-
+-    j:=t.Integers['status'];
+-    if ExistingRow and (j = TR_STATUS_SEED) and (FTorrents[idxStatus, row] = TR_STATUS_DOWNLOAD) then
+-      DownloadFinished(UTF8Encode(widestring(FTorrents[idxName, row])));
+-    FTorrents[idxStatus, row]:=j;
+-    case j of
+-      TR_STATUS_CHECK_WAIT: StateImg:=imgDownQueue;
+-      TR_STATUS_CHECK:      StateImg:=imgDownQueue;
+-      TR_STATUS_DOWNLOAD:   StateImg:=imgDown;
+-      TR_STATUS_SEED:       StateImg:=imgSeed;
+-      TR_STATUS_STOPPED:    StateImg:=imgDone;
++    //DONE:2.4+
++    if RpcObj.RPCVersion>=14 then
++    Begin
++     j:=t.Integers['status'];
++     if ExistingRow and (j = TR_STATUS_SEED) and (FTorrents[idxStatus, row] = TR_STATUS_DOWNLOAD) then
++       DownloadFinished(UTF8Encode(widestring(FTorrents[idxName, row])));
++     if (t.Integers['isStalled']<>0) and (GetTorrentError(t)='') and (t.Strings['errorString'] = '') then j:=TR_STATUS_STALLED;
++     FTorrents[idxStatus, row]:=j;
++     case j of
++       TR_STATUS_CHECK_WAIT:   StateImg:=imgDownQueue;
++       TR_STATUS_CHECK:        StateImg:=imgDownQueue;
++       TR_STATUS_DOWNLOAD:     StateImg:=imgDown;
++       TR_STATUS_SEED:         StateImg:=imgSeed;
++       TR_STATUS_STOPPED:      StateImg:=imgDone;
++       TR_STATUS_DOWNLOAD_WAIT:StateImg:=imgDownQueue;
++       TR_STATUS_SEED_WAIT :   StateImg:=imgSeedQueue;
++       TR_STATUS_STALLED:      StateImg:=imgSeedStalled;
++     end;
++    end
++    else
++    begin
++      j:=t.Integers['status'];
++      if ExistingRow and (j = TR_STATUS_23_SEED) and (FTorrents[idxStatus, row] = TR_STATUS_23_DOWNLOAD) then
++        DownloadFinished(UTF8Encode(widestring(FTorrents[idxName, row])));
++      FTorrents[idxStatus, row]:=j;
++      case j of
++        TR_STATUS_23_CHECK_WAIT: StateImg:=imgDownQueue;
++        TR_STATUS_23_CHECK:      StateImg:=imgDownQueue;
++        TR_STATUS_23_DOWNLOAD:   StateImg:=imgDown;
++        TR_STATUS_23_SEED:       StateImg:=imgSeed;
++        TR_STATUS_23_STOPPED:    StateImg:=imgDone;
++      end;
+     end;
+-
+     if RpcObj.RPCVersion >= 7 then begin
+       if t.Arrays['trackerStats'].Count > 0 then
+         with t.Arrays['trackerStats'].Objects[0] do begin
+@@ -3673,25 +3902,60 @@
+     end
+     else
+       FTorrents[idxTrackerStatus, row]:=t.Strings['announceResponse'];
+-    if (FTorrents[idxStatus, row] <> TR_STATUS_STOPPED) and (GetTorrentError(t) <> '') then
+-      if t.Strings['errorString'] <> '' then
+-        StateImg:=imgError
+-      else
+-        if StateImg in [imgDown,imgSeed] then
+-          Inc(StateImg, 2);
+ 
+-    if FTorrents[idxStatus, row] = TR_STATUS_CHECK then
+-      f:=t.Floats['recheckProgress']*100.0
+-    else begin
+-      f:=t.Floats['sizeWhenDone'];
+-      if f <> 0 then
+-        f:=(f - t.Floats['leftUntilDone'])*100.0/f;
+-      if StateImg = imgDone then
+-        if (t.Floats['leftUntilDone'] <> 0) or (t.Floats['sizeWhenDone'] = 0) then
+-          StateImg:=imgStopped
++    //DONE:2.4+
++    if RpcObj.RPCVersion >=14 then
++     begin
++      if (FTorrents[idxStatus, row] <> TR_STATUS_STOPPED) and (GetTorrentError(t) <> '') then
++        if t.Strings['errorString'] <> '' then
++          StateImg:=imgError
+         else
+-          FTorrents[idxStatus, row]:=TR_STATUS_FINISHED;
+-    end;
++          if StateImg in [imgDown,imgSeed] then
++            Inc(StateImg, 2);
++     end
++    else
++    begin
++      if (FTorrents[idxStatus, row] <> TR_STATUS_23_STOPPED) and (GetTorrentError(t) <> '') then
++        if t.Strings['errorString'] <> '' then
++          StateImg:=imgError
++        else
++          if StateImg in [imgDown,imgSeed] then
++            Inc(StateImg, 2);
++
++     end;
++
++    //DONE:2.4+
++    if RpcObj.RPCVersion >= 14 then
++     begin
++      if FTorrents[idxStatus, row] = TR_STATUS_CHECK then
++        f:=t.Floats['recheckProgress']*100.0
++      else begin
++        f:=t.Floats['sizeWhenDone'];
++        if f <> 0 then
++          f:=(f - t.Floats['leftUntilDone'])*100.0/f;
++        if StateImg = imgDone then
++          if (t.Floats['leftUntilDone'] <> 0) or (t.Floats['sizeWhenDone'] = 0) then
++            StateImg:=imgStopped
++          else
++            FTorrents[idxStatus, row]:=TR_STATUS_FINISHED;
++      end;
++     end
++    else
++     begin
++      if FTorrents[idxStatus, row] = TR_STATUS_23_CHECK then
++        f:=t.Floats['recheckProgress']*100.0
++      else begin
++        f:=t.Floats['sizeWhenDone'];
++        if f <> 0 then
++          f:=(f - t.Floats['leftUntilDone'])*100.0/f;
++        if StateImg = imgDone then
++          if (t.Floats['leftUntilDone'] <> 0) or (t.Floats['sizeWhenDone'] = 0) then
++            StateImg:=imgStopped
++          else
++            FTorrents[idxStatus, row]:=TR_STATUS_FINISHED;
++      end;
++     end;
++
+     if f < 0 then
+       f:=0;
+     FTorrents[idxDone, row]:=Int(f*10.0)/10.0;
+@@ -3792,6 +4056,10 @@
+     if t.IndexOfName('bandwidthPriority') >= 0 then
+       FTorrents[idxPriority, row]:=t.Integers['bandwidthPriority'];
+ 
++    if RpcObj.RPCVersion>=14 then
++    begin
++      GetTorrentValue(idxQueue, 'queuePosition', vtInteger);
++    End;
+     DownSpeed:=DownSpeed + FTorrents[idxDownSpeed, row];
+     UpSpeed:=UpSpeed + FTorrents[idxUpSpeed, row];
+ 
+@@ -3816,7 +4084,8 @@
+       IsActive:=(FTorrents[idxDownSpeed, i] <> 0) or (FTorrents[idxUpSpeed, i] <> 0);
+       if IsActive then
+         Inc(ActiveCnt);
+-
++      //DONE:2.4+
++      if RpcObj.RPCVersion >= 14 then
+       case integer(FTorrents[idxStatus, i]) of
+         TR_STATUS_DOWNLOAD:
+           Inc(DownCnt);
+@@ -3825,6 +4094,18 @@
+             Inc(SeedCnt);
+             Inc(CompletedCnt);
+           end;
++        TR_STATUS_FINISHED,TR_STATUS_STALLED:
++          Inc(CompletedCnt);
++      end
++      else
++      case integer(FTorrents[idxStatus, i]) of
++        TR_STATUS_23_DOWNLOAD:
++          Inc(DownCnt);
++        TR_STATUS_23_SEED:
++          begin
++            Inc(SeedCnt);
++            Inc(CompletedCnt);
++          end;
+         TR_STATUS_FINISHED:
+           Inc(CompletedCnt);
+       end;
+@@ -3832,6 +4113,9 @@
+       if integer(FTorrents[idxStateImg, i]) in [imgStopped, imgDone] then
+         Inc(StoppedCnt);
+ 
++      if integer(FTorrents[idxStateImg, i]) in [imgError, imgDownError, imgSeedError] then
++        Inc(ErrCnt);
++
+       if not VarIsEmpty(FTorrents[idxTracker, i]) then begin
+         s:=UTF8Encode(widestring(FTorrents[idxTracker, i]));
+         j:=FTrackers.IndexOf(s);
+@@ -3856,11 +4140,14 @@
+           if FTorrents[idxStatus, i] <> TR_STATUS_DOWNLOAD then
+             continue;
+         fltDone:
+-          if (FTorrents[idxStateImg, i] <> imgDone) and (FTorrents[idxStatus, i] <> TR_STATUS_SEED) then
++          if (FTorrents[idxStateImg, i] <> imgDone) and (not (Integer(FTorrents[idxStatus, i]) in [TR_STATUS_STALLED,TR_STATUS_SEED])) then
+             continue;
+         fltStopped:
+           if not (integer(FTorrents[idxStateImg, i]) in [imgStopped, imgDone]) then
+             continue;
++        fltError:
++          if not (integer(FTorrents[idxStateImg, i]) in [imgError, imgDownError, imgSeedError]) then
++                  continue;
+       end;
+ 
+       if edSearch.Text <> '' then
+@@ -3909,6 +4196,7 @@
+     lvFilter.Items[0, 3]:=UTF8Decode(Format('%s (%d)', [SActive, ActiveCnt]));
+     lvFilter.Items[0, 4]:=UTF8Decode(Format('%s (%d)', [SInactive, FTorrents.Count - ActiveCnt]));
+     lvFilter.Items[0, 5]:=UTF8Decode(Format('%s (%d)', [sStopped, StoppedCnt]));
++    lvFilter.Items[0, 6]:=UTF8Decode(Format('%s (%d)', [sError, ErrCnt]));
+ 
+     j:=StatusFiltersCount;
+     lvFilter.Items[0, j]:=NULL;
+@@ -3957,7 +4245,8 @@
+ 
+   StatusBar.Panels[1].Text:=Format(sDownSpeed, [GetHumanSize(DownSpeed, 1)]);
+   StatusBar.Panels[2].Text:=Format(sUpSpeed, [GetHumanSize(UpSpeed, 1)]);
+-
++  { TODO : Graph data update }
++  ProcessGraph(DownSpeed,UpSpeed);
+ {$ifndef LCLcarbon}
+   // There is memory leak in TTrayIcon implementation for Mac.
+   // Disable tray icon update for Mac.
+@@ -4387,6 +4676,7 @@
+   end;
+   txAddedOn.Caption:=TorrentDateTimeToString(Trunc(t.Floats['addedDate']));
+   txCompletedOn.Caption:=TorrentDateTimeToString(Trunc(t.Floats['doneDate']));
++  if RpcObj.RPCVersion >= 14 then  txQueue.Caption:=IntToStr(t.Integers['queuePosition']);
+   panGeneralInfo.ChildSizing.Layout:=cclLeftToRightThenTopToBottom;
+ end;
+ 
+@@ -4496,9 +4786,15 @@
+   end;
+ end;
+ 
++
++
+ procedure TMainForm.FillSessionInfo(s: TJSONObject);
+ var
+   d, u: integer;
++
++  req, args, stat, stattot: TJSONObject;
++
++
+ begin
+   acRemoveTorrentAndData.Visible:=RpcObj.RPCVersion >= 4;
+   acReannounceTorrent.Visible:=RpcObj.RPCVersion >= 5;
+@@ -4517,6 +4813,14 @@
+   acDelTracker.Visible:=acAddTracker.Visible;
+   sepTrackers.Visible:=acAddTracker.Visible;
+ 
++  miQueue.Visible:=RpcObj.RPCVersion >= 14;
++  tbSep1.Visible:=RpcObj.RPCVersion >= 14;
++  acQueueBottom.Visible:=RpcObj.RPCVersion >= 14;
++  acQueueTOP.Visible:=RpcObj.RPCVersion >= 14;
++  acQueueUp.Visible:=RpcObj.RPCVersion >= 14;
++  acQueueDown.Visible:=RpcObj.RPCVersion >= 14;
++
++
+   if RpcObj.RPCVersion >= 5 then begin
+     acAltSpeed.Checked:=s.Integers['alt-speed-enabled'] <> 0;
+     acUpdateBlocklist.Tag:=s.Integers['blocklist-enabled'];
+@@ -4524,7 +4828,27 @@
+   end;
+   if s.IndexOfName('download-dir-free-space') >= 0 then
+     StatusBar.Panels[3].Text:=Format(SFreeSpace, [GetHumanSize(s.Floats['download-dir-free-space'])]);
++  if (RpcObj.RPCVersion >= 4)  then
++   begin
++    req:=TJSONObject.Create;
++    try
++      req.Add('method', 'session-stats');
++      args:=RpcObj.SendRequest(req);
++      if args <> nil then
++      try
++          stat:=args.Objects['current-stats'];
++          stattot:=args.Objects['cumulative-stats'];
++          StatusBar.Panels[5].Text := Format(STotal, [GetHumanSize(stat.Floats['downloadedBytes']),GetHumanSize(stat.Floats['uploadedBytes']),RatioToString(stat.Floats['uploadedBytes']/(stat.Floats['downloadedBytes']+1E-99)),
++                                                      GetHumanSize(stattot.Floats['downloadedBytes']),GetHumanSize(stattot.Floats['uploadedBytes']),RatioToString(stattot.Floats['uploadedBytes']/(stattot.Floats['downloadedBytes']+1E-99))]);
++      finally
++        args.Free;
++      end;
++    finally
++      req.Free;
++    end;
+ 
++  end;
++
+   if (RpcObj.RPCVersion >= 5) and acAltSpeed.Checked then begin
+     d:=s.Integers['alt-speed-down'];
+     u:=s.Integers['alt-speed-up']
+@@ -4787,6 +5111,229 @@
+   end;
+ end;
+ 
++{=====================AVG Variables======================================}
++     const cn_maxAVG = 100;
++     const maxAVG:smallint = 3;
++
++
++var XAr:array[0..2,0..cn_maxAVG] of single ;
++
++procedure TMainForm.ProcessGraph(downSpeed,upSpeed:Double);
++const MaxDataCount=12*60*60; //12 hour with 1 sec interval
++  TimesArr:Array[0..4] of integer=
++    ( 60, //1 min
++    5*60, //5 min
++   30*60, //30 min
++ 2*60*60, //2 h
++12*60*60);//12 h
++  var i: Integer;
++    bmp: TBitmap;
++      R: TRect;
++  X1,X2: Integer;
++  tFull:Integer;
++
++
++
++
++      {======================Functions Start===================================}
++      procedure ClrAVG2(down,up:Double);
++        var i,j:smallint;
++      begin
++          for i:= 0 to maxAVG do
++          begin
++            XAr[0,i]:=up;
++            XAr[1,i]:=down;
++          end;
++      end;
++
++
++      function AVG2(n:byte;x:Single):Single;
++      var i:smallint;
++          tt:single;
++      begin
++
++        for i:= maxAVG downto 1 do
++        Begin
++         XAr[n,i]:=XAr[n,i-1];
++        End;
++
++        XAr[n,0]:=x;
++
++        tt:=0;
++        for i:=0 to maxAVG do tt:=tt+XAr[n,i];
++        tt := tt / (maxAVG+1);
++        AVG2:=tt;
++      end;
++
++Function ScaleGraphY(v:double):Integer;
++begin
++  result:=bmp.Height-round((v/FSpeedMax)*bmp.Height);
++end;
++
++Function ScaleGraphX(t:double):Integer; //t = time in seconds
++
++begin
++  result:=bmp.Width-round((t/(tFull))*bmp.Width);
++end;
++
++Function GetMaxSpeed(spd:Double):Double;
++  const SpeedAr:Array [0..8] of Single = (1,1.5,2.0,3.0,4.0,6.0,8.0,10.0,12.0);
++  var i,j,k:Integer;
++    Spr:Single;
++Begin
++ i:=0;
++ while i <= 6 do begin
++   if spd < 1024 then
++     break;
++   spd:=spd/1024;
++   Inc(i);
++ end;
++ k:=0;
++ while k <= 6 do begin
++   if spd < 10.24 then
++     break;
++   spd:=spd/10.24;
++   Inc(k);
++ end;
++ for j := High(SpeedAr) downto 0 do
++  begin
++    if spd<SpeedAr[j] then spr:=SpeedAr[j];
++  end;
++ result:=spr*power(1024,i)*power(10,k);
++end;
++
++
++
++
++begin
++ if Length(FSpeedData)=0 then ClrAVG2(downSpeed,UpSpeed);
++  if FSpeedBitmap = nil then
++      FSpeedBitmap:=TBitmap.Create;
++ tabGraph.DoubleBuffered:=True;
++ if Length(FSpeedData)<MaxDataCount then
++ begin
++   SetLength(FSpeedData,Length(FSpeedData)+1);
++ end
++ else
++ begin
++   //move....
++   for i:=1 to High(FSpeedData) do
++     FSpeedData[i-1]:=FSpeedData[i];
++ end;
++ FSpeedCount:=Length(FSpeedData)-1;
++ with FSpeedData[FSpeedCount] do
++   begin
++     id:=Length(FSpeedData);
++     Time:=Now();
++     UpSpd:=AVG2(0,upSpeed);
++     DownSpd:=AVG2(1,downSpeed);
++   end;
++ tFull:=TimesArr[cbInterval.ItemIndex];
++ FSpeedMax:=0;
++ i:=FSpeedCount;
++ While (SecondsBetween(FSpeedData[FSpeedCount].Time,FSpeedData[i].Time)<tFull) and (i>1) do
++   begin
++     with FSpeedData[i] do
++     begin
++      if UpSpd>FSpeedMax then FSpeedMax:=UpSpd;
++      if DownSpd>FSpeedMax then FSpeedMax:=DownSpd;
++     end;
++     dec(i);
++   end;
++ FSpeedMax:=GetMaxSpeed(FSpeedMax*1.05);
++ Try
++  bmp:=TBitmap.Create;
++  bmp.Width:=pbGraph.Width;
++  bmp.Height:=pbGraph.Height;
++  bmp.Canvas.Brush.Color:=clWindow;
++  bmp.Canvas.FillRect(0, 0, bmp.Width, bmp.Height);
++ { for i:= High(FSpeedData)-1  downto 0 do
++   begin
++     bmp.Canvas.Pen.Color:=clGreen;
++     bmp.Canvas.Line(ScaleGraphX(i),ScaleGraphY(FSpeedData[i].UpSpd),ScaleGraphX(i+1),ScaleGraphY(FSpeedData[i+1].UpSpd));
++
++     bmp.Canvas.Pen.Color:=clRed;
++     bmp.Canvas.Line(ScaleGraphX(i),ScaleGraphY(FSpeedData[i].DownSpd),ScaleGraphX(i+1),ScaleGraphY(FSpeedData[i+1].DownSpd));
++
++   end;}
++
++  With bmp.Canvas do
++  begin
++    Pen.Color:=clGray;
++    Pen.Style:=psSolid;
++    TextOut(bmp.Width-60,2,GetHumanSize(FSpeedMax,1)+'/s');
++    Line(0,ScaleGraphY(FSpeedMax),bmp.Canvas.Width,ScaleGraphY(FSpeedMax));
++
++    TextOut(bmp.Width-60,ScaleGraphY(FSpeedMax/2),GetHumanSize(FSpeedMax/2,1)+'/s');
++    Line(0,ScaleGraphY(FSpeedMax/2),bmp.Canvas.Width,ScaleGraphY(FSpeedMax/2));
++
++
++    Line(0,ScaleGraphY(0),bmp.Canvas.Width,ScaleGraphY(0));
++    Pen.Style:=psDash;
++    TextOut(bmp.Width-60,ScaleGraphY(FSpeedMax*0.25),GetHumanSize(FSpeedMax*0.25,1)+'/s');
++    Line(0,ScaleGraphY(FSpeedMax*0.25),bmp.Canvas.Width,ScaleGraphY(FSpeedMax*0.25));
++
++    TextOut(bmp.Width-60,ScaleGraphY(FSpeedMax*0.75),GetHumanSize(FSpeedMax*0.75,1)+'/s');
++    Line(0,ScaleGraphY(FSpeedMax*0.75),bmp.Canvas.Width,ScaleGraphY(FSpeedMax*0.75));
++
++    Pen.Style:=psDot;
++    for i:=0 to 10 do
++      Line(ScaleGraphX(i*(tFull/10)),0,ScaleGraphX(i*(tFull/10)),height);
++    Pen.Style:=psSolid;
++    Pen.Color:=clBlack;
++
++
++  end;
++
++
++  i:=FSpeedCount;
++  While (SecondsBetween(FSpeedData[FSpeedCount].Time,FSpeedData[i].Time)<tFull) and (i>1) do
++    begin
++     X1:=ScaleGraphX(SecondsBetween(FSpeedData[FSpeedCount].Time,FSpeedData[i-1].Time));
++     X2:=ScaleGraphX(SecondsBetween(FSpeedData[FSpeedCount].Time,FSpeedData[i].Time));
++
++     bmp.Canvas.Pen.Color:=clGreen;
++     bmp.Canvas.Line(X1,ScaleGraphY(FSpeedData[i-1].UpSpd),X2,ScaleGraphY(FSpeedData[i].UpSpd));
++     //bmp.Canvas.TextOut(X2,ScaleGraphY(FSpeedData[i].UpSpd),Format('Up: %s=%s/s',[DateTimeToStr(FSpeedData[i].Time),GetHumanSize(FSpeedData[i].UpSpd,3)]));
++
++     bmp.Canvas.Pen.Color:=clRed;
++     bmp.Canvas.Line(X1,ScaleGraphY(FSpeedData[i-1].DownSpd),X2,ScaleGraphY(FSpeedData[i].DownSpd));
++     dec(i);
++    end;
++
++  with FSpeedBitmap.Canvas do
++  begin
++      FSpeedBitmap.Width:=pbGraph.ClientWidth;
++      if bmp <> nil then begin
++        FSpeedBitmap.Height:=bmp.Height;
++        R:=Rect(0, 0, FSpeedBitmap.Width, FSpeedBitmap.Height);
++        if bmp.Width > 0 then
++          StretchDraw(R, bmp)
++        else begin
++          Brush.Color:=clWindow;
++          FillRect(R);
++        end;
++      end
++      else begin
++        FSpeedBitmap.Height:=pbGraph.ClientHeight;
++        R:=Rect(0, 0, FSpeedBitmap.Width, FSpeedBitmap.Height);
++        FillRect(R);
++      end;
++  end;
++  pbGraph.Invalidate;
++
++ finally
++   bmp.Free;
++ end;
++
++end;
++
++procedure TMainForm.pbGraphPaint(Sender: TObject);
++begin
++  if FSpeedBitmap <> nil then
++    pbGraph.Canvas.StretchDraw(pbGraph.ClientRect, FSpeedBitmap);
++end;
++
+ function TMainForm.ExecRemoteFile(const FileName: string; SelectFile: boolean): boolean;
+ 
+   procedure _Exec(s: string);
+@@ -4871,11 +5418,12 @@
+ 
+ function TMainForm.PriorityToStr(p: integer; var ImageIndex: integer): string;
+ begin
++  //DONE:ImageIndex..
+   case p of
+-    TR_PRI_SKIP:   begin Result:=sSkip; ImageIndex:=23; end;
+-    TR_PRI_LOW:    begin Result:=sLow; ImageIndex:=24; end;
+-    TR_PRI_NORMAL: begin Result:=sNormal; ImageIndex:=25; end;
+-    TR_PRI_HIGH:   begin Result:=sHigh; ImageIndex:=26; end;
++    TR_PRI_SKIP:   begin Result:=sSkip; ImageIndex:=imgSkip; end;
++    TR_PRI_LOW:    begin Result:=sLow; ImageIndex:=imgLow; end;
++    TR_PRI_NORMAL: begin Result:=sNormal; ImageIndex:=imgNormal; end;
++    TR_PRI_HIGH:   begin Result:=sHigh; ImageIndex:=imgHigh; end;
+     else           Result:='???';
+   end;
+ end;
