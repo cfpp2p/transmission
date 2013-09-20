@@ -687,6 +687,10 @@ Transmission.prototype =
 				window.open('./shift.html','_self');
 				break;
 
+			case 'shifttq':
+				window.open('./shifttq/index.html','_self');
+				break;
+
 			case 'unlimited_download_rate':
 				o = {};
 				o[RPC._DownSpeedLimited] = false;
