@@ -150,7 +150,11 @@ tr_magnetParse( const char * uri )
             }
 
             if( ( vallen > 0 ) && ( keylen==2 ) && !memcmp( key, "dn", 2 ) )
-                displayName = tr_http_unescape( val, vallen );
+//#ifdef WIN32
+                displayName = cleanFilename(tr_http_unescape (val, vallen));
+//#else
+//                displayName = tr_http_unescape( val, vallen );
+//#endif
 
             if( ( vallen > 0 ) && ( trCount < MAX_TRACKERS ) ) {
                 int i;

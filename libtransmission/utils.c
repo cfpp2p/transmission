@@ -1836,4 +1836,28 @@ tr_formatter_get_units( tr_benc * d )
     l = tr_bencDictAddList( d, "speed-units", 4 );
     for( i=0; i<4; i++ ) tr_bencListAddStr( l, speed_units.units[i].name );
 }
- 
+
+//#ifdef WIN32
+
+static const char invalid[]   = { '"', '*', ':', '<', '>', '?', '|', '\\' };
+static const int invalid_sz = sizeof(invalid) / sizeof(char);
+
+char *
+cleanFilename (char *name)      /* just name, no path */
+{
+    if (name == NULL)
+        return name;
+
+    char * p = name;
+
+    while (*p != '\0')
+    {   if (memchr(invalid, *p, invalid_sz) != NULL)    /* it's dirty */
+            *p = '_';  /* substitute */ 
+        p++;
+    }
+
+    return name;
+}
+//#endif
+
+

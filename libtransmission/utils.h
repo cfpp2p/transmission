@@ -555,6 +555,18 @@ char* tr_formatter_size_B( char * buf, int64_t bytes, size_t buflen );
 
 void tr_formatter_get_units( struct tr_benc * dict );
 
+//#ifdef WIN32
+
+/** @brief Cleans the name for invalid characters (FAT32 & NTFS file systems);
+ *  deletes the invalid characters.
+ *  Use case: magnets with "dn" that can't be used as file name (the parameter should be the
+ *  the (percent) un-escaped text, i.e. no conversion is done here).
+ *  @param path: file name
+ *  @return the possibly modified path.
+ */
+char * cleanFilename (char *name);
+//#endif
+
 /***
 ****
 ***/
