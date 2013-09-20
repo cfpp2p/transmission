@@ -486,29 +486,7 @@ tau_tracker_fail_all( struct tau_tracker  * tracker,
 
 }
 
-static void
-tau_tracker_on_dns( int errcode, struct evutil_addrinfo *addr, void * vtracker )
-{
-    struct tau_tracker * tracker = vtracker;
 
-    tracker->is_asking_dns = false;
-
-    if ( errcode )
-    {
-        char * errmsg = tr_strdup_printf( _( "DNS Lookup failed: %s" ),
-                                          evdns_err_to_string( errcode ) );
-        dbgmsg( tracker->key, "%s", errmsg );
-        tau_tracker_fail_all( tracker, false, false, errmsg );
-        tr_free( errmsg );
-    }
-    else
-    {
-        dbgmsg( tracker->key, "DNS lookup succeeded" );
-        tracker->addr = addr;
-        tracker->addr_expiration_time = tr_time() + (60*60); /* one hour */
-        tau_tracker_upkeep( tracker );
-    }
-}
 
 static void
 tau_tracker_send_request( struct tau_tracker  * tracker,
@@ -658,6 +636,7 @@ tau_tracker_upkeep( struct tau_tracker * tracker )
 {
     const time_t now = tr_time( );
 
+
     /* if the address info is too old, expire it */
     if( tracker->addr && ( tracker->addr_expiration_time <= now ) ) {
         dbgmsg( tracker->host, "Expiring old DNS result" );
@@ -674,15 +653,33 @@ tau_tracker_upkeep( struct tau_tracker * tracker )
     {
         struct evutil_addrinfo hints;
         memset( &hints, 0, sizeof( hints ) );
-        hints.ai_family = AF_UNSPEC;
-        hints.ai_flags = EVUTIL_AI_CANONNAME;
+        hints.ai_family = AF_INET;
+//        hints.ai_flags = EVUTIL_AI_CANONNAME;
         hints.ai_socktype = SOCK_DGRAM;
         hints.ai_protocol = IPPROTO_UDP;
+        /* Only return addresses we can use. */
+//        hints.ai_flags = EVUTIL_AI_ADDRCONFIG;
         tracker->is_asking_dns = true;
         dbgmsg( tracker->host, "Trying a new DNS lookup" );
-        evdns_getaddrinfo( tracker->session->evdns_base,
-                           tracker->host, NULL, &hints,
-                           tau_tracker_on_dns, tracker );
+        
+
+
+        if ( evutil_getaddrinfo( tracker->host, NULL, &hints, &tracker->addr ) == 0 )
+        {
+            tracker->is_asking_dns = false;
+            dbgmsg( tracker->key, "DNS lookup succeeded" );
+            tracker->addr_expiration_time = tr_time() + (60*60); /* one hour */
+            tau_tracker_upkeep( tracker );
+        }
+        else
+        {
+            tracker->is_asking_dns = false;
+            char * errmsg;
+            errmsg = tr_strdup( _( "DNS Lookup failed" ) );
+            dbgmsg( tracker->key, "%s", errmsg );
+            tau_tracker_fail_all( tracker, false, false, errmsg );
+            tr_free( errmsg );
+        }
         return;
     }
 
