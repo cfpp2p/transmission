@@ -780,7 +780,7 @@ loadFromFile( tr_torrent * tor, uint64_t fieldsToLoad )
     if( ( fieldsToLoad & TR_FR_RUN )
       && tr_bencDictFindBool( &top, KEY_PAUSED, &boolVal ) )
     {
-        tor->isRunning = !boolVal;
+        tor->isRunning = !boolVal && !tor->isQueued;
         fieldsLoaded |= TR_FR_RUN;
     }
 

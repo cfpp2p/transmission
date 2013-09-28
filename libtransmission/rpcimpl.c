@@ -61,6 +61,15 @@
 ****
 ***/
 
+static int
+compareTorrentByQueuePosition (const void * va, const void * vb)
+{
+  const tr_torrent * a = * (const tr_torrent **) va;
+  const tr_torrent * b = * (const tr_torrent **) vb;
+
+  return a->queuePosition - b->queuePosition;
+}
+
 static tr_rpc_callback_status
 notify( tr_session * session,
         int          type,
@@ -262,6 +271,7 @@ torrentStart( tr_session               * session,
 
     assert( idle_data == NULL );
 
+    qsort (torrents, torrentCount, sizeof (tr_torrent *), compareTorrentByQueuePosition);
     for( i = 0; i < torrentCount; ++i )
     {
         tr_torrent * tor = torrents[i];
