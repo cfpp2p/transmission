@@ -350,6 +350,7 @@ tr_sessionGetDefaultSettings( tr_benc * d )
     tr_bencDictAddStr ( d, TR_PREFS_KEY_RPC_URL,                         TR_DEFAULT_RPC_URL_STR );
     tr_bencDictAddBool( d, TR_PREFS_KEY_SCRAPE_PAUSED_TORRENTS,          true );
     tr_bencDictAddBool( d, TR_PREFS_KEY_PREFETCH_MAGNETS,                false );
+    tr_bencDictAddInt ( d, TR_PREFS_KEY_REVERIFY_TORRENTS,                0 );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_SCRIPT_TORRENT_DONE_FILENAME,    "" );
     tr_bencDictAddBool( d, TR_PREFS_KEY_SCRIPT_TORRENT_DONE_ENABLED,     false );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_SEED_QUEUE_SIZE,                 10 );
@@ -423,6 +424,7 @@ tr_sessionGetSettings( tr_session * s, struct tr_benc * d )
     tr_bencDictAddBool( d, TR_PREFS_KEY_RPC_WHITELIST_ENABLED,            tr_sessionGetRPCWhitelistEnabled( s ) );
     tr_bencDictAddBool( d, TR_PREFS_KEY_SCRAPE_PAUSED_TORRENTS,           s->scrapePausedTorrents );
     tr_bencDictAddBool( d, TR_PREFS_KEY_PREFETCH_MAGNETS,                 s->prefetchMagnets );
+    tr_bencDictAddInt ( d, TR_PREFS_KEY_REVERIFY_TORRENTS,                s->reverifyTorrents );
     tr_bencDictAddBool( d, TR_PREFS_KEY_SCRIPT_TORRENT_DONE_ENABLED,      tr_sessionIsTorrentDoneScriptEnabled( s ) );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_SCRIPT_TORRENT_DONE_FILENAME,     tr_sessionGetTorrentDoneScript( s ) );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_SEED_QUEUE_SIZE,                  tr_sessionGetQueueSize( s, TR_UP ) );
@@ -795,6 +797,8 @@ sessionSetImpl( void * vdata )
         tr_sessionSetPaused( session, !boolVal );
     if( tr_bencDictFindBool( settings, TR_PREFS_KEY_TRASH_ORIGINAL, &boolVal) )
         tr_sessionSetDeleteSource( session, boolVal );
+    if( tr_bencDictFindInt( settings, TR_PREFS_KEY_REVERIFY_TORRENTS, &i ) )
+        session->reverifyTorrents = ( i > 0 ) ? i : 0 ;
 
     /* torrent queues */
     if( tr_bencDictFindInt( settings, TR_PREFS_KEY_QUEUE_STALLED_MINUTES, &i ) )

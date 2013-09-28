@@ -263,6 +263,8 @@ struct tr_torrent
 
     int                        uniqueId;
 
+    int                        reverifyTorrent;
+
     struct tr_bandwidth        bandwidth;
 
     struct tr_torrent_peers  * torrentPeers;

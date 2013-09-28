@@ -206,6 +206,7 @@ const char* tr_getDefaultDownloadDir( void );
 #define TR_PREFS_KEY_RPC_WHITELIST_ENABLED              "rpc-whitelist-enabled"
 #define TR_PREFS_KEY_SCRAPE_PAUSED_TORRENTS             "scrape-paused-torrents-enabled"
 #define TR_PREFS_KEY_PREFETCH_MAGNETS                   "prefetch-magnets-enabled"
+#define TR_PREFS_KEY_REVERIFY_TORRENTS                  "reverify-torrents-tries"
 #define TR_PREFS_KEY_SCRIPT_TORRENT_DONE_FILENAME       "script-torrent-done-filename"
 #define TR_PREFS_KEY_SCRIPT_TORRENT_DONE_ENABLED        "script-torrent-done-enabled"
 #define TR_PREFS_KEY_SEED_QUEUE_SIZE                    "seed-queue-size"
