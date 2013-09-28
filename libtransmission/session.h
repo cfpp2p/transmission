@@ -119,6 +119,8 @@ struct tr_session
     bool                         scrapePausedTorrents;
     bool                         prefetchMagnets;
 
+    int                          reverifyTorrents;
+
     tr_benc                      removedTorrents;
 
     bool                         stalledEnabled;

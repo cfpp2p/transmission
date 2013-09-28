@@ -878,6 +878,7 @@ torrentInit( tr_torrent * tor, const tr_ctor * ctor )
     tor->uniqueId = nextUniqueId++;
     tor->magicNumber = TORRENT_MAGIC_NUMBER;
     tor->queuePosition = session->torrentCount;
+    tor->reverifyTorrent = tor->session->reverifyTorrents;
 
     tr_peerIdInit( tor->peer_id );
 
@@ -2300,6 +2301,17 @@ tr_torrentRecheckCompleteness( tr_torrent * tor )
 
             if( tor->currentDir == tor->incompleteDir )
                 tr_torrentSetLocation( tor, tor->downloadDir, true, NULL, NULL );
+				
+            if( tor->session->reverifyTorrents )
+            {
+                if( tor->reverifyTorrent-- )
+                    tr_torrentVerify( tor );
+                else
+                {
+                    tr_torrentSetLocalError( tor, "%s", _( "Reverify count exceeded - pausing torrent -- resetting retries" ) );
+                    tor->reverifyTorrent = tor->session->reverifyTorrents;  /* reset reverify tries */
+                }
+            }
 
             if( tr_sessionIsTorrentDoneScriptEnabled( tor->session ) )
                 torrentCallScript( tor, tr_sessionGetTorrentDoneScript( tor->session ) );
