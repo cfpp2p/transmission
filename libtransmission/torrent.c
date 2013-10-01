@@ -1952,7 +1952,6 @@ stopTorrent( void * vtor )
 
     tr_verifyRemove( tor );
     const bool wasQueued = tr_torrentIsQueued( tor );
-    torrentSetQueued( tor, false );
     tr_peerMgrStopTorrent( tor );
 
     if( !wasQueued )
@@ -1964,6 +1963,8 @@ stopTorrent( void * vtor )
 
     if( !tor->isDeleting )
         tr_torrentSave( tor );
+
+    torrentSetQueued( tor, false );
 
     tr_torrentUnlock( tor );
 }
@@ -3799,6 +3800,7 @@ torrentSetQueued( tr_torrent * tor, bool queued )
     {
         tor->isQueued = queued;
         tor->anyDate = tr_time( );
+        tr_torrentSetDirty( tor );
     }
 }
 
