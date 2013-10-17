@@ -1967,6 +1967,12 @@ stopTorrent( void * vtor )
     torrentSetQueued( tor, false );
 
     tr_torrentUnlock( tor );
+
+    if( tor->magnetVerify ) {
+        tor->magnetVerify = false;
+        tr_torinf( tor, "Magnet Verify" );
+        tr_torrentVerify( tor );
+    }
 }
 
 void
@@ -2043,6 +2049,7 @@ closeTorrent( void * vtor )
 
     tr_torinf( tor, "%s", _( "Removing torrent" ) );
 
+    tor->magnetVerify = false;
     stopTorrent( tor );
 
     if( tor->isDeleting )
