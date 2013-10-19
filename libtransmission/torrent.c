@@ -1971,6 +1971,7 @@ stopTorrent( void * vtor )
     if( tor->magnetVerify ) {
         tor->magnetVerify = false;
         tr_torinf( tor, "Magnet Verify" );
+        refreshCurrentDir( tor );
         tr_torrentVerify( tor );
     }
 }
