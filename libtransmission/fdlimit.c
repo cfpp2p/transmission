@@ -207,6 +207,9 @@ tr_fsync( int fd )
  #define HAVE_PWRITE
 #endif
 
+#undef HAVE_PREAD
+#undef HAVE_PWRITE
+
 ssize_t
 tr_pread( int fd, void *buf, size_t count, off_t offset )
 {
