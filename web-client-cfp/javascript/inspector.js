@@ -238,7 +238,7 @@ function Inspector(controller) {
         if (!t)
             return;
         for (i=0; row=data.file_rows[i]; ++i)
-            if (row.isEditable() && (t.getFile(i).wanted !== s))
+            if ((t.getFile(i).wanted !== s))
                 rows.push(row);
         if (rows.length > 0)
             changeFileCommand(rows, s?'files-wanted':'files-unwanted');
