@@ -55,7 +55,7 @@ function FileRow(torrent, i)
 		    c = [ e.classNameConst ];
 
 		if (!fields.isWanted) { c.push('skip'); }
-		if (isDone()) { c.push('complete'); }
+//		if (isDone()) { c.push('complete'); }
 		e.className = c.join(' ');
 	},
 	refreshPriorityHTML = function()
