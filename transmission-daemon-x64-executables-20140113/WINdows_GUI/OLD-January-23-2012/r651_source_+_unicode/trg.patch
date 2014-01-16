@@ -1,0 +1,4323 @@
+diff -rupN Y:\home\alegzz\transmisson-remote-gui-read-only\/addtorrent.lfm D:\transmisson-remote-gui-read-only/addtorrent.lfm
+--- Y:\home\alegzz\transmisson-remote-gui-read-only\/addtorrent.lfm	2011-11-29 11:23:27.469651500 +0400
++++ D:\transmisson-remote-gui-read-only/addtorrent.lfm	2011-11-06 14:36:18.770634000 +0400
+@@ -1,6 +1,6 @@
+ inherited AddTorrentForm: TAddTorrentForm
+   Left = 376
+-  Height = 440
++  Height = 478
+   Top = 186
+   Width = 497
+   HorzScrollBar.Page = 505
+@@ -8,7 +8,7 @@ inherited AddTorrentForm: TAddTorrentFor
+   VertScrollBar.Range = 92
+   BorderIcons = [biSystemMenu]
+   Caption = 'Add new torrent'
+-  ClientHeight = 440
++  ClientHeight = 478
+   ClientWidth = 497
+   Constraints.MinHeight = 300
+   Constraints.MinWidth = 470
+@@ -59,7 +59,7 @@ inherited AddTorrentForm: TAddTorrentFor
+       Left = 10
+       Height = 17
+       Top = 47
+-      Width = 79
++      Width = 81
+       Caption = 'Start torrent'
+       Checked = True
+       State = cbChecked
+@@ -89,7 +89,7 @@ inherited AddTorrentForm: TAddTorrentFor
+   end
+   object gbContents: TGroupBox[1]
+     Left = 8
+-    Height = 294
++    Height = 366
+     Top = 104
+     Width = 481
+     Align = alClient
+@@ -98,7 +98,7 @@ inherited AddTorrentForm: TAddTorrentFor
+     BorderSpacing.Right = 8
+     BorderSpacing.Bottom = 8
+     Caption = 'Torrent contents'
+-    ClientHeight = 276
++    ClientHeight = 348
+     ClientWidth = 477
+     TabOrder = 1
+     object txDiskSpace: TLabel
+@@ -118,7 +118,7 @@ inherited AddTorrentForm: TAddTorrentFor
+     end
+     object lvFiles: TVarGrid
+       Left = 10
+-      Height = 223
++      Height = 271
+       Top = 40
+       Width = 456
+       Anchors = [akTop, akLeft, akRight, akBottom]
+@@ -126,15 +126,18 @@ inherited AddTorrentForm: TAddTorrentFor
+         item
+           ReadOnly = True
+           Title.Caption = 'File name'
++          Title.PrefixOption = poNone
+           Width = 350
+         end      
+         item
+           ReadOnly = True
+           Title.Caption = 'Size'
++          Title.PrefixOption = poNone
+           Width = 80
+         end      
+         item
+           Title.Caption = ' '
++          Title.PrefixOption = poNone
+           Visible = False
+         end>
+       FixedCols = 0
+@@ -168,25 +171,35 @@ inherited AddTorrentForm: TAddTorrentFor
+       OnClick = btSelectNoneClick
+       TabOrder = 2
+     end
+-  end
+-  object Buttons: TButtonPanel[2]
+-    Left = 0
+-    Height = 26
+-    Top = 406
+-    Width = 497
+-    BorderSpacing.Bottom = 8
+-    BorderSpacing.Around = 0
+-    OKButton.Name = 'OKButton'
+-    OKButton.Caption = '&OK'
+-    HelpButton.Name = 'HelpButton'
+-    HelpButton.Caption = '&Help'
+-    CloseButton.Name = 'CloseButton'
+-    CloseButton.Caption = '&Close'
+-    CancelButton.Name = 'CancelButton'
+-    CancelButton.Caption = 'Cancel'
+-    TabOrder = 2
+-    Spacing = 8
+-    ShowButtons = [pbOK, pbCancel]
+-    ShowBevel = False
++    object Buttons: TButtonPanel
++      Left = 0
++      Height = 26
++      Top = 314
++      Width = 477
++      BorderSpacing.Bottom = 8
++      BorderSpacing.Around = 0
++      OKButton.Name = 'OKButton'
++      OKButton.Caption = '&OK'
++      HelpButton.Name = 'HelpButton'
++      HelpButton.Caption = '&Help'
++      CloseButton.Name = 'CloseButton'
++      CloseButton.Caption = '&Close'
++      CancelButton.Name = 'CancelButton'
++      CancelButton.Caption = 'Cancel'
++      TabOrder = 3
++      Spacing = 8
++      ShowButtons = [pbOK, pbCancel]
++      ShowBevel = False
++      object cbSkipMultiTorrents: TCheckBox
++        Left = 135
++        Height = 26
++        Top = 0
++        Width = 174
++        Align = alCustom
++        Caption = 'Skip this dialog for next torrents'
++        TabOrder = 4
++        Visible = False
++      end
++    end
+   end
+ end
+diff -rupN Y:\home\alegzz\transmisson-remote-gui-read-only\/addtorrent.pas D:\transmisson-remote-gui-read-only/addtorrent.pas
+--- Y:\home\alegzz\transmisson-remote-gui-read-only\/addtorrent.pas	2011-11-29 11:23:27.453879100 +0400
++++ D:\transmisson-remote-gui-read-only/addtorrent.pas	2011-11-06 14:36:18.772134200 +0400
+@@ -39,6 +39,7 @@ type
+     btSelectNone: TButton;
+     btBrowse: TButton;
+     Buttons: TButtonPanel;
++    cbSkipMultiTorrents: TCheckBox;
+     cbStartTorrent: TCheckBox;
+     cbDestFolder: TComboBox;
+     gbSaveAs: TGroupBox;
+@@ -305,4 +306,3 @@ initialization
+   {$I addtorrent.lrs}
+ 
+ end.
+-
+diff -rupN Y:\home\alegzz\transmisson-remote-gui-read-only\/daemonoptions.lfm D:\transmisson-remote-gui-read-only/daemonoptions.lfm
+--- Y:\home\alegzz\transmisson-remote-gui-read-only\/daemonoptions.lfm	2011-11-29 11:23:27.457818200 +0400
++++ D:\transmisson-remote-gui-read-only/daemonoptions.lfm	2012-01-14 03:14:00.935745100 +0400
+@@ -21,10 +21,10 @@ inherited DaemonOptionsForm: TDaemonOpti
+     Height = 295
+     Top = 8
+     Width = 570
+-    ActivePage = tabBandwidth
++    ActivePage = TabQueue
+     Align = alClient
+     BorderSpacing.Around = 8
+-    TabIndex = 2
++    TabIndex = 3
+     TabOrder = 0
+     object tabDownload: TTabSheet
+       Caption = 'Download'
+@@ -74,7 +74,7 @@ inherited DaemonOptionsForm: TDaemonOpti
+         Left = 8
+         Height = 17
+         Top = 80
+-        Width = 159
++        Width = 161
+         Caption = 'Directory for incomplete files:'
+         OnClick = cbIncompleteDirClick
+         TabOrder = 2
+@@ -91,7 +91,7 @@ inherited DaemonOptionsForm: TDaemonOpti
+         Left = 8
+         Height = 17
+         Top = 56
+-        Width = 203
++        Width = 207
+         Caption = 'Add .part extension to incomplete files'
+         TabOrder = 1
+       end
+@@ -99,7 +99,7 @@ inherited DaemonOptionsForm: TDaemonOpti
+         Left = 8
+         Height = 17
+         Top = 134
+-        Width = 71
++        Width = 73
+         Caption = 'Seed ratio:'
+         OnClick = cbSeedRatioClick
+         TabOrder = 4
+@@ -127,7 +127,7 @@ inherited DaemonOptionsForm: TDaemonOpti
+         Left = 8
+         Height = 17
+         Top = 163
+-        Width = 170
++        Width = 172
+         Caption = 'Stop seeding when inactive for:'
+         OnClick = cbIdleSeedLimitClick
+         TabOrder = 6
+@@ -195,7 +195,7 @@ inherited DaemonOptionsForm: TDaemonOpti
+         Left = 292
+         Height = 17
+         Top = 38
+-        Width = 128
++        Width = 130
+         Caption = 'Enable port forwarding'
+         TabOrder = 3
+       end
+@@ -203,7 +203,7 @@ inherited DaemonOptionsForm: TDaemonOpti
+         Left = 192
+         Height = 17
+         Top = 126
+-        Width = 125
++        Width = 127
+         Caption = 'Enable Peer Exchange'
+         TabOrder = 6
+       end
+@@ -221,7 +221,7 @@ inherited DaemonOptionsForm: TDaemonOpti
+         Left = 192
+         Height = 17
+         Top = 146
+-        Width = 73
++        Width = 75
+         Caption = 'Enable DHT'
+         TabOrder = 7
+       end
+@@ -229,7 +229,7 @@ inherited DaemonOptionsForm: TDaemonOpti
+         Left = 292
+         Height = 17
+         Top = 13
+-        Width = 193
++        Width = 195
+         Caption = 'Peek random port on daemon launch'
+         OnClick = cbRandomPortClick
+         TabOrder = 1
+@@ -247,7 +247,7 @@ inherited DaemonOptionsForm: TDaemonOpti
+         Left = 8
+         Height = 17
+         Top = 210
+-        Width = 94
++        Width = 96
+         Caption = 'Enable blocklist:'
+         OnClick = cbBlocklistClick
+         TabOrder = 10
+@@ -264,7 +264,7 @@ inherited DaemonOptionsForm: TDaemonOpti
+         Left = 192
+         Height = 17
+         Top = 166
+-        Width = 152
++        Width = 154
+         Caption = 'Enable Local Peer Discovery'
+         TabOrder = 8
+       end
+@@ -272,7 +272,7 @@ inherited DaemonOptionsForm: TDaemonOpti
+         Left = 192
+         Height = 17
+         Top = 186
+-        Width = 71
++        Width = 73
+         Caption = 'Enable µTP'
+         TabOrder = 9
+       end
+@@ -313,7 +313,7 @@ inherited DaemonOptionsForm: TDaemonOpti
+           Left = 8
+           Height = 17
+           Top = 4
+-          Width = 147
++          Width = 149
+           Caption = 'Maximum download speed:'
+           OnClick = cbMaxDownClick
+           TabOrder = 0
+@@ -332,7 +332,7 @@ inherited DaemonOptionsForm: TDaemonOpti
+           Left = 8
+           Height = 17
+           Top = 30
+-          Width = 133
++          Width = 135
+           Caption = 'Maximum upload speed:'
+           OnClick = cbMaxUpClick
+           TabOrder = 2
+@@ -442,7 +442,7 @@ inherited DaemonOptionsForm: TDaemonOpti
+           Left = 8
+           Height = 17
+           Top = 54
+-          Width = 177
++          Width = 179
+           Caption = 'Use alternate bandwidth settings'
+           TabOrder = 2
+         end
+@@ -450,7 +450,7 @@ inherited DaemonOptionsForm: TDaemonOpti
+           Left = 8
+           Height = 17
+           Top = 76
+-          Width = 252
++          Width = 254
+           Caption = 'Apply alternate bandwidth settings automatically'
+           OnClick = cbAutoAltClick
+           TabOrder = 3
+@@ -481,6 +481,97 @@ inherited DaemonOptionsForm: TDaemonOpti
+         end
+       end
+     end
++    object TabQueue: TTabSheet
++      Caption = 'Queue'
++      ClientHeight = 273
++      ClientWidth = 562
++      object txQueueDownSize: TLabel
++        Left = 196
++        Height = 17
++        Top = 19
++        Width = 200
++        Caption = 'Queue Down Size'
++        ParentColor = False
++      end
++      object txQueueUpSize: TLabel
++        Left = 196
++        Height = 17
++        Top = 77
++        Width = 200
++        Caption = 'Queue Up Size'
++        ParentColor = False
++      end
++      object txStalledMinTime: TLabel
++        Left = 14
++        Height = 14
++        Top = 164
++        Width = 58
++        Caption = 'Stalled Time'
++        ParentColor = False
++      end
++      object cbQueueDownEnabled: TCheckBox
++        Left = 11
++        Height = 17
++        Top = 19
++        Width = 123
++        Caption = 'Queue Down Enabled'
++        TabOrder = 0
++      end
++      object cbQueueUpEnabled: TCheckBox
++        Left = 11
++        Height = 17
++        Top = 77
++        Width = 109
++        Caption = 'Queue Up Enabled'
++        TabOrder = 2
++      end
++      object edQueueDown: TSpinEdit
++        Left = 400
++        Height = 21
++        Top = 15
++        Width = 66
++        MaxValue = 999999
++        MinValue = 1
++        TabOrder = 1
++        Value = 1
++      end
++      object edQueueUp: TSpinEdit
++        Left = 400
++        Height = 21
++        Top = 70
++        Width = 66
++        MaxValue = 999999
++        MinValue = 1
++        TabOrder = 3
++        Value = 1
++      end
++      object edIdleStalled: TSpinEdit
++        Left = 300
++        Height = 21
++        Top = 162
++        Width = 66
++        MaxValue = 999999
++        MinValue = 1
++        TabOrder = 5
++        Value = 1
++      end
++      object txMinutes2: TLabel
++        Left = 372
++        Height = 14
++        Top = 164
++        Width = 38
++        Caption = 'minutes'
++        ParentColor = False
++      end
++      object cbQueueStalledEnabled: TCheckBox
++        Left = 11
++        Height = 17
++        Top = 138
++        Width = 128
++        Caption = 'Queue Stalled Enabled'
++        TabOrder = 4
++      end
++    end
+   end
+   object Buttons: TButtonPanel[1]
+     Left = 0
+diff -rupN Y:\home\alegzz\transmisson-remote-gui-read-only\/daemonoptions.pas D:\transmisson-remote-gui-read-only/daemonoptions.pas
+--- Y:\home\alegzz\transmisson-remote-gui-read-only\/daemonoptions.pas	2011-11-29 11:23:27.477651400 +0400
++++ D:\transmisson-remote-gui-read-only/daemonoptions.pas	2011-11-06 14:36:18.775634600 +0400
+@@ -61,7 +61,15 @@ type
+     cbAltEnabled: TCheckBox;
+     cbAutoAlt: TCheckBox;
+     cbUTP: TCheckBox;
++    cbQueueDownEnabled: TCheckBox;
++    cbQueueStalledEnabled: TCheckBox;
++    edQueueDown: TSpinEdit;
++    edQueueUp: TSpinEdit;
++    edIdleStalled: TSpinEdit;
++    txMinutes2: TLabel;
++    cbQueueUpEnabled: TCheckBox;
+     edAltTimeEnd: TMaskEdit;
++    TabQueue: TTabSheet;
+     txDays: TLabel;
+     txFrom: TLabel;
+     edDownloadDir: TEdit;
+@@ -80,6 +88,9 @@ type
+     edAltTimeBegin: TMaskEdit;
+     txAltUp: TLabel;
+     txAltDown: TLabel;
++    txQueueDownSize: TLabel;
++    txQueueUpSize: TLabel;
++    txStalledMinTime: TLabel;
+     txTo: TLabel;
+     txKbs3: TLabel;
+     txKbs4: TLabel;
+@@ -112,7 +123,7 @@ type
+     { private declarations }
+   public
+     { public declarations }
+-  end; 
++  end;
+ 
+ implementation
+ 
+@@ -273,4 +284,3 @@ initialization
+   {$I daemonoptions.lrs}
+ 
+ end.
+-
+diff -rupN Y:\home\alegzz\transmisson-remote-gui-read-only\/json/fpjson.pp D:\transmisson-remote-gui-read-only/json/fpjson.pp
+--- Y:\home\alegzz\transmisson-remote-gui-read-only\/json/fpjson.pp	2011-11-29 11:23:25.797706100 +0400
++++ D:\transmisson-remote-gui-read-only/json/fpjson.pp	2012-01-14 02:30:15.022551500 +0400
+@@ -98,7 +98,7 @@ type
+     class function NumberType : TJSONNumberType; override;
+     Procedure Clear;  override;
+   end;
+-  
++
+   { TJSONIntegerNumber }
+ 
+   TJSONIntegerNumber = class(TJSONNumber)
+@@ -337,7 +337,7 @@ type
+   end;
+ 
+   EJSON = Class(Exception);
+-  
++
+ Function StringToJSONString(S : TJSONStringType) : TJSONStringType;
+ Function JSONStringToString(S : TJSONStringType) : TJSONStringType;
+ 
+@@ -363,8 +363,8 @@ Resourcestring
+   SErrOddNumber = 'TJSONObject must be constructed with name,value pairs';
+   SErrNameMustBeString = 'TJSONObject constructor element name at pos %d is not a string';
+   SErrElementNotFound = 'JSON element ''%s'' not found.';
+-  
+-  
++
++
+ Function StringToJSONString(S : TJSONStringType) : TJSONStringType;
+ 
+ Var
+@@ -1077,6 +1077,7 @@ begin
+       vtString     : Result:=TJSONString.Create(vString^);
+       vtAnsiString : Result:=TJSONString.Create(AnsiString(vAnsiString));
+       vtWideString : Result:=TJSONString.Create(WideString(VWideString));
++      vtUnicodeString: Result:=TJSONString.Create(UnicodeString(VUnicodeString));
+       vtPChar      : Result:=TJSONString.Create(StrPas(VPChar));
+       vtPointer    : If (VPointer<>Nil) then
+                        Raise EJSON.CreateFmt(SErrPointerNotNil,[SourceType])
+@@ -1126,7 +1127,7 @@ procedure TJSONArray.Iterate(Iterator: T
+ Var
+   I : Integer;
+   Cont : Boolean;
+-  
++
+ begin
+   I:=0;
+   Cont:=True;
+@@ -1532,4 +1533,3 @@ begin
+ end;
+ 
+ end.
+-
+diff -rupN Y:\home\alegzz\transmisson-remote-gui-read-only\/lang/transgui.ru D:\transmisson-remote-gui-read-only/lang/transgui.ru
+--- Y:\home\alegzz\transmisson-remote-gui-read-only\/lang/transgui.ru	2011-11-29 11:23:26.209616100 +0400
++++ D:\transmisson-remote-gui-read-only/lang/transgui.ru	2012-01-14 04:05:22.365992800 +0400
+@@ -288,3 +288,14 @@ Browse=Обзор
+ Enable µTP=Разрешить µTP
+ Select a folder for download=Выберите папку для загрузки
+ Select torrent location=Выберите расположение данных торрента
++Start Torrent Now=Принудительный запуск торрента
++Queue Up=Вверх в очереди
++Queue Down=Вниз в очереди
++Queue TOP=Первый в очереди
++Queue BOTTOM=Последний в очереди
++Queue=Очередь
++Queue Down Enabled=Ограничение на загрузку
++Queue Up Enabled=Ограничение на отдачу
++Queue Down Size=Кол-во одновременных загрузок
++Queue Up Size=Кол-во одновременных отдач
++Total: %s / %s %s (%s / %s %s)=Всего: %s / %s %s (%s / %s %s)
+diff -rupN Y:\home\alegzz\transmisson-remote-gui-read-only\/main.lfm D:\transmisson-remote-gui-read-only/main.lfm
+--- Y:\home\alegzz\transmisson-remote-gui-read-only\/main.lfm	2011-11-29 11:23:27.461733700 +0400
++++ D:\transmisson-remote-gui-read-only/main.lfm	2011-11-06 14:36:18.814139500 +0400
+@@ -9,7 +9,7 @@ inherited MainForm: TMainForm
+   ActiveControl = panTop
+   AllowDropFiles = True
+   Caption = ' '
+-  ClientHeight = 486
++  ClientHeight = 487
+   ClientWidth = 780
+   Constraints.MinHeight = 300
+   Constraints.MinWidth = 300
+@@ -23,18 +23,18 @@ inherited MainForm: TMainForm
+   OnWindowStateChange = FormWindowStateChange
+   object panTop: TPanel[0]
+     Left = 0
+-    Height = 128
++    Height = 132
+     Top = 24
+     Width = 780
+     Align = alClient
+     BevelOuter = bvNone
+-    ClientHeight = 128
++    ClientHeight = 132
+     ClientWidth = 780
+     Constraints.MinHeight = 80
+     TabOrder = 0
+     object HSplitter: TSplitter
+       Left = 130
+-      Height = 128
++      Height = 132
+       Top = 0
+       Width = 5
+       AutoSnap = False
+@@ -42,18 +42,18 @@ inherited MainForm: TMainForm
+     end
+     object panFilter: TPanel
+       Left = 0
+-      Height = 128
++      Height = 132
+       Top = 0
+       Width = 130
+       Align = alLeft
+       BevelOuter = bvNone
+-      ClientHeight = 128
++      ClientHeight = 132
+       ClientWidth = 130
+       TabOrder = 2
+       object panSearch: TPanel
+         Left = 0
+         Height = 21
+-        Top = 105
++        Top = 109
+         Width = 130
+         Align = alBottom
+         AutoSize = True
+@@ -130,13 +130,14 @@ inherited MainForm: TMainForm
+       end
+       object lvFilter: TVarGrid
+         Left = 0
+-        Height = 103
++        Height = 107
+         Top = 0
+         Width = 130
+         Align = alClient
+-        Columns = <        
++        Columns = <
+           item
+             Title.Caption = 'Title'
++            Title.PrefixOption = poNone
+             Width = 10
+           end>
+         Constraints.MinWidth = 50
+@@ -155,113 +156,139 @@ inherited MainForm: TMainForm
+     end
+     object gTorrents: TVarGrid
+       Left = 135
+-      Height = 128
++      Height = 132
+       Top = 0
+       Width = 645
+       Align = alClient
+-      Columns = <      
++      Columns = <
+         item
+           Title.Caption = 'Name'
++          Title.PrefixOption = poNone
+           Width = 200
+-        end      
++        end
+         item
+           Alignment = taRightJustify
+           Title.Caption = 'Size'
++          Title.PrefixOption = poNone
+           Width = 60
+-        end      
++        end
+         item
+           Alignment = taCenter
+           Title.Caption = 'Done'
+-        end      
++          Title.PrefixOption = poNone
++        end
+         item
+           Title.Caption = 'Status'
++          Title.PrefixOption = poNone
+           Width = 70
+-        end      
++        end
+         item
+           Alignment = taRightJustify
+           Title.Caption = 'Seeds'
++          Title.PrefixOption = poNone
+           Width = 55
+-        end      
++        end
+         item
+           Alignment = taRightJustify
+           Title.Caption = 'Peers'
++          Title.PrefixOption = poNone
+           Width = 55
+-        end      
++        end
+         item
+           Alignment = taRightJustify
+           Title.Caption = 'Down speed'
++          Title.PrefixOption = poNone
+           Width = 75
+-        end      
++        end
+         item
+           Alignment = taRightJustify
+           Title.Caption = 'Up speed'
++          Title.PrefixOption = poNone
+           Width = 75
+-        end      
++        end
+         item
+           Title.Caption = 'ETA'
++          Title.PrefixOption = poNone
+           Width = 80
+-        end      
++        end
+         item
+           Title.Caption = 'Ratio'
+-        end      
++          Title.PrefixOption = poNone
++        end
+         item
+           Alignment = taRightJustify
+           Title.Caption = 'Downloaded'
++          Title.PrefixOption = poNone
+           Width = 0
+           Visible = False
+-        end      
++        end
+         item
+           Alignment = taRightJustify
+           Title.Caption = 'Uploaded'
++          Title.PrefixOption = poNone
+           Width = 0
+           Visible = False
+-        end      
++        end
+         item
+           Title.Caption = 'Tracker'
++          Title.PrefixOption = poNone
+           Width = 0
+           Visible = False
+-        end      
++        end
+         item
+           Title.Caption = 'Tracker status'
++          Title.PrefixOption = poNone
+           Width = 0
+           Visible = False
+-        end      
++        end
+         item
+           Title.Caption = 'Added on'
++          Title.PrefixOption = poNone
+           Width = 0
+           Visible = False
+-        end      
++        end
+         item
+           Title.Caption = 'Completed on'
++          Title.PrefixOption = poNone
+           Width = 0
+           Visible = False
+-        end      
++        end
+         item
+           Title.Caption = 'Last active'
++          Title.PrefixOption = poNone
+           Width = 0
+           Visible = False
+-        end      
++        end
+         item
+           Title.Caption = 'Path'
++          Title.PrefixOption = poNone
+           Width = 0
+           Visible = False
+-        end      
++        end
+         item
+           Title.Caption = 'Priority'
++          Title.PrefixOption = poNone
+           Width = 0
+           Visible = False
+-        end      
++        end
+         item
+           Alignment = taRightJustify
++          Title.PrefixOption = poNone
+           Title.Caption = 'Size to download'
+           Width = 0
+           Visible = False
+-        end      
++        end
+         item
+           Alignment = taRightJustify
++          Title.PrefixOption = poNone
+           Title.Caption = 'ID'
+           Width = 0
+           Visible = False
++        end
++        item
++          Title.Caption = 'Queue'
++          Title.PrefixOption = poNone
++          Visible = False
+         end>
+       FixedCols = 0
+       Options = [goFixedVertLine, goFixedHorzLine, goColSizing, goColMoving, goRowSelect, goThumbTracking, goDblClickAutoSize, goHeaderHotTracking, goHeaderPushedLook]
+@@ -281,24 +308,28 @@ inherited MainForm: TMainForm
+   end
+   object StatusBar: TStatusBar[1]
+     Left = 0
+-    Height = 23
+-    Top = 463
++    Height = 20
++    Top = 467
+     Width = 780
+-    Panels = <    
++    Panels = <
+       item
+         Width = 300
+-      end    
++      end
+       item
+         Width = 120
+-      end    
++      end
+       item
+         Width = 120
+-      end    
++      end
+       item
+         Width = 120
+-      end    
++      end
+       item
+         Width = 50
++      end
++      item
++        Text = 'T:0/0 B '
++        Width = 100
+       end>
+     SimplePanel = False
+     OnMouseDown = StatusBarMouseDown
+@@ -306,13 +337,13 @@ inherited MainForm: TMainForm
+   object PageInfo: TPageControl[2]
+     Left = 0
+     Height = 306
+-    Top = 157
++    Top = 161
+     Width = 780
+-    ActivePage = tabGeneral
++    ActivePage = tabGraph
+     Align = alBottom
+     Constraints.MinHeight = 50
+     Images = ImageList16
+-    TabIndex = 0
++    TabIndex = 4
+     TabOrder = 1
+     OnChange = PageInfoChange
+     OnPageChanged = PageInfoChange
+@@ -326,6 +357,8 @@ inherited MainForm: TMainForm
+         Height = 253
+         Top = 26
+         Width = 772
++        HorzScrollBar.Page = 772
++        VertScrollBar.Page = 253
+         Align = alClient
+         ClientHeight = 249
+         ClientWidth = 768
+@@ -671,18 +704,20 @@ inherited MainForm: TMainForm
+             Caption = 'txUpLimit'
+             ParentColor = False
+           end
+-          object txDummy1: TLabel
++          object txQueueLabel: TLabel
+             Left = 541
+-            Height = 1
++            Height = 14
+             Top = 58
+-            Width = 1
++            Width = 77
++            Caption = 'Queue Position:'
+             ParentColor = False
+           end
+-          object txDummy2: TLabel
+-            Left = 651
+-            Height = 1
+-            Top = 58
+-            Width = 1
++          object txQueue: TLabel
++            Left = 652
++            Height = 14
++            Top = 57
++            Width = 43
++            Caption = 'txQueue'
+             ParentColor = False
+           end
+           object txSeedsLabel: TLabel
+@@ -872,21 +907,25 @@ inherited MainForm: TMainForm
+         Top = 0
+         Width = 772
+         Align = alClient
+-        Columns = <        
++        Columns = <
+           item
+             Title.Caption = 'Name'
++            Title.PrefixOption = poNone
+             Width = 200
+-          end        
++          end
+           item
+             Title.Caption = 'Status'
++            Title.PrefixOption = poNone
+             Width = 200
+-          end        
++          end
+           item
+             Title.Caption = 'Update in'
++            Title.PrefixOption = poNone
+             Width = 80
+-          end        
++          end
+           item
+             Title.Caption = 'Seeds'
++            Title.PrefixOption = poNone
+           end>
+         FixedCols = 0
+         Options = [goFixedVertLine, goFixedHorzLine, goColSizing, goColMoving, goRowSelect, goThumbTracking, goDblClickAutoSize, goHeaderHotTracking, goHeaderPushedLook]
+@@ -911,41 +950,49 @@ inherited MainForm: TMainForm
+         Top = 0
+         Width = 772
+         Align = alClient
+-        Columns = <        
++        Columns = <
+           item
+             Title.Caption = 'Host'
++            Title.PrefixOption = poNone
+             Width = 150
+-          end        
++          end
+           item
+             Alignment = taRightJustify
+             Title.Caption = 'Port'
++            Title.PrefixOption = poNone
+             Width = 0
+             Visible = False
+-          end        
++          end
+           item
+             Title.Caption = 'Country'
++            Title.PrefixOption = poNone
+             Width = 100
+-          end        
++          end
+           item
+             Title.Caption = 'Client'
++            Title.PrefixOption = poNone
+             Width = 150
+-          end        
++          end
+           item
+             Title.Caption = 'Flags'
++            Title.PrefixOption = poNone
+             Width = 70
+-          end        
++          end
+           item
+             Alignment = taRightJustify
+             Title.Caption = 'Have'
+-          end        
++            Title.PrefixOption = poNone
++          end
+           item
+             Alignment = taRightJustify
+             Title.Caption = 'Up speed'
++            Title.PrefixOption = poNone
+             Width = 80
+-          end        
++          end
+           item
+             Alignment = taRightJustify
+             Title.Caption = 'Down speed'
++            Title.PrefixOption = poNone
+             Width = 80
+           end>
+         FixedCols = 0
+@@ -970,29 +1017,34 @@ inherited MainForm: TMainForm
+         Top = 0
+         Width = 772
+         Align = alClient
+-        Columns = <        
++        Columns = <
+           item
+             Title.Caption = 'File name'
++            Title.PrefixOption = poNone
+             Width = 350
+-          end        
++          end
+           item
+             Alignment = taRightJustify
+             Title.Caption = 'Size'
++            Title.PrefixOption = poNone
+             Width = 80
+-          end        
++          end
+           item
+             Alignment = taCenter
+             Title.Caption = 'Done'
++            Title.PrefixOption = poNone
+             Width = 70
+-          end        
++          end
+           item
+             Alignment = taCenter
+             Title.Alignment = taCenter
+             Title.Caption = '%'
++            Title.PrefixOption = poNone
+             Width = 70
+-          end        
++          end
+           item
+             Title.Caption = 'Priority'
++            Title.PrefixOption = poNone
+             Width = 100
+           end>
+         FixedCols = 0
+@@ -1010,12 +1062,54 @@ inherited MainForm: TMainForm
+         OnDrawCell = lvFilesDrawCell
+       end
+     end
++    object tabGraph: TTabSheet
++      Caption = 'Graph'
++      ClientHeight = 279
++      ClientWidth = 772
++      ImageIndex = 20
++      object pbGraph: TPaintBox
++        Left = 0
++        Height = 255
++        Top = 24
++        Width = 772
++        Align = alClient
++        OnPaint = pbGraphPaint
++      end
++      object Panel1: TPanel
++        Left = 0
++        Height = 24
++        Top = 0
++        Width = 772
++        Align = alTop
++        ClientHeight = 24
++        ClientWidth = 772
++        TabOrder = 0
++        object cbInterval: TComboBox
++          Left = 4
++          Height = 21
++          Top = 0
++          Width = 100
++          ItemHeight = 13
++          ItemIndex = 0
++          Items.Strings = (
++            '1 m'
++            '5 m'
++            '30 m'
++            '2 h'
++            '12 h'
++          )
++          Style = csDropDownList
++          TabOrder = 0
++          Text = '1 m'
++        end
++      end
++    end
+   end
+   object VSplitter: TSplitter[3]
+     Cursor = crVSplit
+     Left = 0
+     Height = 5
+-    Top = 152
++    Top = 156
+     Width = 780
+     Align = alBottom
+     AutoSnap = False
+@@ -1034,53 +1128,53 @@ inherited MainForm: TMainForm
+     ShowHint = True
+     TabOrder = 2
+     object ToolButton1: TToolButton
+-      Left = 40
++      Left = 41
+       Top = 2
+       Action = acAddTorrent
+     end
+     object ToolButton2: TToolButton
+-      Left = 86
++      Left = 87
+       Top = 2
+-      Width = 4
++      Width = 5
+       Caption = 'ToolButton2'
+       Style = tbsDivider
+     end
+     object ToolButton3: TToolButton
+-      Left = 90
++      Left = 92
+       Top = 2
+       Action = acStartTorrent
+     end
+     object ToolButton4: TToolButton
+-      Left = 113
++      Left = 138
+       Top = 2
+       Action = acStopTorrent
+     end
+     object ToolButton5: TToolButton
+-      Left = 136
++      Left = 161
+       Top = 2
+       Action = acRemoveTorrent
+     end
+     object ToolButton6: TToolButton
+       Left = 36
+       Top = 2
+-      Width = 4
++      Width = 5
+       Caption = 'ToolButton6'
+       Style = tbsDivider
+     end
+     object ToolButton7: TToolButton
+-      Left = 186
++      Left = 268
+       Top = 2
+-      Width = 4
++      Width = 10
+       Caption = 'ToolButton7'
+-      Style = tbsDivider
++      Style = tbsSeparator
+     end
+     object ToolButton8: TToolButton
+-      Left = 190
++      Left = 278
+       Top = 2
+       Action = acDaemonOptions
+     end
+     object ToolButton9: TToolButton
+-      Left = 63
++      Left = 64
+       Top = 2
+       Action = acAddLink
+     end
+@@ -1101,17 +1195,42 @@ inherited MainForm: TMainForm
+       Style = tbsDropDown
+     end
+     object tbtAltSpeed: TToolButton
+-      Left = 163
++      Left = 189
+       Top = 2
+       Action = acAltSpeed
+     end
+     object sepAltSpeed: TToolButton
+-      Left = 159
++      Left = 184
+       Top = 2
+-      Width = 4
++      Width = 5
+       Caption = 'sepAltSpeed'
+       Style = tbsDivider
+     end
++    object tbForceStart: TToolButton
++      Left = 115
++      Hint = 'Start Torrent Now'
++      Top = 2
++      Action = acForceStartTorrent
++    end
++    object tbQueueUp: TToolButton
++      Left = 222
++      Hint = 'Queue Up'
++      Top = 2
++      Action = acQueueUp
++    end
++    object tbSep1: TToolButton
++      Left = 212
++      Top = 2
++      Width = 10
++      Caption = 'tbSep1'
++      Style = tbsSeparator
++    end
++    object tbQueueDown: TToolButton
++      Left = 245
++      Hint = 'Queue Down'
++      Top = 2
++      Action = acQueueDown
++    end
+   end
+   object panReconnect: TPanel[5]
+     Left = 532
+@@ -1401,6 +1520,46 @@ inherited MainForm: TMainForm
+         }
+         OnClick = acStartTorrentExecute
+       end
++      object miForceStart: TMenuItem
++        Action = acForceStartTorrent
++        Caption = 'Start Torrent Now'
++        Bitmap.Data = {
++          36040000424D3604000000000000360000002800000010000000100000000100
++          2000000000000004000064000000640000000000000000000000FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00005A00FF005A00FF005A00FFFF00FF00FF00FF00005A00FF005A00FF005A
++          00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00007300FF08BD21FF007300FF005A00FFFF00FF00007300FF08BD21FF0073
++          00FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00007300FF10BD21FF08BD21FF007300FF005A00FF007300FF10BD21FF08BD
++          21FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00007300FF10C631FF10C631FF08BD21FF007300FF007300FF10C631FF10C6
++          31FF08BD21FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00007300FF10DE42FF10C631FF08BD21FF08BD21FF007300FF10DE42FF10C6
++          31FF08BD21FF08BD21FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00
++          FF00007300FF18DE5AFF10CE42FF10CE42FF10CE42FF007300FF18DE5AFF10CE
++          42FF10CE42FF10CE42FF10C631FF007300FF006300FFFF00FF00FF00FF00FF00
++          FF00007300FF63E763FF6BE763FF5AE763FF5AE763FF007300FF63E763FF6BE7
++          63FF5AE763FF5AE763FF5AE763FF007300FF006300FFFF00FF00FF00FF00FF00
++          FF00007300FF6BEF6BFF84EF84FF84EF73FF5AE763FF007300FF6BEF6BFF84EF
++          84FF84EF73FF5AE763FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00
++          FF00007300FF84EF84FF94FF94FF94FF94FF007300FF007300FF84EF84FF94FF
++          94FF94FF94FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00007300FF73EF73FFADFFADFF007300FF005A00FF007300FF73EF73FFADFF
++          ADFF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00007300FF42CE42FF007300FF005A00FFFF00FF00007300FF42CE42FF0073
++          00FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00005A00FF005A00FF005A00FFFF00FF00FF00FF00005A00FF005A00FF005A
++          00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++        }
++      end
+       object MenuItem22: TMenuItem
+         Action = acStartAllTorrents
+         OnClick = acStartAllTorrentsExecute
+@@ -1981,6 +2140,36 @@ inherited MainForm: TMainForm
+       ImageIndex = 38
+       OnExecute = acAltSpeedExecute
+     end
++    object acForceStartTorrent: TAction
++      Category = 'Torrent'
++      Caption = 'acForceStartTorrent'
++      ImageIndex = 44
++      OnExecute = acForceStartTorrentExecute
++    end
++    object acQueueUp: TAction
++      Category = 'Torrent'
++      Caption = 'Queue Up'
++      ImageIndex = 41
++      OnExecute = acQueueUpExecute
++    end
++    object acQueueDown: TAction
++      Category = 'Torrent'
++      Caption = 'Queue Down'
++      ImageIndex = 42
++      OnExecute = acQueueDownExecute
++    end
++    object acQueueTOP: TAction
++      Category = 'Torrent'
++      Caption = 'Queue TOP'
++      ImageIndex = 40
++      OnExecute = acQueueTOPExecute
++    end
++    object acQueueBottom: TAction
++      Category = 'Torrent'
++      Caption = 'Queue BOTTOM'
++      ImageIndex = 43
++      OnExecute = acQueueBottomExecute
++    end
+   end
+   object TorrentsListTimer: TTimer[8]
+     Enabled = False
+@@ -1992,6 +2181,7 @@ inherited MainForm: TMainForm
+   object OpenTorrentDlg: TOpenDialog[9]
+     Title = 'Select a .torrent to open'
+     Filter = 'Torrents (*.torrent)|*.torrent|All files (*.*)|*.*'
++    Options = [ofHideReadOnly, ofAllowMultiSelect, ofEnableSizing, ofViewDetail]
+     left = 213
+     top = 55
+   end
+@@ -2083,6 +2273,46 @@ inherited MainForm: TMainForm
+       }
+       OnClick = acStartTorrentExecute
+     end
++    object MenuItem64: TMenuItem
++      Action = acForceStartTorrent
++      Caption = 'Start Torrent Now'
++      Bitmap.Data = {
++        36040000424D3604000000000000360000002800000010000000100000000100
++        2000000000000004000064000000640000000000000000000000FF00FF00FF00
++        FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++        FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++        FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++        FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++        FF00005A00FF005A00FF005A00FFFF00FF00FF00FF00005A00FF005A00FF005A
++        00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++        FF00007300FF08BD21FF007300FF005A00FFFF00FF00007300FF08BD21FF0073
++        00FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++        FF00007300FF10BD21FF08BD21FF007300FF005A00FF007300FF10BD21FF08BD
++        21FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++        FF00007300FF10C631FF10C631FF08BD21FF007300FF007300FF10C631FF10C6
++        31FF08BD21FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00
++        FF00007300FF10DE42FF10C631FF08BD21FF08BD21FF007300FF10DE42FF10C6
++        31FF08BD21FF08BD21FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00
++        FF00007300FF18DE5AFF10CE42FF10CE42FF10CE42FF007300FF18DE5AFF10CE
++        42FF10CE42FF10CE42FF10C631FF007300FF006300FFFF00FF00FF00FF00FF00
++        FF00007300FF63E763FF6BE763FF5AE763FF5AE763FF007300FF63E763FF6BE7
++        63FF5AE763FF5AE763FF5AE763FF007300FF006300FFFF00FF00FF00FF00FF00
++        FF00007300FF6BEF6BFF84EF84FF84EF73FF5AE763FF007300FF6BEF6BFF84EF
++        84FF84EF73FF5AE763FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00
++        FF00007300FF84EF84FF94FF94FF94FF94FF007300FF007300FF84EF84FF94FF
++        94FF94FF94FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00
++        FF00007300FF73EF73FFADFFADFF007300FF005A00FF007300FF73EF73FFADFF
++        ADFF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++        FF00007300FF42CE42FF007300FF005A00FFFF00FF00007300FF42CE42FF0073
++        00FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++        FF00005A00FF005A00FF005A00FFFF00FF00FF00FF00005A00FF005A00FF005A
++        00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++        FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++        FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++        FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++        FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      }
++    end
+     object MenuItem9: TMenuItem
+       Action = acStopTorrent
+       Bitmap.Data = {
+@@ -2293,6 +2523,165 @@ inherited MainForm: TMainForm
+         OnClick = acSetLowPriorityExecute
+       end
+     end
++    object miQueue: TMenuItem
++      Caption = 'Queue'
++      object miMoveTOP: TMenuItem
++        Action = acQueueTOP
++        Bitmap.Data = {
++          36040000424D3604000000000000360000002800000010000000100000000100
++          2000000000000004000064000000640000000000000000000000FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00005A00FF007300FF007300FF007300FF007300FF007300FF007300FF0073
++          00FF007300FF007300FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00
++          FF00005A00FF42CE42FF73EF73FF84EF84FF6BEF6BFF63E763FF18DE5AFF10DE
++          42FF10C631FF10BD21FF08BD21FF005A00FFFF00FF00FF00FF00FF00FF00FF00
++          FF00005A00FF007300FFADFFADFF94FF94FF84EF84FF6BE763FF10CE42FF10C6
++          31FF10C631FF08BD21FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00005A00FF007300FF94FF94FF84EF73FF5AE763FF10CE42FF08BD
++          21FF08BD21FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00005A00FF007300FF5AE763FF5AE763FF10CE42FF08BD
++          21FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00005A00FF007300FF5AE763FF10C631FF0073
++          00FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00005A00FF007300FF007300FF005A
++          00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00006300FF006300FF006300FF006300FF006300FF006300FF006300FF0063
++          00FF006300FF006300FF006300FF006300FFFF00FF00FF00FF00FF00FF00FF00
++          FF00006300FF006300FF006300FF006300FF006300FF006300FF006300FF0063
++          00FF006300FF006300FF006300FF006300FFFF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++        }
++      end
++      object miMoveUP: TMenuItem
++        Action = acQueueUp
++        Bitmap.Data = {
++          36040000424D3604000000000000360000002800000010000000100000000100
++          2000000000000004000064000000640000000000000000000000FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00005A00FF007300FF007300FF007300FF007300FF007300FF007300FF0073
++          00FF007300FF007300FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00
++          FF00005A00FF42CE42FF73EF73FF84EF84FF6BEF6BFF63E763FF18DE5AFF10DE
++          42FF10C631FF10BD21FF08BD21FF005A00FFFF00FF00FF00FF00FF00FF00FF00
++          FF00005A00FF007300FFADFFADFF94FF94FF84EF84FF6BE763FF10CE42FF10C6
++          31FF10C631FF08BD21FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00005A00FF007300FF94FF94FF84EF73FF5AE763FF10CE42FF08BD
++          21FF08BD21FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00005A00FF007300FF5AE763FF5AE763FF10CE42FF08BD
++          21FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00005A00FF007300FF5AE763FF10C631FF0073
++          00FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00005A00FF007300FF007300FF005A
++          00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00006300FF006300FFFF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++        }
++      end
++      object miMoveDown: TMenuItem
++        Action = acQueueDown
++        Bitmap.Data = {
++          36040000424D3604000000000000360000002800000010000000100000000100
++          2000000000000004000064000000640000000000000000000000FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00006300FF006300FFFF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00005A00FF007300FF007300FF005A
++          00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00005A00FF007300FF5AE763FF10C631FF0073
++          00FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00005A00FF007300FF5AE763FF5AE763FF10CE42FF08BD
++          21FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00005A00FF007300FF94FF94FF84EF73FF5AE763FF10CE42FF08BD
++          21FF08BD21FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00005A00FF007300FFADFFADFF94FF94FF84EF84FF6BE763FF10CE42FF10C6
++          31FF10C631FF08BD21FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00
++          FF00005A00FF42CE42FF73EF73FF84EF84FF6BEF6BFF63E763FF18DE5AFF10DE
++          42FF10C631FF10BD21FF08BD21FF005A00FFFF00FF00FF00FF00FF00FF00FF00
++          FF00005A00FF007300FF007300FF007300FF007300FF007300FF007300FF0073
++          00FF007300FF007300FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++        }
++      end
++      object miMoveBottom: TMenuItem
++        Action = acQueueBottom
++        Bitmap.Data = {
++          36040000424D3604000000000000360000002800000010000000100000000100
++          2000000000000004000064000000640000000000000000000000FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00006300FF006300FF006300FF006300FF006300FF006300FF006300FF0063
++          00FF006300FF006300FF006300FF006300FFFF00FF00FF00FF00FF00FF00FF00
++          FF00006300FF006300FF006300FF006300FF006300FF006300FF006300FF0063
++          00FF006300FF006300FF006300FF006300FFFF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00005A00FF007300FF007300FF005A
++          00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00005A00FF007300FF5AE763FF10C631FF0073
++          00FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00005A00FF007300FF5AE763FF5AE763FF10CE42FF08BD
++          21FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00005A00FF007300FF94FF94FF84EF73FF5AE763FF10CE42FF08BD
++          21FF08BD21FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00005A00FF007300FFADFFADFF94FF94FF84EF84FF6BE763FF10CE42FF10C6
++          31FF10C631FF08BD21FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00
++          FF00005A00FF42CE42FF73EF73FF84EF84FF6BEF6BFF63E763FF18DE5AFF10DE
++          42FF10C631FF10BD21FF08BD21FF005A00FFFF00FF00FF00FF00FF00FF00FF00
++          FF00005A00FF007300FF007300FF007300FF007300FF007300FF007300FF0073
++          00FF007300FF007300FF007300FF005A00FFFF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++          FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++        }
++      end
++    end
+     object MenuItem50: TMenuItem
+       Action = acReannounceTorrent
+       OnClick = acReannounceTorrentExecute
+@@ -2600,7 +2989,7 @@ inherited MainForm: TMainForm
+     left = 412
+     top = 92
+     Bitmap = {
+-      4C69270000001000000010000000000000000000000000000000000000000000
++      4C692D0000001000000010000000000000000000000000000000000000000000
+       0000000000000000000000000000000000000000000000000000000000000000
+       0000000000000000000000000000000000000000000000000000000000000000
+       00000000000000000000007308FF087B08FF088C10FF088C10FF087B08FF0000
+@@ -3848,7 +4237,199 @@ inherited MainForm: TMainForm
+       0000000000000000000000000000000000000000000000000000000000000000
+       0000000000000000000000000000000000000000000000000000000000000000
+       0000000000000000000000000000000000000000000000000000000000000000
+-      0000000000000000000000000000
++      0000000000000000000000000000FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00C3FFC3FFC3FF
++      C3FFC3FFC3FFC3FFC3FFC3FFC3FFC3FFC3FFC3FFC3FFC3FFC3FFC3FFC3FFFF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00C3FFC3FF89C589FF84BD
++      84FF7FB67FFF79AD79FF74A674FF6E9E6EFF679467FF628C62FF5A805AFFC3FF
++      C3FFFF00FF00FF00FF00FF00FF00FF00FF00C3FFC3FF98D998FF91CF91FF89C5
++      89FF84BD84FF7FB67FFF79AD79FF74A674FF6E9E6EFF679467FF628C62FF5A80
++      5AFF598E59FFFF00FF00FF00FF00FF00FF00C3FFC3FF98D998FF98D998FF91CF
++      91FF89C589FF84BD84FFFFFFFFFF79AD79FF74A674FF6E9E6EFF679467FF628C
++      62FF598E59FFFF00FF00FF00FF00FF00FF00C3FFC3FFA2E8A2FF98D998FF98D9
++      98FF91CF91FFFFFFFFFFFFFFFFFFFFFFFFFF628C62FF74A674FF6E9E6EFF6794
++      67FF598E59FFFF00FF00FF00FF00FF00FF00C3FFC3FFA7F0A7FFA2E8A2FF98D9
++      98FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF628C62FF74A674FF6E9E
++      6EFF598E59FFFF00FF00FF00FF00FF00FF00C3FFC3FFA7F0A7FFA2E8A2FFFFFF
++      FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF628C62FF74A6
++      74FF598E59FFFF00FF00FF00FF00FF00FF00C3FFC3FFADF7ADFFA7F0A7FFA2E8
++      A2FF84BD84FFFFFFFFFFFFFFFFFFFFFFFFFF4E6A4EFF4E6A4EFF679467FF79AD
++      79FF598E59FFFF00FF00FF00FF00FF00FF00C3FFC3FFB2FFB2FFADF7ADFFA7F0
++      A7FFA2E8A2FFFFFFFFFFFFFFFFFFFFFFFFFF5A805AFF6E9E6EFF84BD84FF7EB4
++      7EFF598E59FFFF00FF00FF00FF00FF00FF00C3FFC3FFB2FFB2FFB2FFB2FFADF7
++      ADFFA7F0A7FFFFFFFFFFFFFFFFFFFFFFFFFF5A805AFF91CF91FF89C589FF84BD
++      84FF598E59FFFF00FF00FF00FF00FF00FF00C3FFC3FFB9FFB9FFB2FFB2FFB2FF
++      B2FFADF7ADFFA7F0A7FF628C62FF628C62FF5A805AFF91CF91FF91CF91FF89C5
++      89FF598E59FFFF00FF00FF00FF00FF00FF00FF00FF00598E59FFB9FFB9FFB2FF
++      B2FFB2FFB2FFADF7ADFFA7F0A7FFA2E8A2FFA2E8A2FF98D998FF91CF91FF598E
++      59FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00598E59FF598E
++      59FF598E59FF598E59FF598E59FF598E59FF598E59FF598E59FF598E59FFFF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00006300FF006300FF0063
++      00FF006300FF006300FF006300FF006300FF006300FF006300FF006300FF0063
++      00FF006300FFFF00FF00FF00FF00FF00FF00FF00FF00006300FF006300FF0063
++      00FF006300FF006300FF006300FF006300FF006300FF006300FF006300FF0063
++      00FF006300FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00005A00FF007300FF007300FF005A00FFFF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00005A00FF007300FF5AE763FF10C631FF007300FF005A00FFFF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00005A
++      00FF007300FF5AE763FF5AE763FF10CE42FF08BD21FF007300FF005A00FFFF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00005A00FF0073
++      00FF94FF94FF84EF73FF5AE763FF10CE42FF08BD21FF08BD21FF007300FF005A
++      00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00005A00FF007300FFADFF
++      ADFF94FF94FF84EF84FF6BE763FF10CE42FF10C631FF10C631FF08BD21FF0073
++      00FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00005A00FF42CE42FF73EF
++      73FF84EF84FF6BEF6BFF63E763FF18DE5AFF10DE42FF10C631FF10BD21FF08BD
++      21FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00005A00FF007300FF0073
++      00FF007300FF007300FF007300FF007300FF007300FF007300FF007300FF0073
++      00FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00006300FF006300FFFF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00005A00FF007300FF007300FF005A00FFFF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00005A00FF007300FF5AE763FF10C631FF007300FF005A00FFFF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00005A
++      00FF007300FF5AE763FF5AE763FF10CE42FF08BD21FF007300FF005A00FFFF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00005A00FF0073
++      00FF94FF94FF84EF73FF5AE763FF10CE42FF08BD21FF08BD21FF007300FF005A
++      00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00005A00FF007300FFADFF
++      ADFF94FF94FF84EF84FF6BE763FF10CE42FF10C631FF10C631FF08BD21FF0073
++      00FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00005A00FF42CE42FF73EF
++      73FF84EF84FF6BEF6BFF63E763FF18DE5AFF10DE42FF10C631FF10BD21FF08BD
++      21FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00005A00FF007300FF0073
++      00FF007300FF007300FF007300FF007300FF007300FF007300FF007300FF0073
++      00FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00005A00FF007300FF0073
++      00FF007300FF007300FF007300FF007300FF007300FF007300FF007300FF0073
++      00FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00005A00FF42CE42FF73EF
++      73FF84EF84FF6BEF6BFF63E763FF18DE5AFF10DE42FF10C631FF10BD21FF08BD
++      21FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00005A00FF007300FFADFF
++      ADFF94FF94FF84EF84FF6BE763FF10CE42FF10C631FF10C631FF08BD21FF0073
++      00FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00005A00FF0073
++      00FF94FF94FF84EF73FF5AE763FF10CE42FF08BD21FF08BD21FF007300FF005A
++      00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00005A
++      00FF007300FF5AE763FF5AE763FF10CE42FF08BD21FF007300FF005A00FFFF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00005A00FF007300FF5AE763FF10C631FF007300FF005A00FFFF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00005A00FF007300FF007300FF005A00FFFF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00006300FF006300FFFF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00005A00FF007300FF0073
++      00FF007300FF007300FF007300FF007300FF007300FF007300FF007300FF0073
++      00FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00005A00FF42CE42FF73EF
++      73FF84EF84FF6BEF6BFF63E763FF18DE5AFF10DE42FF10C631FF10BD21FF08BD
++      21FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00005A00FF007300FFADFF
++      ADFF94FF94FF84EF84FF6BE763FF10CE42FF10C631FF10C631FF08BD21FF0073
++      00FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00005A00FF0073
++      00FF94FF94FF84EF73FF5AE763FF10CE42FF08BD21FF08BD21FF007300FF005A
++      00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00005A
++      00FF007300FF5AE763FF5AE763FF10CE42FF08BD21FF007300FF005A00FFFF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00005A00FF007300FF5AE763FF10C631FF007300FF005A00FFFF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00005A00FF007300FF007300FF005A00FFFF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00006300FF006300FF0063
++      00FF006300FF006300FF006300FF006300FF006300FF006300FF006300FF0063
++      00FF006300FFFF00FF00FF00FF00FF00FF00FF00FF00006300FF006300FF0063
++      00FF006300FF006300FF006300FF006300FF006300FF006300FF006300FF0063
++      00FF006300FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00005A00FF005A00FF005A
++      00FFFF00FF00FF00FF00005A00FF005A00FF005A00FFFF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00007300FF42CE42FF0073
++      00FF005A00FFFF00FF00007300FF42CE42FF007300FF005A00FFFF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00007300FF73EF73FFADFF
++      ADFF007300FF005A00FF007300FF73EF73FFADFFADFF007300FF005A00FFFF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00007300FF84EF84FF94FF
++      94FF94FF94FF007300FF007300FF84EF84FF94FF94FF94FF94FF007300FF005A
++      00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00007300FF6BEF6BFF84EF
++      84FF84EF73FF5AE763FF007300FF6BEF6BFF84EF84FF84EF73FF5AE763FF0073
++      00FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00007300FF63E763FF6BE7
++      63FF5AE763FF5AE763FF007300FF63E763FF6BE763FF5AE763FF5AE763FF5AE7
++      63FF007300FF006300FFFF00FF00FF00FF00FF00FF00007300FF18DE5AFF10CE
++      42FF10CE42FF10CE42FF007300FF18DE5AFF10CE42FF10CE42FF10CE42FF10C6
++      31FF007300FF006300FFFF00FF00FF00FF00FF00FF00007300FF10DE42FF10C6
++      31FF08BD21FF08BD21FF007300FF10DE42FF10C631FF08BD21FF08BD21FF0073
++      00FF005A00FFFF00FF00FF00FF00FF00FF00FF00FF00007300FF10C631FF10C6
++      31FF08BD21FF007300FF007300FF10C631FF10C631FF08BD21FF007300FF005A
++      00FFFF00FF00FF00FF00FF00FF00FF00FF00FF00FF00007300FF10BD21FF08BD
++      21FF007300FF005A00FF007300FF10BD21FF08BD21FF007300FF005A00FFFF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00007300FF08BD21FF0073
++      00FF005A00FFFF00FF00007300FF08BD21FF007300FF005A00FFFF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00005A00FF005A00FF005A
++      00FFFF00FF00FF00FF00005A00FF005A00FF005A00FFFF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
++      FF00FF00FF00FF00FF00FF00FF00
+     }
+   end
+   object pmLabels: TPopupMenu[15]
+diff -rupN Y:\home\alegzz\transmisson-remote-gui-read-only\/main.pas D:\transmisson-remote-gui-read-only/main.pas
+--- Y:\home\alegzz\transmisson-remote-gui-read-only\/main.pas	2011-11-29 11:23:27.481661200 +0400
++++ D:\transmisson-remote-gui-read-only/main.pas	2012-01-14 04:13:41.219525600 +0400
+@@ -30,7 +30,7 @@ uses
+ 
+ const
+   AppName = 'Transmission Remote GUI';
+-  AppVersion = '3.2';
++  AppVersion = '3.2.1';
+ 
+ resourcestring
+   sAll = 'All';
+@@ -40,6 +40,10 @@ resourcestring
+   sSeeding = 'Seeding';
+   sFinished = 'Finished';
+   sStopped = 'Stopped';
++  sError = 'Error';
++  sQueuedDown = 'Queued(Down)';
++  sQueuedUp = 'Queued(Up)';
++  sStalled = 'Stalled';
+   sUnknown = 'Unknown';
+   sCompleted = 'Completed';
+   sConnected = 'connected';
+@@ -62,6 +66,7 @@ resourcestring
+   sDownSpeed = 'D: %s/s';
+   sUpSpeed = 'U: %s/s';
+   SFreeSpace = 'Free: %s';
++  STotal = 'Total: %s / %s %s (%s / %s %s)';
+   sNoPathMapping = 'Unable to find path mapping.'+LineEnding+'Use program''s options to setup path mappings.';
+   sGeoIPConfirm = 'Geo IP database is needed to resolve country by IP address.' + LineEnding + 'Download this database now?';
+   sFlagArchiveConfirm = 'Flag images archive is needed to display country flags.' + LineEnding + 'Download this archive now?';
+@@ -101,6 +106,12 @@ resourcestring
+   SAverage = 'average';
+ 
+ type
++  TSpeedRecord = record
++    ID: Integer;
++    Time: TDateTime;
++    UpSpd: Double;
++    DownSpd: Double;
++  end;
+ 
+   { TMainForm }
+ 
+@@ -139,17 +150,39 @@ type
+     acNewConnection: TAction;
+     acDisconnect: TAction;
+     acAltSpeed: TAction;
++    acForceStartTorrent: TAction;
++    acQueueUp: TAction;
++    acQueueDown: TAction;
++    acQueueTOP: TAction;
++    acQueueBottom: TAction;
+     acUpdateBlocklist: TAction;
+     acUpdateGeoIP: TAction;
+     acTorrentProps: TAction;
+     acVerifyTorrent: TAction;
+     ActionList: TActionList;
+     ApplicationProperties: TApplicationProperties;
++    cbInterval: TComboBox;
+     edSearch: TEdit;
+     imgSearch: TImage;
+     imgFlags: TImageList;
+     ImageList16: TImageList;
+     FilterTimer: TTimer;
++    MenuItem64: TMenuItem;
++    miForceStart: TMenuItem;
++    miQueue: TMenuItem;
++    miMoveTOP: TMenuItem;
++    miMoveBottom: TMenuItem;
++    miMoveDown: TMenuItem;
++    miMoveUP: TMenuItem;
++    Panel1: TPanel;
++    pbGraph: TPaintBox;
++    tabGraph: TTabSheet;
++    tbForceStart: TToolButton;
++    tbQueueUp: TToolButton;
++    tbSep1: TToolButton;
++    tbQueueDown: TToolButton;
++    txQueue: TLabel;
++    txQueueLabel: TLabel;
+     lvFilter: TVarGrid;
+     lvTrackers: TVarGrid;
+     MenuItem25: TMenuItem;
+@@ -267,9 +300,7 @@ type
+     txPeersLabel: TLabel;
+     txSeeds: TLabel;
+     txSeedsLabel: TLabel;
+-    txDummy2: TLabel;
+     txTrackerUpdate: TLabel;
+-    txDummy1: TLabel;
+     txRemaining: TLabel;
+     txRemainingLabel: TLabel;
+     txStatus: TLabel;
+@@ -361,6 +392,7 @@ type
+     procedure acConnOptionsExecute(Sender: TObject);
+     procedure acDelTrackerExecute(Sender: TObject);
+     procedure acEditTrackerExecute(Sender: TObject);
++    procedure acForceStartTorrentExecute(Sender: TObject);
+     procedure acHideAppExecute(Sender: TObject);
+     procedure acMoveTorrentExecute(Sender: TObject);
+     procedure acNewConnectionExecute(Sender: TObject);
+@@ -370,6 +402,10 @@ type
+     procedure acDisconnectExecute(Sender: TObject);
+     procedure acExitExecute(Sender: TObject);
+     procedure acDaemonOptionsExecute(Sender: TObject);
++    procedure acQueueBottomExecute(Sender: TObject);
++    procedure acQueueDownExecute(Sender: TObject);
++    procedure acQueueTOPExecute(Sender: TObject);
++    procedure acQueueUpExecute(Sender: TObject);
+     procedure acReannounceTorrentExecute(Sender: TObject);
+     procedure acRemoveTorrentAndDataExecute(Sender: TObject);
+     procedure acRemoveTorrentExecute(Sender: TObject);
+@@ -416,6 +452,7 @@ type
+     procedure lvTrackersCellAttributes(Sender: TVarGrid; ACol, ARow, ADataCol: integer; AState: TGridDrawState; var CellAttribs: TCellAttributes);
+     procedure lvTrackersDblClick(Sender: TObject);
+     procedure lvTrackersKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
++    procedure pbGraphPaint(Sender: TObject);
+     procedure pbStatusPaint(Sender: TObject);
+     procedure panReconnectResize(Sender: TObject);
+     procedure pbDownloadedPaint(Sender: TObject);
+@@ -457,6 +494,10 @@ type
+     FStatusImgIndex: integer;
+     FCurDownSpeedLimit: integer;
+     FCurUpSpeedLimit: integer;
++    FSpeedCount: Integer;
++    FSpeedData: Array of TSpeedRecord;
++    FSpeedMax: Double;
++    FSpeedBitmap: TBitmap;
+ 
+     procedure DoConnect;
+     procedure DoDisconnect;
+@@ -482,6 +523,7 @@ type
+     function GetSeedsText(Seeds, SeedsTotal: integer): string;
+     function GetPeersText(Peers, PeersTotal, Leechers: integer): string;
+     function RatioToString(Ratio: double): string;
++    function GetRatio(const num, denum: double): string;
+     function TorrentDateTimeToString(d: Int64): string;
+     procedure DoRefresh(All: boolean = False);
+     function GetFilesCommonPath(files: TJSONArray): string;
+@@ -491,6 +533,7 @@ type
+     procedure CenterReconnectWindow;
+     procedure DrawProgressCell(Sender: TVarGrid; ACol, ARow, ADataCol: integer; AState: TGridDrawState; const ACellRect: TRect);
+     procedure ProcessPieces(const Pieces: string; PieceCount: integer; const Done: double);
++    procedure ProcessGraph(downSpeed, upSpeed: Double);
+     function ExecRemoteFile(const FileName: string; SelectFile: boolean): boolean;
+     function GetSelectedTorrents: variant;
+     procedure FillDownloadDirs(CB: TComboBox);
+@@ -506,6 +549,7 @@ type
+     procedure SetSpeedLimit(const Dir: string; Speed: integer);
+     function FixSeparators(const p: string): string;
+     function MapRemoteToLocal(const RemotePath: string): string;
++    procedure QueueMove(act: string);
+   public
+     procedure FillTorrentsList(list: TJSONArray);
+     procedure FillPeersList(list: TJSONArray);
+@@ -557,6 +601,7 @@ const
+   idxPriority = 18;
+   idxSizeToDowload = 19;
+   idxTorrentId = 20;
++  idxQueue = 21;
+ 
+   idxTag = -1;
+   idxSeedsTotal = -2;
+@@ -606,27 +651,41 @@ const
+   fltActive   = 3;
+   fltInactive = 4;
+   fltStopped  = 5;
++  fltError    = 6;
+ 
+   // Status images
+-  imgDown      = 9;
+-  imgSeed      = 10;
+-  imgDownError = 11;
+-  imgSeedError = 12;
+-  imgError     = 13;
+-  imgDone      = 14;
+-  imgStopped   = 29;
+-  imgDownQueue = 16;
+-  imgSeedQueue = 17;
+-  imgAll       = 19;
+-  imgActive    = 20;
++  imgDown         = 9;
++  imgSeed         = 10;
++  imgDownError    = 11;
++  imgSeedError    = 12;
++  imgError        = 13;
++  imgDone         = 14;
++  imgStopped      = 29;
++  imgDownQueue    = 16;
++  imgSeedQueue    = 17;
++  imgAll          = 19;
++  imgActive       = 20;
++  imgInactive     = 15;
++  imgSeedStalled  = 39;
++  imgTrackers     = 5;
++  imgOpen         = 22;
++  imgSkip         = 23;
++  imgLow          = 24;
++  imgNormal       = 25;
++  imgHigh         = 26;
++  imgQTOP         = 40;
++  imgQUP          = 41;
++  imgQDOWN        = 42;
++  imgQBOTTOM      = 43;
++  imgForceStart   = 44;
+ 
+-  StatusFiltersCount = 6;
++  StatusFiltersCount = 7;
+ 
+-  TorrentFieldsMap: array[idxName..idxTorrentId] of string =
++  TorrentFieldsMap: array[idxName..idxQueue] of string =
+     ('', 'totalSize', '', 'status', 'peersSendingToUs,seeders',
+      'peersGettingFromUs,leechers', 'rateDownload', 'rateUpload', 'eta', 'uploadRatio',
+      'downloadedEver', 'uploadedEver', '', '', 'addedDate', 'doneDate', 'activityDate', '', 'bandwidthPriority',
+-     '', '');
++     '', '','queuePosition');
+ 
+ implementation
+ 
+@@ -634,9 +693,9 @@ uses
+ {$ifdef linux}
+   process,
+ {$endif linux}
+-  AddTorrent, synacode, ConnOptions, clipbrd, DateUtils, utils, TorrProps, DaemonOptions, About,
++  ufiles, AddTorrent, synacode, ConnOptions, clipbrd, DateUtils, utils, TorrProps, DaemonOptions, About,
+   ToolWin, download, ColSetup, types, AddLink, MoveTorrent, ssl_openssl_lib, AddTracker, lcltype,
+-  Options, ButtonPanel;
++  Options, ButtonPanel, math;
+ 
+ const
+   TR_STATUS_CHECK_WAIT_1   = ( 1 shl 0 ); // Waiting in queue to check files
+@@ -653,7 +712,8 @@ const
+   TR_STATUS_SEED_WAIT_2     = 5;     // Queued to seed
+   TR_STATUS_SEED_2          = 6;     // Seeding
+ 
+-  TR_STATUS_FINISHED        = $100; // Torrent is finished (pseudo status)
++  TR_STATUS_FINISHED     = ( 1 shl 6 ); // Torrent is finished (pseudo status)
++  TR_STATUS_STALLED      = ( 1 shl 7 ); // Torrent is stalled (psevdo status)
+ 
+   TR_SPEEDLIMIT_GLOBAL    = 0;    // only follow the overall speed limit
+   TR_SPEEDLIMIT_SINGLE    = 1;    // only follow the per-torrent limit
+@@ -664,6 +724,10 @@ const
+   TR_PRI_NORMAL =  0;
+   TR_PRI_HIGH   =  1;
+ 
++Var
++  MultiTorrentsSkipParams: boolean = false;
++  MultiTorrentsCount: integer = 1;
++
+ const
+   SizeNames: array[1..5] of string = (sByte, sKByte, sMByte, sGByte, sTByte);
+ 
+@@ -879,7 +943,7 @@ begin
+     if IsProtocolSupported(s) or FileExistsUTF8(s) then
+       AddTorrentFile(s);
+   end;
+-  if FileExists(FRunFileName) then begin
++  if FileExists(UTF8Decode(FRunFileName)) then begin
+     h:=FileOpen(FRunFileName, fmOpenRead or fmShareDenyNone);
+     if FileRead(h, pid, SizeOf(pid)) = SizeOf(pid) then begin
+ {$ifdef mswindows}
+@@ -969,6 +1033,10 @@ begin
+   lvTrackers.AlternateColor:=FAlterColor;
+   FStatusImgIndex:=30;
+ 
++  gTorrents.DoubleBuffered:=True;
++  lvPeers.DoubleBuffered:=True;
++  lvFiles.DoubleBuffered:=True;
++
+   DoDisconnect;
+   PageInfo.ActivePageIndex:=0;
+   PageInfoChange(nil);
+@@ -1052,6 +1120,7 @@ begin
+   FUnZip.Free;
+   RpcObj.Free;
+   FTorrentProgress.Free;
++  FSpeedBitmap.Free;
+   FStatusBmp.Free;
+   FPathMap.Free;
+   FTorrents.Free;
+@@ -1154,6 +1223,12 @@ begin
+   AddTracker(True);
+ end;
+ 
++procedure TMainForm.acForceStartTorrentExecute(Sender: TObject);
++begin
++  if gTorrents.Items.Count = 0 then exit;
++  TorrentAction(GetSelectedTorrents, 'start-now');
++end;
++
+ procedure TMainForm.acHideAppExecute(Sender: TObject);
+ begin
+   HideApp;
+@@ -1349,9 +1424,14 @@ begin
+ end;
+ 
+ procedure TMainForm.acAddTorrentExecute(Sender: TObject);
++var
++  i: integer;
+ begin
+   if not OpenTorrentDlg.Execute then exit;
+-  DoAddTorrent(OpenTorrentDlg.FileName);
++  MultiTorrentsSkipParams:=False;
++  MultiTorrentsCount:=OpenTorrentDlg.Files.Count;
++  for i:=0 to OpenTorrentDlg.Files.Count-1 do
++    DoAddTorrent(OpenTorrentDlg.Files[i]);
+ end;
+ 
+ procedure TMainForm.acAddTrackerExecute(Sender: TObject);
+@@ -1486,7 +1566,7 @@ var
+   id: integer;
+   t, files: TJSONArray;
+   i: integer;
+-  fs: TFileStream;
++  fs: TFileStreamU;
+   s, ss, OldDownloadDir, IniSec, path: string;
+   tt: TDateTime;
+   ok: boolean;
+@@ -1496,7 +1576,7 @@ begin
+   if IsProtocolSupported(FileName) then
+     torrent:='-'
+   else begin
+-    fs:=TFileStream.Create(UTF8ToSys(FileName), fmOpenRead or fmShareDenyNone);
++    fs:=TFileStreamU.Create(UTF8Decode(FileName), fmOpenRead or fmShareDenyNone);
+     try
+       SetLength(torrent, fs.Size);
+       fs.ReadBuffer(PChar(torrent)^, Length(torrent));
+@@ -1511,6 +1591,9 @@ begin
+       Width:=Ini.ReadInteger('AddTorrent', 'Width', Width);
+       Height:=Ini.ReadInteger('AddTorrent', 'Height', Height);
+ 
++      cbSkipMultiTorrents.Visible:=MultiTorrentsCount>1;
++      cbSkipMultiTorrents.Checked:=MultiTorrentsSkipParams;
++
+       IniSec:='AddTorrent.' + FCurConn;
+       FillDownloadDirs(cbDestFolder);
+ 
+@@ -1594,7 +1677,7 @@ begin
+       OldDownloadDir:=cbDestFolder.Text;
+       AppNormal;
+ 
+-      ok:=not FIni.ReadBool('Interface', 'ShowAddTorrentWindow', True);
++      ok:=(not FIni.ReadBool('Interface', 'ShowAddTorrentWindow', True)) or MultiTorrentsSkipParams;
+       if ok then
+         btSelectAllClick(nil)
+       else begin
+@@ -1607,6 +1690,8 @@ begin
+         AppBusy;
+         Self.Update;
+ 
++        MultiTorrentsSkipParams:=cbSkipMultiTorrents.Checked;
++
+         if OldDownloadDir <> cbDestFolder.Text then begin
+           TorrentAction(VarArrayOf([id]), 'remove');
+           id:=0;
+@@ -1933,6 +2018,9 @@ begin
+   if i = TR_STATUS_FINISHED then
+     Result:=sFinished
+   else
++  if ((i = TR_STATUS_STALLED) and (RpcObj.RPCVersion>= 14)) then
++    Result:=sStalled
++  else
+     Result:=sUnknown;
+ end;
+ 
+@@ -1965,6 +2053,14 @@ begin
+       Result:=Format('%.3f', [Ratio]);
+ end;
+ 
++function TMainForm.GetRatio(const num, denum: double): string;
++begin
++ if (num <= 0) or (denum <= 0) then
++  Result:='-'
++ else
++  Result:=RatioToString(num/denum);
++end;
++
+ function TMainForm.TorrentDateTimeToString(d: Int64): string;
+ begin
+   if d = 0 then
+@@ -2096,6 +2192,21 @@ begin
+           else
+             cbUTP.Visible:=False;
+ 
++          //DONE: 2.4+
++          //Queue's
++          if RpcObj.RPCVersion >= 14 then
++           Begin
++            TabQueue.TabVisible:=true;
++            cbQueueDownEnabled.Checked:=args.Integers['download-queue-enabled']<>0;
++            cbQueueUpEnabled.Checked:=args.Integers['seed-queue-enabled']<>0;
++            cbQueueStalledEnabled.Checked:=args.Integers['queue-stalled-enabled']<>0;
++            edQueueDown.Value:=args.Integers['download-queue-size'];
++            edQueueUp.Value:=args.Integers['seed-queue-size'];
++            edIdleStalled.Value:=args.Integers['queue-stalled-minutes'];
++           end
++          else
++            TabQueue.TabVisible:=False;
++
+           cbPortForwarding.Checked:=args.Integers['port-forwarding-enabled'] <> 0;
+           s:=args.Strings['encryption'];
+           if s = 'preferred' then
+@@ -2197,6 +2308,18 @@ begin
+         if RpcObj.RPCVersion >= 13 then
+           args.Add('utp-enabled', integer(cbUTP.Checked) and 1);
+ 
++        //DONE: 2.4+
++        //queue's
++        if RpcObj.RPCVersion >= 14 then
++          begin
++            args.Add('download-queue-enabled',Integer(cbQueueDownEnabled.Checked) and 1);
++            args.Add('seed-queue-enabled',Integer(cbQueueUpEnabled.Checked) and 1);
++            args.Add('queue-stalled-enabled',Integer(cbQueueStalledEnabled.Checked) and 1);
++            args.Add('download-queue-size',edQueueDown.Value);
++            args.Add('seed-queue-size',edQueueUp.Value);
++            args.Add('queue-stalled-minutes',edIdleStalled.Value);
++          end;
++
+         req.Add('arguments', args);
+         args:=RpcObj.SendRequest(req, False);
+         if args = nil then begin
+@@ -2803,14 +2926,15 @@ begin
+       1: ImageIndex:=imgDown;
+       2: ImageIndex:=imgSeed;
+       3: ImageIndex:=imgActive;
+-      4: ImageIndex:=15;
++      4: ImageIndex:=imgInactive;
+       5: ImageIndex:=imgStopped;
++      6: ImageIndex:=imgError;
+       else
+         if Text <> '' then
+           if ARow >= Sender.Items.Count - FTrackers.Count then
+-            ImageIndex:=5
++            ImageIndex:=imgTrackers
+           else
+-            ImageIndex:=22;
++            ImageIndex:=imgOpen;
+     end;
+   end;
+ end;
+@@ -2915,6 +3039,56 @@ begin
+   end;
+ end;
+ 
++procedure TMainForm.QueueMove(act:string);
++var
++ args: TJSONObject;
++ req : TJSONObject;
++ TorrentIds: Variant;
++ ids: TJSONArray;
++ i: Integer;
++begin
++ if gTorrents.Items.Count = 0 then exit;
++ if act=''  then exit;
++ if not ((act = 'top') or (act = 'up') or (act = 'down') or (act = 'bottom')) then exit;
++
++ req:=TJSONObject.Create;
++ req.Add('method', 'queue-move-'+act);
++
++ args:=TJSONObject.Create;
++ TorrentIds:=GetSelectedTorrents;
++ if not VarIsNull(TorrentIds) then
++  begin
++    ids:=TJSONArray.Create;
++    for i:=VarArrayLowBound(TorrentIds, 1) to VarArrayHighBound(TorrentIds, 1) do
++      ids.Add(integer(TorrentIds[i]));
++
++    args.Add('ids', ids);
++  end;
++
++ req.Add('arguments', args);
++ args:=RpcObj.SendRequest(req, False, 30000);
++end;
++
++procedure TMainForm.acQueueUpExecute(Sender: TObject);
++begin
++ QueueMove('up');
++end;
++
++procedure TMainForm.acQueueDownExecute(Sender: TObject);
++begin
++ QueueMove('down');
++end;
++
++procedure TMainForm.acQueueTOPExecute(Sender: TObject);
++begin
++ QueueMove('top');
++end;
++
++procedure TMainForm.acQueueBottomExecute(Sender: TObject);
++begin
++ QueueMove('bottom');
++end;
++
+ procedure TMainForm.pbStatusPaint(Sender: TObject);
+ begin
+   if FStatusBmp = nil then begin
+@@ -3242,6 +3416,7 @@ begin
+     Items[0, 3]:=UTF8Decode(SActive);
+     Items[0, 4]:=UTF8Decode(SInactive);
+     Items[0, 5]:=UTF8Decode(sStopped);
++    Items[0, 6]:=UTF8Decode(sError);
+   end;
+   edSearch.Enabled:=False;
+   edSearch.Color:=gTorrents.Color;
+@@ -3585,7 +3760,7 @@ var
+   FilterIdx, OldId: integer;
+   TrackerFilter, PathFilter: string;
+   UpSpeed, DownSpeed: double;
+-  DownCnt, SeedCnt, CompletedCnt, ActiveCnt, StoppedCnt: integer;
++  DownCnt, SeedCnt, CompletedCnt, ActiveCnt, StoppedCnt, ErrCnt: integer;
+   IsActive: boolean;
+   Paths: TStringList;
+   v: variant;
+@@ -3633,6 +3808,7 @@ begin
+   CompletedCnt:=0;
+   ActiveCnt:=0;
+   StoppedCnt:=0;
++  ErrCnt:=0;
+ 
+   FilterIdx:=lvFilter.Row;
+   if VarIsNull(lvFilter.Items[0, FilterIdx]) then
+@@ -3670,7 +3846,16 @@ begin
+     j:=t.Integers['status'];
+     if ExistingRow and (j = TR_STATUS_SEED) and (FTorrents[idxStatus, row] = TR_STATUS_DOWNLOAD) then
+       DownloadFinished(UTF8Encode(widestring(FTorrents[idxName, row])));
++
++    if RpcObj.RPCVersion>=14 then
++      if (t.Integers['isStalled']<>0) and (GetTorrentError(t)='') and (t.Strings['errorString'] = '') then
++       begin
++         j:=TR_STATUS_STALLED;
++         StateImg:=imgSeedStalled;
++       end;
++
+     FTorrents[idxStatus, row]:=j;
++
+     if j = TR_STATUS_CHECK_WAIT  then StateImg:=imgDownQueue else
+     if j = TR_STATUS_CHECK  then StateImg:=imgDownQueue else
+     if j = TR_STATUS_DOWNLOAD_WAIT  then StateImg:=imgDownQueue else
+@@ -3820,6 +4005,9 @@ begin
+     if t.IndexOfName('bandwidthPriority') >= 0 then
+       FTorrents[idxPriority, row]:=t.Integers['bandwidthPriority'];
+ 
++    if RpcObj.RPCVersion>=14 then
++      GetTorrentValue(idxQueue, 'queuePosition', vtInteger);
++
+     DownSpeed:=DownSpeed + FTorrents[idxDownSpeed, row];
+     UpSpeed:=UpSpeed + FTorrents[idxUpSpeed, row];
+ 
+@@ -3854,12 +4042,15 @@ begin
+         Inc(CompletedCnt);
+       end
+       else
+-      if j = TR_STATUS_FINISHED then
++      if (j = TR_STATUS_FINISHED) or (j = TR_STATUS_STALLED) then
+         Inc(CompletedCnt);
+ 
+       if integer(FTorrents[idxStateImg, i]) in [imgStopped, imgDone] then
+         Inc(StoppedCnt);
+ 
++      if integer(FTorrents[idxStateImg, i]) in [imgError, imgDownError, imgSeedError] then
++        Inc(ErrCnt);
++
+       if not VarIsEmpty(FTorrents[idxTracker, i]) then begin
+         s:=UTF8Encode(widestring(FTorrents[idxTracker, i]));
+         j:=FTrackers.IndexOf(s);
+@@ -3884,11 +4075,14 @@ begin
+           if FTorrents[idxStatus, i] <> TR_STATUS_DOWNLOAD then
+             continue;
+         fltDone:
+-          if (FTorrents[idxStateImg, i] <> imgDone) and (FTorrents[idxStatus, i] <> TR_STATUS_SEED) then
++          if (FTorrents[idxStateImg, i] <> imgDone) and (not (Integer(FTorrents[idxStatus, i]) in [TR_STATUS_STALLED,TR_STATUS_SEED])) then
+             continue;
+         fltStopped:
+           if not (integer(FTorrents[idxStateImg, i]) in [imgStopped, imgDone]) then
+             continue;
++        fltError:
++          if not (integer(FTorrents[idxStateImg, i]) in [imgError, imgDownError, imgSeedError]) then
++                  continue;
+       end;
+ 
+       if edSearch.Text <> '' then
+@@ -3937,6 +4131,7 @@ begin
+     lvFilter.Items[0, 3]:=UTF8Decode(Format('%s (%d)', [SActive, ActiveCnt]));
+     lvFilter.Items[0, 4]:=UTF8Decode(Format('%s (%d)', [SInactive, FTorrents.Count - ActiveCnt]));
+     lvFilter.Items[0, 5]:=UTF8Decode(Format('%s (%d)', [sStopped, StoppedCnt]));
++    lvFilter.Items[0, 6]:=UTF8Decode(Format('%s (%d)', [sError, ErrCnt]));
+ 
+     j:=StatusFiltersCount;
+     lvFilter.Items[0, j]:=NULL;
+@@ -3986,6 +4181,9 @@ begin
+   StatusBar.Panels[1].Text:=Format(sDownSpeed, [GetHumanSize(DownSpeed, 1)]);
+   StatusBar.Panels[2].Text:=Format(sUpSpeed, [GetHumanSize(UpSpeed, 1)]);
+ 
++  { TODO : Graph data update }
++  ProcessGraph(DownSpeed, UpSpeed);
++
+ {$ifndef LCLcarbon}
+   // There is memory leak in TTrayIcon implementation for Mac.
+   // Disable tray icon update for Mac.
+@@ -4415,6 +4613,7 @@ begin
+   end;
+   txAddedOn.Caption:=TorrentDateTimeToString(Trunc(t.Floats['addedDate']));
+   txCompletedOn.Caption:=TorrentDateTimeToString(Trunc(t.Floats['doneDate']));
++  if RpcObj.RPCVersion >= 14 then  txQueue.Caption:=IntToStr(t.Integers['queuePosition']);
+   panGeneralInfo.ChildSizing.Layout:=cclLeftToRightThenTopToBottom;
+ end;
+ 
+@@ -4527,6 +4726,7 @@ end;
+ procedure TMainForm.FillSessionInfo(s: TJSONObject);
+ var
+   d, u: integer;
++  req, args, stat, stattot: TJSONObject;
+ begin
+ {$ifdef LCLcarbon}
+   TrayIcon.Tag:=0;
+@@ -4566,6 +4766,13 @@ begin
+   acDelTracker.Visible:=acAddTracker.Visible;
+   sepTrackers.Visible:=acAddTracker.Visible;
+ 
++  miQueue.Visible:=RpcObj.RPCVersion >= 14;
++  tbSep1.Visible:=RpcObj.RPCVersion >= 14;
++  acQueueBottom.Visible:=RpcObj.RPCVersion >= 14;
++  acQueueTOP.Visible:=RpcObj.RPCVersion >= 14;
++  acQueueUp.Visible:=RpcObj.RPCVersion >= 14;
++  acQueueDown.Visible:=RpcObj.RPCVersion >= 14;
++
+   if RpcObj.RPCVersion >= 5 then begin
+ {$ifdef LCLcarbon}
+     if acAltSpeed.Checked <> (s.Integers['alt-speed-enabled'] <> 0) then
+@@ -4577,6 +4784,25 @@ begin
+   end;
+   if s.IndexOfName('download-dir-free-space') >= 0 then
+     StatusBar.Panels[3].Text:=Format(SFreeSpace, [GetHumanSize(s.Floats['download-dir-free-space'])]);
++  if (RpcObj.RPCVersion >= 4)  then
++   begin
++    req:=TJSONObject.Create;
++    try
++      req.Add('method', 'session-stats');
++      args:=RpcObj.SendRequest(req);
++      if args <> nil then
++      try
++          stat:=args.Objects['current-stats'];
++          stattot:=args.Objects['cumulative-stats'];
++          StatusBar.Panels[5].Text := Format(STotal, [GetHumanSize(stat.Floats['downloadedBytes']),GetHumanSize(stat.Floats['uploadedBytes']),GetRatio(stat.Floats['uploadedBytes'], (stat.Floats['downloadedBytes'])),
++                                                      GetHumanSize(stattot.Floats['downloadedBytes']),GetHumanSize(stattot.Floats['uploadedBytes']),GetRatio(stattot.Floats['uploadedBytes'], (stattot.Floats['downloadedBytes']))]);
++      finally
++        args.Free;
++      end;
++    finally
++      req.Free;
++    end;
++   end;
+ 
+   if (RpcObj.RPCVersion >= 5) and acAltSpeed.Checked then begin
+     d:=s.Integers['alt-speed-down'];
+@@ -4847,6 +5073,223 @@ begin
+   end;
+ end;
+ 
++{=====================AVG Variables======================================}
++const
++  cn_maxAVG = 100;
++  maxAVG: smallint = 3;
++
++var
++  XAr: array[0..2,0..cn_maxAVG] of single;
++
++procedure TMainForm.ProcessGraph(downSpeed, upSpeed: double);
++const
++  MaxDataCount=12*60*60; //12 hour with 1 sec interval
++  TimesArr: array[0..4] of integer =
++    ( 60, //1 min
++      5*60, //5 min
++      30*60, //30 min
++      2*60*60, //2 h
++      12*60*60);//12 h
++var
++  i: integer;
++  bmp: TBitmap;
++  R: TRect;
++  X1,X2: integer;
++  tFull: integer;
++
++{======================Functions Start===================================}
++procedure ClrAVG2(down,up:Double);
++var
++  i:smallint;
++begin
++  for i:=0 to maxAVG do
++   begin
++     XAr[0,i]:=up;
++     XAr[1,i]:=down;
++   end;
++end;
++
++function AVG2(n:byte;x:Single):Single;
++var
++  i: smallint;
++  tt: single;
++begin
++  for i:=maxAVG downto 1 do
++    XAr[n,i]:=XAr[n,i-1];
++
++  XAr[n,0]:=x;
++
++  tt:=0;
++  for i:=0 to maxAVG do tt:=tt+XAr[n,i];
++
++// tt := tt / (maxAVG+1);
++  AVG2:= tt / (maxAVG+1);
++end;
++
++function ScaleGraphY(v:double):Integer;
++begin
++  result:=bmp.Height-round((v/FSpeedMax)*bmp.Height);
++end;
++
++function ScaleGraphX(t: double): Integer; //t = time in seconds
++begin
++  Result:=bmp.Width-round((t/(tFull))*bmp.Width);
++end;
++
++Function GetMaxSpeed(spd: Double): Double;
++const
++  SpeedAr: array [0..8] of single = (1,1.5,2.0,3.0,4.0,6.0,8.0,10.0,12.0);
++var
++  i,j,k: integer;
++  Spr: single;
++begin
++  i:=0;
++  while i <= 6 do
++   begin
++    if spd < 1024 then
++      break;
++    spd:=spd/1024;
++    Inc(i);
++   end;
++
++ k:=0;
++
++ while k <= 6 do
++  begin
++   if spd < 10.24 then
++     break;
++   spd:=spd/10.24;
++   Inc(k);
++  end;
++
++ for j:= High(SpeedAr) downto 0 do
++  if spd<SpeedAr[j] then spr:=SpeedAr[j];
++
++ Result:=spr*power(1024,i)*power(10,k);
++end;
++
++begin
++ if Length(FSpeedData)=0 then ClrAVG2(downSpeed,UpSpeed);
++  if FSpeedBitmap = nil then
++      FSpeedBitmap:=TBitmap.Create;
++ tabGraph.DoubleBuffered:=True;
++ if Length(FSpeedData)<MaxDataCount then
++   SetLength(FSpeedData,Length(FSpeedData)+1)
++ else
++   //move....
++   for i:=1 to High(FSpeedData) do FSpeedData[i-1]:=FSpeedData[i];
++ FSpeedCount:=Length(FSpeedData)-1;
++ with FSpeedData[FSpeedCount] do
++   begin
++     id:=Length(FSpeedData);
++     Time:=Now();
++     UpSpd:=AVG2(0,upSpeed);
++     DownSpd:=AVG2(1,downSpeed);
++   end;
++ tFull:=TimesArr[cbInterval.ItemIndex];
++ FSpeedMax:=0;
++ i:=FSpeedCount;
++ While (SecondsBetween(FSpeedData[FSpeedCount].Time,FSpeedData[i].Time)<tFull) and (i>1) do
++   begin
++     with FSpeedData[i] do
++     begin
++      if UpSpd>FSpeedMax then FSpeedMax:=UpSpd;
++      if DownSpd>FSpeedMax then FSpeedMax:=DownSpd;
++     end;
++
++     dec(i);
++   end;
++
++ FSpeedMax:=GetMaxSpeed(FSpeedMax*1.05);
++ Try
++  bmp:=TBitmap.Create;
++  bmp.Width:=pbGraph.Width;
++  bmp.Height:=pbGraph.Height;
++  bmp.Canvas.Brush.Color:=clWindow;
++  bmp.Canvas.FillRect(0, 0, bmp.Width, bmp.Height);
++ { for i:= High(FSpeedData)-1  downto 0 do
++   begin
++     bmp.Canvas.Pen.Color:=clGreen;
++     bmp.Canvas.Line(ScaleGraphX(i),ScaleGraphY(FSpeedData[i].UpSpd),ScaleGraphX(i+1),ScaleGraphY(FSpeedData[i+1].UpSpd));
++
++     bmp.Canvas.Pen.Color:=clRed;
++     bmp.Canvas.Line(ScaleGraphX(i),ScaleGraphY(FSpeedData[i].DownSpd),ScaleGraphX(i+1),ScaleGraphY(FSpeedData[i+1].DownSpd));
++
++   end;}
++
++  With bmp.Canvas do
++  begin
++    Pen.Color:=clGray;
++    Pen.Style:=psSolid;
++    TextOut(bmp.Width-60,2,GetHumanSize(FSpeedMax,1)+'/s');
++    Line(0,ScaleGraphY(FSpeedMax),bmp.Canvas.Width,ScaleGraphY(FSpeedMax));
++
++    TextOut(bmp.Width-60,ScaleGraphY(FSpeedMax/2),GetHumanSize(FSpeedMax/2,1)+'/s');
++    Line(0,ScaleGraphY(FSpeedMax/2),bmp.Canvas.Width,ScaleGraphY(FSpeedMax/2));
++
++
++    Line(0,ScaleGraphY(0),bmp.Canvas.Width,ScaleGraphY(0));
++    Pen.Style:=psDash;
++    TextOut(bmp.Width-60,ScaleGraphY(FSpeedMax*0.25),GetHumanSize(FSpeedMax*0.25,1)+'/s');
++    Line(0,ScaleGraphY(FSpeedMax*0.25),bmp.Canvas.Width,ScaleGraphY(FSpeedMax*0.25));
++
++    TextOut(bmp.Width-60,ScaleGraphY(FSpeedMax*0.75),GetHumanSize(FSpeedMax*0.75,1)+'/s');
++    Line(0,ScaleGraphY(FSpeedMax*0.75),bmp.Canvas.Width,ScaleGraphY(FSpeedMax*0.75));
++
++    Pen.Style:=psDot;
++    for i:=0 to 10 do
++      Line(ScaleGraphX(i*(tFull/10)),0,ScaleGraphX(i*(tFull/10)),height);
++    Pen.Style:=psSolid;
++    Pen.Color:=clBlack;
++  end;
++
++  i:=FSpeedCount;
++  While (SecondsBetween(FSpeedData[FSpeedCount].Time,FSpeedData[i].Time)<tFull) and (i>1) do
++    begin
++     X1:=ScaleGraphX(SecondsBetween(FSpeedData[FSpeedCount].Time,FSpeedData[i-1].Time));
++     X2:=ScaleGraphX(SecondsBetween(FSpeedData[FSpeedCount].Time,FSpeedData[i].Time));
++
++     bmp.Canvas.Pen.Color:=clGreen;
++     bmp.Canvas.Line(X1,ScaleGraphY(FSpeedData[i-1].UpSpd),X2,ScaleGraphY(FSpeedData[i].UpSpd));
++     //bmp.Canvas.TextOut(X2,ScaleGraphY(FSpeedData[i].UpSpd),Format('Up: %s=%s/s',[DateTimeToStr(FSpeedData[i].Time),GetHumanSize(FSpeedData[i].UpSpd,3)]));
++
++     bmp.Canvas.Pen.Color:=clRed;
++     bmp.Canvas.Line(X1,ScaleGraphY(FSpeedData[i-1].DownSpd),X2,ScaleGraphY(FSpeedData[i].DownSpd));
++     dec(i);
++    end;
++
++  with FSpeedBitmap.Canvas do
++  begin
++      FSpeedBitmap.Width:=pbGraph.ClientWidth;
++      if bmp <> nil then begin
++        FSpeedBitmap.Height:=bmp.Height;
++        R:=Rect(0, 0, FSpeedBitmap.Width, FSpeedBitmap.Height);
++        if bmp.Width > 0 then
++          StretchDraw(R, bmp)
++        else begin
++          Brush.Color:=clWindow;
++          FillRect(R);
++        end;
++      end
++      else begin
++        FSpeedBitmap.Height:=pbGraph.ClientHeight;
++        R:=Rect(0, 0, FSpeedBitmap.Width, FSpeedBitmap.Height);
++        FillRect(R);
++      end;
++  end;
++  pbGraph.Invalidate;
++
++ finally
++   bmp.Free;
++ end;
++end;
++
++procedure TMainForm.pbGraphPaint(Sender: TObject);
++begin
++  if FSpeedBitmap <> nil then
++    pbGraph.Canvas.StretchDraw(pbGraph.ClientRect, FSpeedBitmap);
++end;
++
+ function TMainForm.ExecRemoteFile(const FileName: string; SelectFile: boolean): boolean;
+ 
+   procedure _Exec(s: string);
+@@ -4951,10 +5394,10 @@ end;
+ function TMainForm.PriorityToStr(p: integer; var ImageIndex: integer): string;
+ begin
+   case p of
+-    TR_PRI_SKIP:   begin Result:=sSkip; ImageIndex:=23; end;
+-    TR_PRI_LOW:    begin Result:=sLow; ImageIndex:=24; end;
+-    TR_PRI_NORMAL: begin Result:=sNormal; ImageIndex:=25; end;
+-    TR_PRI_HIGH:   begin Result:=sHigh; ImageIndex:=26; end;
++    TR_PRI_SKIP:   begin Result:=sSkip; ImageIndex:=imgSkip; end;
++    TR_PRI_LOW:    begin Result:=sLow; ImageIndex:=imgLow; end;
++    TR_PRI_NORMAL: begin Result:=sNormal; ImageIndex:=imgNormal; end;
++    TR_PRI_HIGH:   begin Result:=sHigh; ImageIndex:=imgHigh; end;
+     else           Result:='???';
+   end;
+ end;
+diff -rupN Y:\home\alegzz\transmisson-remote-gui-read-only\/osxattr.pas D:\transmisson-remote-gui-read-only/osxattr.pas
+--- Y:\home\alegzz\transmisson-remote-gui-read-only\/osxattr.pas	1970-01-01 04:00:00.000000000 +0400
++++ D:\transmisson-remote-gui-read-only/osxattr.pas	2010-03-06 01:43:22.000000000 +0400
+@@ -0,0 +1,435 @@
++unit osxattr;
++
++{$mode delphi}
++
++interface
++
++uses
++  BaseUnix,
++  ctypes;
++
++const
++  FSOPT_NOFOLLOW 		      = $00000001;
++  FSOPT_NOINMEMUPDATE 	  = $00000002;
++  FSOPT_REPORT_FULLSIZE	  = $00000004;
++  { The following option only valid when requesting ATTR_CMN_RETURNED_ATTRS }
++  FSOPT_PACK_INVAL_ATTRS  = $00000008;
++
++{ we currently aren't anywhere near this amount for a valid
++ * fssearchblock.sizeofsearchparams1 or fssearchblock.sizeofsearchparams2
++ * but we put a sanity check in to avoid abuse of the value passed in from
++ * user land.
++ }
++  SEARCHFS_MAX_SEARCHPARMS = 4096;
++
++type
++  u_short   = cushort;
++  u_int16_t = cuint16;
++  int32_t   = cint16;
++  u_int32_t = cuint32;
++  u_long    = culong;
++  u_char    = cuchar;
++
++  text_encoding_t = u_int32_t;
++  fsobj_type_t = u_int32_t;
++  fsobj_tag_t = u_int32_t;
++  fsfile_type_t = u_int32_t;
++  fsvolid_t = u_int32_t;
++
++  fsobj_id_t = packed record
++  	fid_objno      : u_int32_t;
++    fid_generation : u_int32_t;
++  end;
++  pfsobj_id_t = ^fsobj_id_t;
++
++  attrgroup_t = u_int32_t;
++
++  attrlist = packed record
++  	bitmapcount : u_short;			{ number of attr. bit sets in list (should be 5) }
++	  reserved    : u_int16_t;				{ (to maintain 4-byte alignment) }
++  	commonattr  : attrgroup_t;			{ common attribute group }
++  	volattr     : attrgroup_t;			{ Volume attribute group }
++  	dirattr     : attrgroup_t;			{ directory attribute group }
++  	fileattr    : attrgroup_t;			{ file attribute group }
++  	forkattr    : attrgroup_t;			{ fork attribute group }
++  end;
++  pattrlist = ^attrlist;
++
++const
++  ATTR_BIT_MAP_COUNT = 5;
++
++type
++  attribute_set_t = packed record
++	  commonattr  : attrgroup_t;			{ common attribute group }
++	  volattr     : attrgroup_t;			{ Volume attribute group }
++	  dirattr     : attrgroup_t;			{ directory attribute group }
++	  fileattr    : attrgroup_t;			{ file attribute group }
++	  forkattr    : attrgroup_t;			{ fork attribute group }
++  end;
++  pattribute_set_t = ^attribute_set_t;
++
++  attrreference_t = packed record
++  	attr_dataoffset : int32_t;
++  	attr_length     : u_int32_t;
++  end;
++  pattrreference_t = ^attrreference_t;
++
++{ XXX PPD This is derived from HFSVolumePriv.h and should perhaps be referenced from there? }
++
++  diskextent = packed record
++	  startblock  : u_int32_t;				{ first block allocated }
++	  blockcount  : u_int32_t;				{ number of blocks allocated }
++  end;
++  pdiskextent = ^diskextent;
++
++  extentrecord = array [0..7] of diskextent;
++  vol_capabilities_set_t = array [0..3] of u_int32_t;
++
++const
++  VOL_CAPABILITIES_FORMAT     = 0;
++  VOL_CAPABILITIES_INTERFACES = 1;
++  VOL_CAPABILITIES_RESERVED1  = 2;
++  VOL_CAPABILITIES_RESERVED2  = 3;
++
++type
++  vol_capabilities_attr_t = packed record
++  	capabilities  : vol_capabilities_set_t;
++	  valid         : vol_capabilities_set_t;
++  end;
++  pvol_capabilities_attr_t = ^vol_capabilities_attr_t;
++
++{
++ * XXX this value needs to be raised - 3893388
++ }
++const
++  ATTR_MAX_BUFFER		= 8192;
++
++{
++ * VOL_CAP_FMT_PERSISTENTOBJECTIDS: When set, the volume has object IDs
++ * that are persistent (retain their values even when the volume is
++ * unmounted and remounted), and a file or directory can be looked up
++ * by ID.  Volumes that support VolFS and can support Carbon File ID
++ * references should set this bit.
++ *
++ * VOL_CAP_FMT_SYMBOLICLINKS: When set, the volume supports symbolic
++ * links.  The symlink(), readlink(), and lstat() calls all use this
++ * symbolic link.
++ *
++ * VOL_CAP_FMT_HARDLINKS: When set, the volume supports hard links.
++ * The link() call creates hard links.
++ *
++ * VOL_CAP_FMT_JOURNAL: When set, the volume is capable of supporting
++ * a journal used to speed recovery in case of unplanned shutdown
++ * (such as a power outage or crash).  This bit does not necessarily
++ * mean the volume is actively using a journal for recovery.
++ *
++ * VOL_CAP_FMT_JOURNAL_ACTIVE: When set, the volume is currently using
++ * a journal for use in speeding recovery after an unplanned shutdown.
++ * This bit can be set only if VOL_CAP_FMT_JOURNAL is also set.
++ *
++ * VOL_CAP_FMT_NO_ROOT_TIMES: When set, the volume format does not
++ * store reliable times for the root directory, so you should not
++ * depend on them to detect changes, etc.
++ *
++ * VOL_CAP_FMT_SPARSE_FILES: When set, the volume supports sparse files.
++ * That is, files which can have "holes" that have never been written
++ * to, and are not allocated on disk.  Sparse files may have an
++ * allocated size that is less than the file's logical length.
++ *
++ * VOL_CAP_FMT_ZERO_RUNS: For security reasons, parts of a file (runs)
++ * that have never been written to must appear to contain zeroes.  When
++ * this bit is set, the volume keeps track of allocated but unwritten
++ * runs of a file so that it can substitute zeroes without actually
++ * writing zeroes to the media.  This provides performance similar to
++ * sparse files, but not the space savings.
++ *
++ * VOL_CAP_FMT_CASE_SENSITIVE: When set, file and directory names are
++ * case sensitive (upper and lower case are different).  When clear,
++ * an upper case character is equivalent to a lower case character,
++ * and you can't have two names that differ solely in the case of
++ * the characters.
++ *
++ * VOL_CAP_FMT_CASE_PRESERVING: When set, file and directory names
++ * preserve the difference between upper and lower case.  If clear,
++ * the volume may change the case of some characters (typically
++ * making them all upper or all lower case).  A volume that sets
++ * VOL_CAP_FMT_CASE_SENSITIVE should also set VOL_CAP_FMT_CASE_PRESERVING.
++ *
++ * VOL_CAP_FMT_FAST_STATFS: This bit is used as a hint to upper layers
++ * (especially Carbon) that statfs() is fast enough that its results
++ * need not be cached by those upper layers.  A volume that caches
++ * the statfs information in its in-memory structures should set this bit.
++ * A volume that must always read from disk or always perform a network
++ * transaction should not set this bit.
++ *
++ * VOL_CAP_FMT_2TB_FILESIZE: If this bit is set the volume format supports
++ * file sizes larger than 4GB, and potentially up to 2TB; it does not
++ * indicate whether the filesystem supports files larger than that.
++ *
++ * VOL_CAP_FMT_OPENDENYMODES: When set, the volume supports open deny
++ * modes (e.g. "open for read write, deny write"; effectively, mandatory
++ * file locking based on open modes).
++ *
++ * VOL_CAP_FMT_HIDDEN_FILES: When set, the volume supports the UF_HIDDEN
++ * file flag, and the UF_HIDDEN flag is mapped to that volume's native
++ * "hidden" or "invisible" bit (which may be the invisible bit from the
++ * Finder Info extended attribute).
++ *
++ * VOL_CAP_FMT_PATH_FROM_ID:  When set, the volume supports the ability
++ * to derive a pathname to the root of the file system given only the
++ * id of an object.  This also implies that object ids on this file
++ * system are persistent and not recycled.  This is a very specialized
++ * capability and it is assumed that most file systems will not support
++ * it.  Its use is for legacy non-posix APIs like ResolveFileIDRef.
++ *
++ * VOL_CAP_FMT_NO_VOLUME_SIZES: When set, the volume does not support
++ * returning values for total data blocks, available blocks, or free blocks
++ * (as in f_blocks, f_bavail, or f_bfree in "struct statfs").  Historically,
++ * those values were set to $FFFFFFFF for volumes that did not support them.
++ *
++ * VOL_CAP_FMT_DECMPFS_COMPRESSION: When set, the volume supports transparent
++ * decompression of compressed files using decmpfs.
++ }
++  VOL_CAP_FMT_PERSISTENTOBJECTIDS	=	$00000001;
++  VOL_CAP_FMT_SYMBOLICLINKS 		  =	$00000002;
++  VOL_CAP_FMT_HARDLINKS      	    =	$00000004;
++  VOL_CAP_FMT_JOURNAL       	    =	$00000008;
++  VOL_CAP_FMT_JOURNAL_ACTIVE 	    =	$00000010;
++  VOL_CAP_FMT_NO_ROOT_TIMES 	    =	$00000020;
++  VOL_CAP_FMT_SPARSE_FILES 		    =	$00000040;
++  VOL_CAP_FMT_ZERO_RUNS     	    =	$00000080;
++  VOL_CAP_FMT_CASE_SENSITIVE 	    =	$00000100;
++  VOL_CAP_FMT_CASE_PRESERVING   	=	$00000200;
++  VOL_CAP_FMT_FAST_STATFS 		    =	$00000400;
++  VOL_CAP_FMT_2TB_FILESIZE		    =	$00000800;
++  VOL_CAP_FMT_OPENDENYMODES		    =	$00001000;
++  VOL_CAP_FMT_HIDDEN_FILES		    =	$00002000;
++  VOL_CAP_FMT_PATH_FROM_ID		    =	$00004000;
++  VOL_CAP_FMT_NO_VOLUME_SIZES	    =	$00008000;
++  VOL_CAP_FMT_DECMPFS_COMPRESSION =	$00010000;
++
++
++{
++ * VOL_CAP_INT_SEARCHFS: When set, the volume implements the
++ * searchfs() system call (the vnop_searchfs vnode operation).
++ *
++ * VOL_CAP_INT_ATTRLIST: When set, the volume implements the
++ * getattrlist() and setattrlist() system calls (vnop_getattrlist
++ * and vnop_setattrlist vnode operations) for the volume, files,
++ * and directories.  The volume may or may not implement the
++ * readdirattr() system call.  XXX Is there any minimum set
++ * of attributes that should be supported?  To determine the
++ * set of supported attributes, get the ATTR_VOL_ATTRIBUTES
++ * attribute of the volume.
++ *
++ * VOL_CAP_INT_NFSEXPORT: When set, the volume implements exporting
++ * of NFS volumes.
++ *
++ * VOL_CAP_INT_READDIRATTR: When set, the volume implements the
++ * readdirattr() system call (vnop_readdirattr vnode operation).
++ *
++ * VOL_CAP_INT_EXCHANGEDATA: When set, the volume implements the
++ * exchangedata() system call (VNOP_EXCHANGE vnode operation).
++ *
++ * VOL_CAP_INT_COPYFILE: When set, the volume implements the
++ * VOP_COPYFILE vnode operation.  (XXX There should be a copyfile()
++ * system call in <unistd.h>.)
++ *
++ * VOL_CAP_INT_ALLOCATE: When set, the volume implements the
++ * VNOP_ALLOCATE vnode operation, which means it implements the
++ * F_PREALLOCATE selector of fcntl(2).
++ *
++ * VOL_CAP_INT_VOL_RENAME: When set, the volume implements the
++ * ATTR_VOL_NAME attribute for both getattrlist() and setattrlist().
++ * The volume can be renamed by setting ATTR_VOL_NAME with setattrlist().
++ *
++ * VOL_CAP_INT_ADVLOCK: When set, the volume implements POSIX style
++ * byte range locks via vnop_advlock (accessible from fcntl(2)).
++ *
++ * VOL_CAP_INT_FLOCK: When set, the volume implements whole-file flock(2)
++ * style locks via vnop_advlock.  This includes the O_EXLOCK and O_SHLOCK
++ * flags of the open(2) call.
++ *
++ * VOL_CAP_INT_EXTENDED_SECURITY: When set, the volume implements
++ * extended security (ACLs).
++ *
++ * VOL_CAP_INT_USERACCESS:  When set, the volume supports the
++ * ATTR_CMN_USERACCESS attribute (used to get the user's access
++ * mode to the file).
++ *
++ * VOL_CAP_INT_MANLOCK: When set, the volume supports AFP-style
++ * mandatory byte range locks via an ioctl().
++ *
++ * VOL_CAP_INT_EXTENDED_ATTR: When set, the volume implements
++ * native extended attribues.
++ *
++ * VOL_CAP_INT_NAMEDSTREAMS: When set, the volume supports
++ * native named streams.
++ }
++  VOL_CAP_INT_SEARCHFS		 = $00000001;
++  VOL_CAP_INT_ATTRLIST		 = $00000002;
++  VOL_CAP_INT_NFSEXPORT		 = $00000004;
++  VOL_CAP_INT_READDIRATTR	 = $00000008;
++  VOL_CAP_INT_EXCHANGEDATA = $00000010;
++  VOL_CAP_INT_COPYFILE	 	 = $00000020;
++  VOL_CAP_INT_ALLOCATE	 	 = $00000040;
++  VOL_CAP_INT_VOL_RENAME 	 = $00000080;
++  VOL_CAP_INT_ADVLOCK		 	 = $00000100;
++  VOL_CAP_INT_FLOCK			   = $00000200;
++  VOL_CAP_INT_EXTENDED_SECURITY	= $00000400;
++  VOL_CAP_INT_USERACCESS			  = $00000800;
++  VOL_CAP_INT_MANLOCK			      = $00001000;
++  VOL_CAP_INT_NAMEDSTREAMS		  = $00002000;
++  VOL_CAP_INT_EXTENDED_ATTR		  = $00004000;
++
++type
++  vol_attributes_attr_t = packed record
++	  validattr  : attribute_set_t;
++  	nativeattr : attribute_set_t;
++  end;
++  pvol_attributes_attr_t = ^vol_attributes_attr_t;
++
++const
++  ATTR_CMN_NAME			    	= $00000001;
++  ATTR_CMN_DEVID				  = $00000002;
++  ATTR_CMN_FSID				    = $00000004;
++  ATTR_CMN_OBJTYPE			  = $00000008;
++  ATTR_CMN_OBJTAG				  = $00000010;
++  ATTR_CMN_OBJID				  = $00000020;
++  ATTR_CMN_OBJPERMANENTID	= $00000040;
++  ATTR_CMN_PAROBJID				= $00000080;
++  ATTR_CMN_SCRIPT					= $00000100;
++  ATTR_CMN_CRTIME					= $00000200;
++  ATTR_CMN_MODTIME				= $00000400;
++  ATTR_CMN_CHGTIME				= $00000800;
++  ATTR_CMN_ACCTIME				= $00001000;
++  ATTR_CMN_BKUPTIME				= $00002000;
++  ATTR_CMN_FNDRINFO				= $00004000;
++  ATTR_CMN_OWNERID				= $00008000;
++  ATTR_CMN_GRPID					= $00010000;
++  ATTR_CMN_ACCESSMASK			= $00020000;
++  ATTR_CMN_FLAGS				  = $00040000;
++{    ATTR_CMN_NAMEDATTRCOUNT =	$00080000;	 not implemented }
++{    ATTR_CMN_NAMEDATTRLIST	= $00100000;	 not implemented }
++  ATTR_CMN_USERACCESS			   = $00200000;
++  ATTR_CMN_EXTENDED_SECURITY = $00400000;
++  ATTR_CMN_UUID			  	= $00800000;
++  ATTR_CMN_GRPUUID			= $01000000;
++  ATTR_CMN_FILEID				= $02000000;
++  ATTR_CMN_PARENTID			= $04000000;
++  ATTR_CMN_FULLPATH			= $08000000;
++{
++ * ATTR_CMN_RETURNED_ATTRS is only valid with getattrlist(2).
++ * It is always the first attribute in the return buffer.
++ }
++  ATTR_CMN_RETURNED_ATTRS		=	$80000000;
++
++  ATTR_CMN_VALIDMASK			  = $8FE7FFFF;
++  ATTR_CMN_SETMASK			    = $01C7FF00;
++  ATTR_CMN_VOLSETMASK			  = $00006700;
++
++  ATTR_VOL_FSTYPE				  = $00000001;
++  ATTR_VOL_SIGNATURE			= $00000002;
++  ATTR_VOL_SIZE				    = $00000004;
++  ATTR_VOL_SPACEFREE			= $00000008;
++  ATTR_VOL_SPACEAVAIL			= $00000010;
++  ATTR_VOL_MINALLOCATION		=	$00000020;
++  ATTR_VOL_ALLOCATIONCLUMP	=	$00000040;
++  ATTR_VOL_IOBLOCKSIZE			= $00000080;
++  ATTR_VOL_OBJCOUNT			  =	$00000100;
++  ATTR_VOL_FILECOUNT			=	$00000200;
++  ATTR_VOL_DIRCOUNT			  = $00000400;
++  ATTR_VOL_MAXOBJCOUNT		=	$00000800;
++  ATTR_VOL_MOUNTPOINT			=	$00001000;
++  ATTR_VOL_NAME				    = $00002000;
++  ATTR_VOL_MOUNTFLAGS			=	$00004000;
++  ATTR_VOL_MOUNTEDDEVICE	=	$00008000;
++  ATTR_VOL_ENCODINGSUSED	= $00010000;
++  ATTR_VOL_CAPABILITIES		=	$00020000;
++  ATTR_VOL_UUID				    =	$00040000;
++  ATTR_VOL_ATTRIBUTES			= $40000000;
++  ATTR_VOL_INFO				    = $80000000;
++
++  ATTR_VOL_VALIDMASK			= $C007FFFF;
++  ATTR_VOL_SETMASK			  = $80002000;
++
++
++{ File/directory attributes: }
++  ATTR_DIR_LINKCOUNT			= $00000001;
++  ATTR_DIR_ENTRYCOUNT			= $00000002;
++  ATTR_DIR_MOUNTSTATUS		= $00000004;
++  DIR_MNTSTATUS_MNTPOINT	= $00000001;
++
++  ATTR_DIR_VALIDMASK			= $00000007;
++  ATTR_DIR_SETMASK			  = $00000000;
++
++  ATTR_FILE_LINKCOUNT			= $00000001;
++  ATTR_FILE_TOTALSIZE			= $00000002;
++  ATTR_FILE_ALLOCSIZE			= $00000004;
++  ATTR_FILE_IOBLOCKSIZE		= $00000008;
++  ATTR_FILE_DEVTYPE			  = $00000020;
++  ATTR_FILE_FORKCOUNT			= $00000080;
++  ATTR_FILE_FORKLIST			= $00000100;
++  ATTR_FILE_DATALENGTH		= $00000200;
++  ATTR_FILE_DATAALLOCSIZE	= $00000400;
++  ATTR_FILE_RSRCLENGTH		= $00001000;
++  ATTR_FILE_RSRCALLOCSIZE	= $00002000;
++
++  ATTR_FILE_VALIDMASK			= $000037FF;
++  ATTR_FILE_SETMASK			  = $00000020;
++
++  ATTR_FORK_TOTALSIZE			= $00000001;
++  ATTR_FORK_ALLOCSIZE			= $00000002;
++
++  ATTR_FORK_VALIDMASK			= $00000003;
++  ATTR_FORK_SETMASK			  = $00000000;
++
++{ Obsolete, implemented, not supported }
++  ATTR_CMN_NAMEDATTRCOUNT	= $00080000;	{ not implemented }
++  ATTR_CMN_NAMEDATTRLIST	= $00100000;	{ not implemented }
++  ATTR_FILE_CLUMPSIZE			= $00000010;	{ obsolete }
++  ATTR_FILE_FILETYPE			= $00000040;	{ always zero }
++  ATTR_FILE_DATAEXTENTS		= $00000800;	{ obsolete, HFS-specific }
++  ATTR_FILE_RSRCEXTENTS		= $00004000;	{ obsolete, HFS-specific }
++
++{
++ * Searchfs
++ }
++  SRCHFS_START 				      = $00000001;
++  SRCHFS_MATCHPARTIALNAMES 	= $00000002;
++  SRCHFS_MATCHDIRS 			    = $00000004;
++  SRCHFS_MATCHFILES 			  = $00000008;
++  SRCHFS_SKIPLINKS 			    = $00000010;
++  SRCHFS_SKIPINVISIBLE			= $00000020;
++  SRCHFS_SKIPPACKAGES			  = $00000040;
++  SRCHFS_SKIPINAPPROPRIATE	= $00000080;
++
++  SRCHFS_NEGATEPARAMS 			= $80000000;
++  SRCHFS_VALIDOPTIONSMASK		= $800000FF;
++
++type
++  fssearchblock = packed record
++  	returnattrs         : pattrlist;
++  	returnbuffer        : Pointer;
++  	returnbuffersize    : size_t;
++  	maxmatches          : u_long;
++  	timelimit           : timeval;
++  	searchparams1       : Pointer;
++  	sizeofsearchparams1 : size_t;
++  	searchparams2       : Pointer;
++  	sizeofsearchparams2 : size_t;
++  	searchattrs         : attrlist;
++  end;
++  pfssearchblock=^fssearchblock;
++
++  searchstate = packed record
++	  reserved : array [0..555] of u_char;		//	sizeof( SearchState )
++  end;
++  psearchstate = ^searchstate;
++
++function getattrlist(path: Pchar; alist: pattrlist; attrBuf: Pointer; attrBufSize: size_t; options: LongWord): Integer; cdecl; external;
++
++implementation
++
++end.
++
+diff -rupN Y:\home\alegzz\transmisson-remote-gui-read-only\/rpc.pas D:\transmisson-remote-gui-read-only/rpc.pas
+--- Y:\home\alegzz\transmisson-remote-gui-read-only\/rpc.pas	2011-11-29 11:23:27.461733700 +0400
++++ D:\transmisson-remote-gui-read-only/rpc.pas	2011-11-06 14:36:18.863145700 +0400
+@@ -349,6 +349,8 @@ begin
+       if i >= 0 then
+         sl.Delete(i);
+ 
++    if FRpc.RPCVersion>=14 then sl.Add('isStalled');
++
+     SetLength(ExtraFields, sl.Count);
+     for i:=0 to sl.Count - 1 do
+       ExtraFields[i]:=sl[i];
+@@ -437,14 +439,23 @@ procedure TRpcThread.GetInfo(TorrentId: 
+ var
+   args: TJSONObject;
+   t: TJSONArray;
++  ExtraFields: array of string;
+ begin
++  if FRpc.RPCVersion >=14 then
++   begin
++     SetLength(ExtraFields,2);
++     ExtraFields[0]:='isStalled';
++     ExtraFields[1]:='queuePosition';
++   end;
++
+   args:=FRpc.RequestInfo(TorrentId, ['totalSize', 'sizeWhenDone', 'leftUntilDone', 'pieceCount', 'pieceSize', 'haveValid',
+                                      'hashString', 'comment', 'downloadedEver', 'uploadedEver', 'corruptEver', 'errorString',
+                                      'announceResponse', 'downloadLimit', 'downloadLimitMode', 'uploadLimit', 'uploadLimitMode',
+                                      'maxConnectedPeers', 'nextAnnounceTime', 'dateCreated', 'creator', 'eta', 'peersSendingToUs',
+                                      'seeders','peersGettingFromUs','leechers', 'uploadRatio', 'addedDate', 'doneDate',
+-                                     'activityDate', 'downloadLimited', 'uploadLimited', 'downloadDir', 'id', 'pieces',
+-                                     'trackerStats', 'secondsDownloading']);
++                                     'activityDate', 'downloadLimited', 'uploadLimited', 'downloadDir', 'id','pieces',
++                                     'trackerStats', 'secondsDownloading'], ExtraFields);
++
+   try
+     if args <> nil then begin
+       t:=args.Arrays['torrents'];
+@@ -849,4 +860,3 @@ begin
+ end;
+ 
+ end.
+-
+diff -rupN Y:\home\alegzz\transmisson-remote-gui-read-only\/setup/win/make_setup.bat D:\transmisson-remote-gui-read-only/setup/win/make_setup.bat
+--- Y:\home\alegzz\transmisson-remote-gui-read-only\/setup/win/make_setup.bat	2011-11-29 11:23:27.350606000 +0400
++++ D:\transmisson-remote-gui-read-only/setup/win/make_setup.bat	2012-01-14 03:29:24.323559900 +0400
+@@ -1,12 +1,12 @@
+ @echo off
+ 
+-if (%1) == () goto usage
+-if (%2) == () goto usage
++set LAZPATH=d:\lazarus
+ 
+-make -C ../.. LAZARUS_DIR="%1"
++%LAZPATH%\lazbuild.exe -B ../../transgui.lpi
++%LAZPATH%\fpc\2.5.1\bin\i386-win32\strip.exe ../../units/transgui.exe
+ if errorlevel 1 goto err
+ 
+-set ISC=%~2
++set "ISC=C:\Program Files (x86)\Inno Setup 5"
+ )
+ 
+ "%ISC%\iscc.exe" setup.iss
+@@ -14,9 +14,6 @@ if errorlevel 1 goto err
+ 
+ exit /b 0
+ 
+-:usage
+-echo "Usage: %~nx0 <lazarus_dir> <inno_setup_dir>"
+-
+ :err
+ pause
+ exit /b 1
+diff -rupN Y:\home\alegzz\transmisson-remote-gui-read-only\/setup/win/setup.iss D:\transmisson-remote-gui-read-only/setup/win/setup.iss
+--- Y:\home\alegzz\transmisson-remote-gui-read-only\/setup/win/setup.iss	2011-11-29 11:23:27.350606000 +0400
++++ D:\transmisson-remote-gui-read-only/setup/win/setup.iss	2011-11-23 19:33:26.713842000 +0400
+@@ -2,7 +2,7 @@
+ ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
+ 
+ #ifndef AppVersion
+-  #define AppVersion GetFileVersion(SourcePath+'..\..\transgui.exe')
++  #define AppVersion GetFileVersion(SourcePath+'..\..\units\transgui.exe')
+   #define AppVersion Copy(AppVersion, 1, RPos('.', AppVersion) - 1)
+   #define tmpvar Copy(AppVersion, RPos('.', AppVersion) + 1, 3)
+   #if tmpvar == "0"
+@@ -28,8 +28,8 @@ AppPublisherURL={#MyAppURL}
+ AppSupportURL={#MyAppURL}
+ AppUpdatesURL={#MyAppURL}
+ 
+-VersionInfoVersion={#GetFileVersion(SourcePath+'..\..\transgui.exe')}
+-VersionInfoTextVersion={#GetFileVersion(SourcePath+'..\..\transgui.exe')}
++VersionInfoVersion={#GetFileVersion(SourcePath+'..\..\units\transgui.exe')}
++VersionInfoTextVersion={#GetFileVersion(SourcePath+'..\..\units\transgui.exe')}
+ 
+ DefaultDirName={pf}\{#MyAppName}
+ DefaultGroupName={#MyAppName}
+@@ -68,7 +68,7 @@ Name: "desktopicon"; Description: "{cm:C
+ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+ 
+ [Files]
+-Source: "..\..\transgui.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: app
++Source: "..\..\units\transgui.exe"; DestDir: "{app}"; Flags: ignoreversion; Components: app
+ Source: "..\..\LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion; Components: app
+ Source: "..\..\readme.txt"; DestDir: "{app}"; Flags: ignoreversion; Components: app
+ Source: "..\..\history.txt"; DestDir: "{app}"; Flags: ignoreversion; Components: app
+Files Y:\home\alegzz\transmisson-remote-gui-read-only\/transgui.res and D:\transmisson-remote-gui-read-only/transgui.res differ
+diff -rupN Y:\home\alegzz\transmisson-remote-gui-read-only\/ufiles.pas D:\transmisson-remote-gui-read-only/ufiles.pas
+--- Y:\home\alegzz\transmisson-remote-gui-read-only\/ufiles.pas	1970-01-01 04:00:00.000000000 +0400
++++ D:\transmisson-remote-gui-read-only/ufiles.pas	2011-11-23 19:12:30.914014300 +0400
+@@ -0,0 +1,558 @@
++{
++    This file is part of the Free Pascal Free Component Library.
++
++    Unicode name file access and utility functions
++
++    See the file COPYING.FPC, included in this distribution,
++    for details about the copyright.
++
++    This program is distributed in the hope that it will be useful,
++    but WITHOUT ANY WARRANTY; without even the implied warranty of
++    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
++
++    The unit is based on FPC RTL SysUtils
++
++ **********************************************************************}
++unit
++  ufiles;
++
++{$mode objfpc}{$h+}
++
++interface
++
++uses
++  SysUtils, Classes, sysconst, RtlConsts, ufilescore
++  {$ifdef MSWindows}
++  //Win32 implementations
++  ,ufileswin
++  {$endif}
++  {$ifdef darwin}
++  // MacOSX implementations
++  ,ufilesmac
++  {$endif}
++  {$ifdef linux}
++  // Linux implementations
++  ,ufileslinux
++  {$endif}
++  ;
++
++type
++  TSearchRecU = ufilescore.TSearchRecUInt;
++
++//
++function DeleteFile (const FileName : UnicodeString): Boolean;
++function RenameFile (const OldName, NewName : UnicodeString): Boolean;
++function FindFirst (const Path : UnicodeString; Attr : Longint; out Rslt : TSearchRecU) : Longint;
++function FindNext (var Rslt : TSearchRecU) : Longint;
++procedure FindClose (var F : TSearchrecU);
++
++function FileGetAttr (const FileName : UnicodeString) : DWORD;
++function FileSetAttr (const Filename : UnicodeString; Attr: DWORD) : Longint;
++
++function FileOpen (const FileName : UnicodeString; Mode : Integer) : THandle;
++function FileCreate (const FileName : UnicodeString) : THandle; overload;
++function FileCreate (const FileName : UnicodeString; Mode : Integer) : THandle; overload;
++
++//
++function FileIsReadOnly(const FileName: UnicodeString): Boolean;
++function FileExists (const FileName : UnicodeString) : Boolean;
++function DirectoryExists (const Directory : UnicodeString) : Boolean;
++
++//
++function ChangeFileExt(const FileName, Extension: UnicodeString): UnicodeString;
++function ExtractFilePath(const FileName: UnicodeString): UnicodeString;
++function ExtractFileDrive(const FileName: Unicodestring): UnicodeString;
++function ExtractFileName(const FileName: Unicodestring): UnicodeString;
++function ExtractFileExt(const FileName: Unicodestring): UnicodeString;
++function ExtractFileDir(Const FileName : Unicodestring): UnicodeString;
++function ExtractRelativepath (Const BaseName,DestNAme : UnicodeString): UnicodeString;
++function IncludeTrailingPathDelimiter(Const Path : UnicodeString) : UnicodeString;
++function IncludeTrailingBackslash(Const Path : UnicodeString) : UnicodeString;
++function ExcludeTrailingBackslash(Const Path: Unicodestring): UnicodeString;
++function ExcludeTrailingPathDelimiter(Const Path: Unicodestring): UnicodeString;
++function IsPathDelimiter(Const Path: Unicodestring; Index: Integer): Boolean;
++procedure DoDirSeparators (var FileName : UnicodeString);
++function SetDirSeparators (const FileName : UnicodeString) : UnicodeString;
++function GetDirs (var DirName : UnicodeString; Var Dirs : array of PUnicodeChar) : Longint;
++
++function SameFileName (const S1, S2: UnicodeString): Boolean;
++function SameFileName (const S1, S2: UnicodeString; CaseSensitive: Boolean): Boolean;
++function CompareFileName (const S1, S2: UnicodeString): Integer;
++function CompareFileName (const S1, S2: UnicodeString; CaseSensitive: Boolean): Integer;
++
++function isPathCaseSensitive(const APath: UnicodeString; var CaseSensitive: Boolean): Boolean;
++
++//
++function ForceDirectories(const Dir: UnicodeString): Boolean;
++
++function CreateDir(const Dir: UnicodeString): Boolean;
++function RemoveDir(const Dir: UnicodeString): Boolean;
++function SetCurrentDir(const Dir: UnicodeString): Boolean;
++function GetCurrentDir: UnicodeString;
++
++type
++
++  { TFileStreamU }
++
++  TFileStreamU = class(THandleStream)
++  Private
++    FFileName : UnicodeString;
++  public
++    constructor Create(const AFileName: UnicodeString; Mode: Word); overload;
++    constructor Create(const AFileName: UnicodeString; Mode: Word; Rights: Cardinal); overload;
++    destructor Destroy; override;
++    property FileName : UnicodeString Read FFilename;
++  end;
++
++implementation
++
++function UCharInSet(const wch: UnicodeChar; const AnsiSet: TAnsiCharSet): Boolean; inline;
++begin
++  Result := (Word(wch)<=127) and (Char(byte(wch)) in AnsiSet);
++end;
++
++function ChangeFileExt(const FileName, Extension: UnicodeString): UnicodeString;
++var
++  i : longint;
++  EndSep : TAnsiCharSet;
++begin
++  i := Length(FileName);
++  EndSep:=AllowDirectorySeparators+AllowDriveSeparators+[ExtensionSeparator];
++  while (I > 0) and not UCharInSet(FileName[I], EndSep) do
++    Dec(I);
++  if (I = 0) or (FileName[I] <> ExtensionSeparator) then
++    I := Length(FileName)+1;
++  Result := Copy(FileName, 1, I - 1) + Extension;
++end;
++
++function ExtractFilePath(const FileName: UnicodeString): UnicodeString;
++var
++  i : longint;
++  EndSep : Set of Char;
++begin
++  i := Length(FileName);
++  EndSep:=AllowDirectorySeparators+AllowDriveSeparators;
++  while (i > 0) and not UCharInSet(FileName[i], EndSep) do
++    Dec(i);
++  If I>0 then
++    Result := Copy(FileName, 1, i)
++  else
++    Result:='';
++end;
++function ExtractFileDir(Const FileName : Unicodestring): UnicodeString;
++var
++  i : longint;
++  EndSep : Set of Char;
++begin
++  I := Length(FileName);
++  EndSep:=AllowDirectorySeparators+AllowDriveSeparators;
++  while (I > 0) and not UCharInSet(FileName[I], EndSep) do
++    Dec(I);
++  if (I > 1) and UCharInSet(FileName[I], AllowDirectorySeparators) and
++     not (FileName[I - 1] in EndSep) then
++    Dec(I);
++  Result := Copy(FileName, 1, I);
++end;
++
++function ExtractFileDrive(const FileName: Unicodestring): UnicodeString;
++var
++  i,l: longint;
++begin
++  Result := '';
++  l:=Length(FileName);
++  if (l<2) then
++    exit;
++  If (FileName[2] in AllowDriveSeparators) then
++    result:=Copy(FileName,1,2)
++  else if UCharInSet(FileName[1], AllowDirectorySeparators) and
++          UCharInSet(FileName[2], AllowDirectorySeparators) then
++    begin
++      i := 2;
++
++      { skip share }
++      While (i<l) and Not UCharInSet(Filename[i+1], AllowDirectorySeparators) do
++        inc(i);
++      inc(i);
++
++      While (i<l) and Not UCharInSet(Filename[i+1], AllowDirectorySeparators) do
++        inc(i);
++      Result:=Copy(FileName,1,i);
++    end;
++end;
++
++function ExtractFileName(const FileName: Unicodestring): UnicodeString;
++var
++  i : longint;
++  EndSep : Set of Char;
++begin
++  I := Length(FileName);
++  EndSep:=AllowDirectorySeparators+AllowDriveSeparators;
++  while (I > 0) and not UCharInSet(FileName[I], EndSep) do
++    Dec(I);
++  Result := Copy(FileName, I + 1, MaxInt);
++end;
++
++function ExtractFileExt(const FileName: Unicodestring): UnicodeString;
++var
++  i : longint;
++  EndSep : Set of Char;
++begin
++  I := Length(FileName);
++  EndSep:=AllowDirectorySeparators+AllowDriveSeparators+[ExtensionSeparator];
++  while (I > 0) and not UCharInSet(FileName[I], EndSep) do
++    Dec(I);
++  if (I > 0) and (FileName[I] = ExtensionSeparator) then
++    Result := Copy(FileName, I, MaxInt)
++  else
++    Result := '';
++end;
++
++function FileNameCompU(p1, p2: PUnicodeChar): Integer;
++var
++  l1, l2 : Integer;
++  ws1, ws2 : UnicodeString;
++begin
++  l1:=0;
++  while p1[l1]<>#0 do inc(l1);
++  l2:=0;
++  while p2[l2]<>#0 do inc(l2);
++  Result:=l1-l2;
++  if Result<>0 then begin
++    if Result<0 then Result:=-1
++    else Result:=1;
++    Exit;
++  end;
++  if l1=0 then begin
++    Result:=0;
++    Exit;
++  end;
++  SetLength(ws1, l1);
++  SetLength(ws2, l2);
++  Move(p1^, ws1[1], l1*sizeof(UnicodeChar));
++  Move(p2^, ws2[1], l1*sizeof(UnicodeChar));
++  Result:=CompareFileName(ws1, ws2);
++end;
++
++function ExtractRelativepath (Const BaseName,DestName : UnicodeString): UnicodeString;
++const
++  MaxDirs = 129;
++Var
++  Source, Dest : UnicodeString;
++  Sc,Dc,I,J    : Longint;
++  SD,DD        : Array[1..MaxDirs] of PWideChar;
++const
++  OneLevelBack = '..'+DirectorySeparator;
++begin
++  If CompareFileName( ExtractFileDrive(BaseName), ExtractFileDrive(DestName)) <> 0 then begin
++    Result:=DestName;
++    exit;
++  end;
++  Source:=ExcludeTrailingPathDelimiter(ExtractFilePath(BaseName));
++  Dest:=ExcludeTrailingPathDelimiter(ExtractFilePath(DestName));
++  SC:=GetDirs (Source,SD);
++  DC:=GetDirs (Dest,DD);
++  I:=1;
++  While (I<=DC) and (I<=SC) do begin
++    If FileNameCompU(DD[i],SD[i])=0 then // wrong. can't use PChar function!
++      Inc(i)
++    else
++      Break;
++  end;
++  Result:='';
++  For J:=I to SC do Result:=Result+OneLevelBack;
++  For J:=I to DC do Result:=Result+DD[J]+DirectorySeparator;
++  Result:=Result+ExtractFileName(DestNAme);
++end;
++
++function IncludeTrailingPathDelimiter(Const Path : UnicodeString) : UnicodeString;
++Var
++  l : Integer;
++begin
++  Result:=Path;
++  l:=Length(Result);
++  If (L=0) or not UCharInSet(Result[l], AllowDirectorySeparators) then
++    Result:=Result+DirectorySeparator;
++end;
++
++function IncludeTrailingBackslash(Const Path : UnicodeString) : UnicodeString;
++begin
++  Result:=IncludeTrailingPathDelimiter(Path);
++end;
++
++function ExcludeTrailingBackslash(Const Path: Unicodestring): UnicodeString;
++begin
++  Result:=ExcludeTrailingPathDelimiter(Path);
++end;
++
++function ExcludeTrailingPathDelimiter(Const Path: Unicodestring): UnicodeString;
++var
++  L : Integer;
++begin
++  L:=Length(Path);
++  If (L>0) and (Path[L] in AllowDirectorySeparators) then
++    Dec(L);
++  Result:=Copy(Path,1,L);
++end;
++
++function IsPathDelimiter(Const Path: Unicodestring; Index: Integer): Boolean;
++begin
++  Result:=(Index>0) and (Index<=Length(Path)) and UCharInSet(Path[Index], AllowDirectorySeparators);
++end;
++
++function SameFileName(const S1, S2: UnicodeString): Boolean;
++begin
++  Result:=CompareFileName(S1,S2, FileNameCaseSensitive) = 0;
++end;
++
++function SameFileName(const S1, S2: UnicodeString; CaseSensitive: Boolean): Boolean;
++begin
++  Result:=CompareFileName(S1,S2, CaseSensitive)= 0;
++end;
++
++function CompareFileName (const S1, S2: UnicodeString): Integer;
++begin
++  Result:=CompareFileName(s1,s2, FileNameCaseSensitive);
++end;
++
++function CompareFileName (const S1, S2: UnicodeString; CaseSensitive: Boolean): Integer;
++begin
++  Result:=DoCompareFileName(S1, S2, CaseSensitive);
++end;
++
++function isPathCaseSensitive(const APath: UnicodeString; var CaseSensitive: Boolean): Boolean;
++begin
++  Result:=DoPathCaseSensitive(APath, CaseSensitive);
++end;
++
++procedure DoDirSeparators (var FileName : UnicodeString);
++var
++  i : longint;
++begin
++  for i:=1 to Length(FileName) do
++    If UCharInSet(FileName[I], AllowDirectorySeparators) then
++      FileName[i]:=DirectorySeparator;
++end;
++
++function SetDirSeparators (const FileName : UnicodeString) : UnicodeString;
++begin
++  Result:=FileName;
++  DoDirSeparators (Result);
++end;
++
++function GetDirs (var DirName : UnicodeString; Var Dirs : array of PUnicodeChar) : Longint;
++Var
++  I : Longint;
++begin
++  I:=1;
++  Result:=-1;
++  While I<=Length(DirName) do
++    begin
++    If UCharInSet(DirName[i], AllowDirectorySeparators) and
++       { avoid error in case last char=pathdelim }
++       (length(dirname)>i) then
++      begin
++        DirName[i]:=#0;
++        Inc(Result);
++        Dirs[Result]:=@DirName[I+1];
++      end;
++    Inc(I);
++    end;
++  If Result>-1 then inc(Result);
++end;
++
++
++// Ansi version functions.
++// The functions are using SysUtils file functions
++// File names are converted from Unicode to current system Locale
++// Can be used for UTF-8 (modern unixes) OSes, but should not be used for WinNT
++
++function FileGetAttr (const FileName : UnicodeString) : DWord;
++begin
++  Result:=DoFileGetAttr(FileName);
++end;
++
++function FileSetAttr (const Filename : UnicodeString; Attr: DWord) : Longint;
++begin
++  Result:=DoFileSetAttr(FileName, Attr);
++end;
++
++function FileExists (const FileName : UnicodeString) : Boolean;
++var
++  Attr  : DWord;
++begin
++  Attr:=FileGetAttr(FileName);
++  Result:=Attr<>-1;
++  if Result then
++    Result:=(Attr and faDirectory)=0;
++end;
++
++function DirectoryExists (const Directory : UnicodeString) : Boolean;
++var
++  Attr  : Integer;
++begin
++  Attr:=FileGetAttr(Directory);
++  Result:=Attr<>-1;
++  if Result then
++    Result:=(Attr and faDirectory)<>0;
++end;
++
++
++function DeleteFile(const FileName : UnicodeString) : Boolean;
++begin
++  Result:=DoDeleteFile(FileName);
++end;
++
++function RenameFile(const OldName, NewName : UnicodeString) : Boolean;
++begin
++  Result:=DoRenameFile(OldName, NewName);
++end;
++
++function FindFirst (const Path : UnicodeString; Attr : Longint; out Rslt : TSearchRecU) : Longint;
++begin
++  Result:=DoFindFirst(Path, Attr, Rslt);
++end;
++
++function FindNext (var Rslt : TSearchRecU) : Longint;
++begin
++  Result:=DoFindNext(Rslt);
++end;
++
++function FileIsReadOnly(const FileName: UnicodeString): Boolean;
++begin
++  Result := (FileGetAttr(FileName) and faReadOnly) <> 0;
++end;
++
++procedure FindClose (var F : TSearchrecU);
++begin
++  DoFindClose(f);
++end;
++
++function FileOpen (const FileName : UnicodeString; Mode : Integer) : THandle;
++begin
++ Result:=DoFileOpen(FileName, Mode);
++end;
++
++function FileCreate (const FileName : UnicodeString) : THandle;
++begin
++  Result:=DoFileCreate(FileName, fmCreate);
++end;
++
++function FileCreate (const FileName : UnicodeString; Mode : Integer) : THandle;
++begin
++  Result:=DoFileCreate(FileName, Mode);
++end;
++
++function ForceDirectories(const Dir: UnicodeString): Boolean;
++var
++  E    : EInOutError;
++  ADrv : UnicodeString;
++
++  function DoForceDirectories(Const Dir: UnicodeString): Boolean;
++  var
++    ADir : UnicodeString;
++    APath: UnicodeString;
++  begin
++    Result:=True;
++    ADir:=ufiles.ExcludeTrailingPathDelimiter(Dir);
++    if (ADir='') then Exit;
++    if not ufiles.DirectoryExists(ADir) then
++      begin
++        APath := ufiles.ExtractFilePath(ADir);
++        //this can happen on Windows if user specifies Dir like \user\name/test/
++        //and would, if not checked for, cause an infinite recusrsion and a stack overflow
++        if (APath = ADir) then Result := False
++          else Result:=DoForceDirectories(APath);
++        If Result then
++          Result := ufiles.CreateDir(ADir);
++      end;
++  end;
++
++  function IsUncDrive(const Drv: UnicodeString): Boolean;
++  begin
++    Result := (Length(Drv) > 2) and (Drv[1] = PathDelim) and (Drv[2] = PathDelim);
++  end;
++
++begin
++  Result := False;
++  ADrv := ufiles.ExtractFileDrive(Dir);
++  if (ADrv<>'') and (not ufiles.DirectoryExists(ADrv))
++  {$IFNDEF FORCEDIR_NO_UNC_SUPPORT} and (not IsUncDrive(ADrv)){$ENDIF} then Exit;
++  if Dir='' then
++    begin
++      E:=EInOutError.Create(SCannotCreateEmptyDir);
++      E.ErrorCode:=3;
++      Raise E;
++    end;
++  Result := DoForceDirectories(SetDirSeparators(Dir));
++end;
++
++function CreateDir(const Dir: UnicodeString): Boolean;
++begin
++  Result:=DoCreateDir(Dir);
++end;
++
++function RemoveDir(const Dir: UnicodeString): Boolean;
++begin
++  Result:=DoRemoveDir(Dir);
++end;
++
++function SetCurrentDir(const Dir: UnicodeString): Boolean;
++begin
++  Result:=DoSetCurrentDir(Dir);
++end;
++
++function GetCurrentDir: UnicodeString;
++begin
++  Result:=DoGetCurrentDir();
++end;
++
++
++{ TFileStreamU }
++
++constructor TFileStreamU.Create(const AFileName: UnicodeString; Mode: Word);
++var
++  hnd : THandle;
++begin
++  FFileName:=AFileName;
++  If Mode=fmcreate then
++    hnd:=FileCreate(AFileName)
++  else
++    hnd:=FileOpen(AFileName,Mode);
++
++  If (THandle(hnd)=feInvalidHandle) then
++    If Mode=fmcreate then
++      raise EFCreateError.createfmt(SFCreateError,[AFileName])
++    else
++      raise EFOpenError.Createfmt(SFOpenError,[AFilename]);
++  inherited Create(hnd);
++end;
++
++constructor TFileStreamU.Create(const AFileName: UnicodeString; Mode: Word; Rights: Cardinal);
++var
++  hnd : THandle;
++begin
++  FFileName:=AFileName;
++  If Mode=fmcreate then
++    hnd:=FileCreate(AFileName,Rights)
++  else
++    hnd:=FileOpen(AFileName,Mode);
++
++  If (THandle(hnd)=feInvalidHandle) then
++    If Mode=fmcreate then
++      raise EFCreateError.createfmt(SFCreateError,[AFileName])
++    else
++      raise EFOpenError.Createfmt(SFOpenError,[AFilename]);
++  inherited Create(hnd);
++end;
++
++destructor TFileStreamU.Destroy;
++begin
++  FileClose(Handle);
++  inherited Destroy;
++end;
++
++initialization
++
++finalization
++
++end.
+diff -rupN Y:\home\alegzz\transmisson-remote-gui-read-only\/ufilescore.pas D:\transmisson-remote-gui-read-only/ufilescore.pas
+--- Y:\home\alegzz\transmisson-remote-gui-read-only\/ufilescore.pas	1970-01-01 04:00:00.000000000 +0400
++++ D:\transmisson-remote-gui-read-only/ufilescore.pas	2011-11-23 19:13:55.912876000 +0400
+@@ -0,0 +1,208 @@
++unit
++  ufilescore;
++
++interface
++
++{$mode objfpc}{$h+}
++
++uses
++  SysUtils;
++
++Type
++  TSearchRecUInt = Record
++    Time : Longint;
++    Size : Int64;
++    Attr : Longint;
++    Name : UnicodeString;
++    ExcludeAttr : LongInt;
++    {$ifdef unix}
++    FindHandle : Pointer;
++    //mode?
++    {$else}
++    FindHandle : THandle;
++    {$endif}
++  end;
++
++function CreateDirAnsi (const Dir: UnicodeString): Boolean;
++function RemoveDirAnsi (const Dir: UnicodeString): Boolean;
++function SetCurrentDirAnsi (const Dir: UnicodeString): Boolean;
++function GetCurrentDirAnsi: UnicodeString;
++function DeleteFileAnsi(const FileName : UnicodeString): Boolean;
++function RenameFileAnsi(const OldName, NewName : UnicodeString): Boolean;
++function FileCreateAnsi(const FileName : UnicodeString; Mode : Integer) : THandle;
++function FileOpenAnsi(const FileName : UnicodeString; Mode : Integer): THandle;
++procedure FindCloseAnsi (var F : TSearchrecUInt);
++function FindNextAnsi (var Rslt : TSearchrecUInt) : Longint;
++function FindFirstAnsi (Const Path : UnicodeString; Attr : Longint; out Rslt : TSearchrecUInt) : Longint;
++function FileGetAttrAnsi (const FileName : UnicodeString) : DWORD;
++function FileSetAttrAnsi (const Filename : UnicodeString; Attr: DWORD) : Longint;
++
++procedure SearchRecAnsiToUnicode(const src: TSearchRec; var dst: TSearchRecUint);
++procedure SearchRecUnicodeToAnsi(const src: TSearchRecUInt; var dst: TSearchRec);
++
++function DefPathCaseSensetive(const Path: UnicodeString; var isCaseSensitive: Boolean): Boolean;
++function DefCompareFileName(const S1, S2: UnicodeString; CaseSensitive: Boolean): Integer;
++
++function DefFNUnicodeToStr(const s: UnicodeString): String;
++function DefFNStrToUnicode(const s: String): UnicodeString;
++
++type
++  TAnsiCharSet = set of AnsiChar;
++
++
++// Cross-platform part
++// Do* functions are system dependable and can be reassigned, if necessary
++
++var
++  DoFindFirst : function  (const Path : UnicodeString; Attr : Longint; out Rslt : TSearchrecUInt) : Longint = @FindFirstAnsi;
++  DoFindNext  : function  (var Rslt : TSearchRecUInt) : Longint = @FindNextAnsi;
++  DoFindClose : procedure (var F : TSearchrecUInt) = @FindCloseAnsi;
++  DoFileGetAttr : function (const FileName : UnicodeString) : DWORD = @FileGetAttrAnsi;
++  DoFileSetAttr : function (const Filename : UnicodeString; Attr: DWORD) : Longint = @FileSetAttrAnsi;
++  DoFileOpen    : function (const FileName : UnicodeString; Mode : Integer) : THandle = @FileOpenAnsi;
++  DoFileCreate  : function (const FileName : UnicodeString; Mode : Integer) : THandle = @FileCreateAnsi;
++
++  DoCreateDir : function (const Dir: UnicodeString): Boolean = @CreateDirAnsi;
++  DoRemoveDir : function (const Dir: UnicodeString): Boolean = @RemoveDirAnsi;
++  DoSetCurrentDir : function (const Dir: UnicodeString): Boolean = @SetCurrentDirAnsi;
++  DoGetCurrentDir : function : UnicodeString = @GetCurrentDirAnsi;
++
++  DoDeleteFile : function (const FileName : UnicodeString): Boolean = @DeleteFileAnsi;
++  DoRenameFile : function (const OldName, NewName : UnicodeString): Boolean = @RenameFileAnsi;
++
++  DoPathCaseSensitive: function (const FilePath: UnicodeString; var isCaseSensitive: Boolean): Boolean = @DefPathCaseSensetive;
++  DoCompareFileName : function (const S1, S2: UnicodeString; CaseSensitive: Boolean): Integer = @DefCompareFileName;
++
++  // these functions are used by *ANSI functions to convert between unicode and ansi names
++  DoFNUnicodeToStr : function (const s: UnicodeString): String = @DefFNUnicodeToStr;
++  DoFNStrToUnicode : function (const s: String): UnicodeString = @DefFNStrToUnicode;
++
++
++implementation
++
++function FindFirstAnsi (Const Path : UnicodeString; Attr : Longint; out Rslt : TSearchRecUInt) : Longint;
++var
++  sr : TSearchRec;
++begin
++  Result:=SysUtils.FindFirst(  DoFNUnicodeToStr(Path), Attr, sr);
++  if Result=0 then SearchRecAnsiToUnicode(sr, Rslt)
++end;
++
++function FindNextAnsi (var Rslt : TSearchRecUInt) : Longint;
++var
++  sr : TSearchRec;
++begin
++  SearchRecUnicodeToAnsi(Rslt, sr);
++  Result:=SysUtils.FindNext(sr);
++  SearchRecAnsiToUnicode(sr, Rslt);
++end;
++
++procedure FindCloseAnsi (var F : TSearchRecUInt);
++var
++  sr : TSearchRec;
++begin
++  SearchRecUnicodeToAnsi(F, sr);
++  SysUtils.FindClose(sr);
++end;
++
++function FileOpenAnsi(const FileName : UnicodeString; Mode : Integer): THandle;
++begin
++  Result:=SysUtils.FileOpen( DoFNUnicodeToStr(FileName), Mode);
++end;
++
++function FileCreateAnsi(const FileName : UnicodeString; Mode : Integer) : THandle;
++begin
++  Result:=SysUtils.FileCreate( DoFNUnicodeToStr(FileName), Mode);
++end;
++
++function CreateDirAnsi (const Dir: UnicodeString): Boolean;
++begin
++  Result:=SysUtils.CreateDir(DoFNUnicodeToStr(Dir));
++end;
++
++function RemoveDirAnsi (const Dir: UnicodeString): Boolean;
++begin
++  Result:=SysUtils.RemoveDir(DoFNUnicodeToStr(Dir));
++end;
++
++function SetCurrentDirAnsi (const Dir: UnicodeString): Boolean;
++begin
++  Result:=SysUtils.SetCurrentDir(DoFNUnicodeToStr(Dir));
++end;
++
++function GetCurrentDirAnsi: UnicodeString;
++begin
++  Result:=DoFNStrToUnicode(SysUtils.GetCurrentDir);
++end;
++
++function DeleteFileAnsi(const FileName : UnicodeString): Boolean;
++begin
++  Result:=SysUtils.DeleteFile( DoFNUnicodeToStr(FileName) );
++end;
++
++function RenameFileAnsi(const OldName, NewName : UnicodeString): Boolean;
++begin
++  Result:=SysUtils.RenameFile( DoFNUnicodeToStr(OldName), DoFNUnicodeToStr(NewName));
++end;
++
++function FileGetAttrAnsi (const FileName : UnicodeString) : DWord;
++begin
++  Result:=SysUtils.FileGetAttr( DoFNUnicodeToStr(FileName) );
++end;
++
++function FileSetAttrAnsi (const Filename : UnicodeString; Attr: DWord) : Longint;
++begin
++  Result:=SysUtils.FileSetAttr( DoFNUnicodeToStr(FileName), Attr);
++end;
++
++procedure SearchRecAnsiToUnicode(const src: TSearchRec; var dst: TSearchRecUInt);
++begin
++  with dst do begin
++    Time := src.Time;
++    Size := src.Size;
++    Attr := src.Attr;
++    Name := DoFNStrToUnicode(src.Name);
++    FindHandle := src.FindHandle;
++  end;
++end;
++
++procedure SearchRecUnicodeToAnsi(const src: TSearchRecUInt; var dst: TSearchRec);
++begin
++  FillChar(dst, sizeof(dst), 0);
++  with dst do begin
++    Time := src.Time;
++    Size := src.Size;
++    Attr := src.Attr;
++    Name := DoFNUnicodeToStr(src.Name);
++    FindHandle := src.FindHandle;
++  end;
++end;
++
++function DefCompareFileName(const S1, S2: UnicodeString; CaseSensitive: Boolean): Integer;
++begin
++  if not CaseSensitive then
++    Result:=UnicodeCompareText(UnicodeLowerCase(S1), UnicodeLowerCase(S2))
++  else
++    Result:=UnicodeCompareText(S1, S2);
++end;
++
++function DefPathCaseSensetive(const Path: UnicodeString; var isCaseSensitive: Boolean): Boolean;
++begin
++  isCaseSensitive:=System.FileNameCaseSensitive;
++  Result:=True;
++end;
++
++function DefFNUnicodeToStr(const s: UnicodeString): String;
++begin
++  Result:=s; // using UnicodeString manager
++end;
++
++function DefFNStrToUnicode(const s: String): UnicodeString;
++begin
++  Result:=s; // using UnicodeString manager
++end;
++
++
++initialization
++
++end.
+\ No newline at end of file
+diff -rupN Y:\home\alegzz\transmisson-remote-gui-read-only\/ufileslinux.pas D:\transmisson-remote-gui-read-only/ufileslinux.pas
+--- Y:\home\alegzz\transmisson-remote-gui-read-only\/ufileslinux.pas	1970-01-01 04:00:00.000000000 +0400
++++ D:\transmisson-remote-gui-read-only/ufileslinux.pas	2010-03-09 10:47:02.000000000 +0400
+@@ -0,0 +1,15 @@
++unit ufileslinux;
++
++
++interface
++
++uses
++  ufilescore, ufilesutf8;
++
++implementation
++
++initialization
++  //todo: check if Linux uses utf8 as locale
++  RegisterUtf8AsAnsiNames;
++
++end.
+diff -rupN Y:\home\alegzz\transmisson-remote-gui-read-only\/ufilesmac.pas D:\transmisson-remote-gui-read-only/ufilesmac.pas
+--- Y:\home\alegzz\transmisson-remote-gui-read-only\/ufilesmac.pas	1970-01-01 04:00:00.000000000 +0400
++++ D:\transmisson-remote-gui-read-only/ufilesmac.pas	2010-03-09 11:41:54.000000000 +0400
+@@ -0,0 +1,75 @@
++unit ufilesmac;
++
++interface
++
++{$mode objfpc}{$h+}
++
++uses
++  Unix, ufilescore, ufilesutf8, MacOSAll, osxattr;
++
++implementation
++
++function MacCompareFileName(const name1, name2: UnicodeString; CaseSensitive: Boolean): Integer;
++var
++  F1,F2: CFStringRef;
++const
++  CompareFlags : array [Boolean] of CFStringCompareFlags = (
++    kCFCompareNonliteral,
++    kCFCompareNonliteral or kCFCompareCaseInsensitive
++  );
++begin
++  if name1=name2 then exit(0);
++  if name1='' then Exit(1);
++  if name2='' then Exit(-1);
++  F1:=CFStringCreateWithCharacters(nil,@name1[1], length(name1));
++  F2:=CFStringCreateWithCharacters(nil,@name2[1], length(name2));
++  Result:=CFStringCompare(F1,F2,CompareFlags[CaseSensitive]);
++  CFRelease(F1);
++  CFRelease(F2);
++end;
++
++
++
++
++function MacPathCaseSensitive(const APath: UnicodeString; var CaseSensitive: Boolean): Boolean;
++type
++  vol_caps_buf_t = packed record
++    size : LongWord;
++    caps : vol_capabilities_attr_t;
++  end;
++
++var
++  info  : tstatfs;
++  s     : string;
++
++  alist   : attrlist;
++  buffer  : vol_caps_buf_t;
++begin
++
++  FillChar(info, sizeof(info), 0);
++  s:=UTF8Encode(APath);
++  Result:=fpStatFS( PAnsiChar(s), @info) = 0;
++  if not Result then Exit;
++
++  FillChar(alist, sizeof(alist), 0);
++  alist.bitmapcount:=ATTR_BIT_MAP_COUNT;
++  alist.volattr:=ATTR_VOL_CAPABILITIES;
++  getattrlist(PAnsiChar(s), nil, nil, 0, 0);
++
++  // getattrlist requires the path to the actual mount point.
++  Result:=getattrlist(info.mountpoint, @alist, @buffer, sizeof(buffer), 0)=0;
++  if not Result then Exit;
++
++  Result:= (alist.volattr and ATTR_VOL_CAPABILITIES) > 0;
++  if Result then begin
++    Result:=(buffer.caps.valid[VOL_CAPABILITIES_FORMAT] and VOL_CAP_FMT_CASE_SENSITIVE) > 0;
++    CaseSensitive:=(buffer.caps.capabilities[VOL_CAPABILITIES_FORMAT] and VOL_CAP_FMT_CASE_SENSITIVE) > 0;
++  end;
++end;
++
++initialization
++  DoCompareFileName:=@MacCompareFileName;
++  DoPathCaseSensitive:=@MacPathCaseSensitive;
++  RegisterUtf8AsAnsiNames;
++
++end.
+diff -rupN Y:\home\alegzz\transmisson-remote-gui-read-only\/ufilesutf8.pas D:\transmisson-remote-gui-read-only/ufilesutf8.pas
+--- Y:\home\alegzz\transmisson-remote-gui-read-only\/ufilesutf8.pas	1970-01-01 04:00:00.000000000 +0400
++++ D:\transmisson-remote-gui-read-only/ufilesutf8.pas	2010-03-09 10:47:02.000000000 +0400
+@@ -0,0 +1,36 @@
++unit ufilesutf8;
++
++interface
++
++{$mode objfpc}{$h+}
++
++uses
++  ufilescore;
++
++// the function registers
++//   DoFNUnicodeToAnsi
++//   DoFNAnsiToUnicode
++// to treat ansi file names as utf8 encoded.
++// if RTL "string" type is changed, these functions might not be required
++procedure RegisterUtf8AsAnsiNames;
++
++implementation
++
++function Utf8FNUnicodeToStr(const s: UnicodeString): string;
++begin
++  Result:=UTF8Encode(s);
++end;
++
++function Utf8FNStrToUnicode(const s: string): UnicodeString;
++begin
++  Result:=UTF8Decode(s);
++end;
++
++procedure RegisterUtf8AsAnsiNames;
++begin
++  DoFNUnicodeToStr:=@Utf8FNUnicodeToStr;
++  DoFNStrToUnicode:=@Utf8FNStrToUnicode;
++end;
++
++
++end.
+diff -rupN Y:\home\alegzz\transmisson-remote-gui-read-only\/ufileswin.pas D:\transmisson-remote-gui-read-only/ufileswin.pas
+--- Y:\home\alegzz\transmisson-remote-gui-read-only\/ufileswin.pas	1970-01-01 04:00:00.000000000 +0400
++++ D:\transmisson-remote-gui-read-only/ufileswin.pas	2011-11-23 19:14:37.346245800 +0400
+@@ -0,0 +1,308 @@
++{
++    This file is part of the Free Pascal Free Component Library.
++
++    Unicode name file access and utility functions
++
++    See the file COPYING.FPC, included in this distribution,
++    for details about the copyright.
++
++    This program is distributed in the hope that it will be useful,
++    but WITHOUT ANY WARRANTY; without even the implied warranty of
++    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
++
++    The unit is based on FPC RTL SysUtils
++
++ **********************************************************************}
++
++unit
++  ufileswin;
++
++interface
++
++{$mode objfpc}{$h+}
++
++uses
++  Windows, SysUtils, ufilescore;
++
++implementation
++
++var
++  kernel32dll    : THandle = 0;
++
++  FindFirstFileU : function (lpFileName: LPWSTR; var lpFindFileData: TWIN32FindDataW): THandle; stdcall = nil;
++  FindNextFileU  : function (hFindFile: THandle; var lpFindFileData: TWIN32FindDataW): BOOL; stdcall = nil;
++
++  SetFileAttributesU : function (lpFileName:LPCWSTR; dwFileAttributes:DWORD):WINBOOL; stdcall = nil;
++  GetFileAttributesU : function (lpFileName:LPCWSTR):DWORD; stdcall = nil;
++
++  SetCurrentDirectoryU : function (lpPathName:LPCWSTR):WINBOOL; stdcall = nil;
++  GetCurrentDirectoryU : function (nBufferLength:DWORD; lpBuffer:LPWSTR):DWORD; stdcall = nil;
++  CreateDirectoryU : function (lpPathName:LPCWSTR; lpSecurityAttributes:LPSECURITY_ATTRIBUTES):WINBOOL; stdcall = nil;
++  RemoveDirectoryU : function (lpPathName:LPCWSTR): WINBOOL; stdcall = nil;
++
++  CreateFileU : function (lpFileName:LPCWSTR; dwDesiredAccess:DWORD;
++    dwShareMode:DWORD; lpSecurityAttributes:LPSECURITY_ATTRIBUTES;
++    dwCreationDisposition:DWORD;dwFlagsAndAttributes:DWORD;
++    hTemplateFile:HANDLE):HANDLE; stdcall = nil;
++
++  DeleteFileU : function (lpFileName:LPCWSTR):WINBOOL; stdcall = nil;
++  MoveFileU : function (lpExistingFileName:LPCWSTR;lpNewFileName:LPCWSTR):WINBOOL; stdcall = nil;
++
++  GetVolumeInformationU : function (lpRootPathName: LPWSTR;
++    lpVolumeNameBuffer: LPWSTR; nVolumeNameSize: DWORD;
++    lpVolumeSerialNumber: PDWORD; lpMaximumComponentLength: PDWORD;
++    lpFileSystemFlags: PDWORD;
++    lpFileSystemNameBuffer: LPWSTR; nFileSystemNameSize: DWORD): BOOL; stdcall = nil;
++
++function WinToDosTime (Var Wtime : TFileTime;var DTime:longint):longbool;
++var
++  lft : TFileTime;
++begin
++  WinToDosTime:=FileTimeToLocalFileTime(WTime,lft) and
++                FileTimeToDosDateTime(lft,Longrec(Dtime).Hi,LongRec(DTIME).lo);
++end;
++
++Function FindMatch(var FindData: TWin32FindDataW; var f: TSearchRecUInt) : Longint;
++begin
++  { Find file with correct attribute }
++  While (FindData.dwFileAttributes and cardinal(F.ExcludeAttr))<>0 do
++   begin
++     if not FindNextFileU (F.FindHandle, FindData) then
++      begin
++        Result:=GetLastError;
++        exit;
++      end;
++   end;
++  { Convert some attributes back }
++  WinToDosTime(FindData.ftLastWriteTime,F.Time);
++  f.size:=FindData.NFileSizeLow+(qword(maxdword)+1)*FindData.NFileSizeHigh;
++  f.attr:=FindData.dwFileAttributes;
++  f.Name:=FindData.cFileName;
++  Result:=0;
++end;
++
++function FindFirstWin(const Path: UnicodeString; Attr: Longint; out Rslt: TSearchRecUInt): Longint;
++var
++  find  : TWIN32FINDDATAW;
++begin
++  Rslt.Name:=Path;
++  Rslt.Attr:=attr;
++  Rslt.ExcludeAttr:=(not Attr) and ($1e);
++
++  Rslt.FindHandle:=FindFirstFileU( PWideChar(Path),find);
++  If Rslt.FindHandle=Invalid_Handle_value then
++  begin
++    Result:=GetLastError;
++    Exit;
++  end;
++  { Find file with correct attribute }
++  Result:=FindMatch(find, Rslt);
++end;
++
++function FindNextWin(var Rslt: TSearchRecUInt): Longint;
++var
++  find  : TWIN32FINDDATAW;
++begin
++  if FindNextFileU(Rslt.FindHandle, find) then
++    Result := FindMatch(find, Rslt)
++  else
++    Result := GetLastError;
++end;
++
++Procedure FindCloseWin(Var F : TSearchRecUInt);
++begin
++  if F.FindHandle <> INVALID_HANDLE_VALUE then
++    Windows.FindClose(F.FindHandle);
++end;
++
++function FileGetAttrWin(const FileName : UnicodeString) : DWord;
++begin
++  Result:=GetFileAttributesU(PWideChar(FileName));
++end;
++
++function FileSetAttrWin(const Filename : UnicodeString; Attr: DWord) : Longint;
++begin
++  if SetFileAttributesU(PWideChar(FileName), Attr) then
++    Result:=0
++  else
++    Result := GetLastError;
++end;
++
++function FileOpenWin(const FileName: UnicodeString; Mode : Integer): THandle;
++const
++  AccessMode: array[0..2] of Cardinal  = (
++    GENERIC_READ,
++    GENERIC_WRITE,
++    GENERIC_READ or GENERIC_WRITE);
++  ShareMode: array[0..4] of Integer = (
++               0,
++               0,
++               FILE_SHARE_READ,
++               FILE_SHARE_WRITE,
++               FILE_SHARE_READ or FILE_SHARE_WRITE);
++begin
++  Result := CreateFileU(PWideChar(FileName), dword(AccessMode[Mode and 3]),
++                       dword(ShareMode[(Mode and $F0) shr 4]), nil, OPEN_EXISTING,
++                       FILE_ATTRIBUTE_NORMAL, 0);
++  //if fail api return feInvalidHandle (INVALIDE_HANDLE=feInvalidHandle=-1)
++end;
++
++function FileCreateWin(const FileName: UnicodeString; Mode : Integer): THandle;
++begin
++  Result := CreateFileU(PWidechar(FileName), GENERIC_READ or GENERIC_WRITE,
++              0, nil, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
++end;
++
++function CreateDirWin(const Dir: UnicodeString): Boolean;
++begin
++  Result:=CreateDirectoryU(PUnicodeChar(Dir), nil);
++end;
++
++function RemoveDirWin(const Dir: UnicodeString): Boolean;
++begin
++  Result:=RemoveDirectoryU(PUnicodeChar(Dir));
++end;
++
++function SetCurrentDirWin(const Dir: UnicodeString): Boolean;
++begin
++  Result:=SetCurrentDirectoryU (PWideChar(Dir));
++end;
++
++function GetCurrentDirWin: UnicodeString;
++var
++  len : Integer;
++begin
++  len:=GetCurrentDirectoryU(0, nil);
++  if len>0 then begin
++    SetLength(Result, len);
++    GetCurrentDirectoryU(length(Result), @Result[1]);
++    Result:=Copy(Result, 1, len-1);
++  end else
++    Result:='';
++end;
++
++function DeleteFileWin(const FileName: UnicodeString): Boolean;
++begin
++  Result:=DeleteFileU(PUnicodeChar(FileName));
++end;
++
++function RenameFileWin(const OldName, NewName: UnicodeString): Boolean;
++begin
++  Result:=MoveFileU(PUnicodeChar(OldName), PUnicodeChar(NewName));
++end;
++
++
++function isUNCPath(const Path: UnicodeString): Boolean;
++begin
++  Result:=(Path<>'') and (Path[1] = '\') and (Path[2] = '\');
++end;
++
++function ExtractUNCRoot(const Path: UnicodeString): UnicodeString;
++var
++  i      : Integer;
++  j      : Integer;
++  slash1 : Integer;
++begin
++  slash1:=0;
++  j:=length(Path)+1;
++  for i:=3 to length(Path) do
++    if (Path[i]='\') then begin
++      if slash1 = 0 then
++        slash1 := i
++      else begin
++        j:=i;
++        Break;
++      end;
++    end;
++  if slash1 > 0 then Result:=Copy(Path, 1, j)
++  else Result:='';
++end;
++
++function ExtractDriveOrUNCRoot(const Path: UnicodeString): UnicodeString;
++begin
++  if isUNCPath(Path) then
++    Result:=ExtractUNCRoot(Path)
++  else
++    Result:=ExtractFileDrive(Path);
++end;
++
++const
++  FILE_CASE_SENSITIVE_SEARCH = $00000001;
++
++function PathCaseSensitiveWin(const Path: UnicodeString; var CaseSensitive: Boolean): Boolean;
++var
++  Dir   : UnicodeString;
++  Name  : UnicodeString;
++  Flags : DWORD;
++begin
++  Dir:=IncludeTrailingPathDelimiter(ExtractDriveOrUNCRoot(Path));
++  SetLength(Name, MAX_PATH+1);
++  Result:=GetVolumeInformationU(PUnicodeChar(Dir), nil, 0, nil, nil, @Flags, nil, 0);
++  if Result then CaseSensitive:=(Flags and FILE_CASE_SENSITIVE_SEARCH) > 0;
++end;
++
++procedure InitWindows;
++begin
++  kernel32dll:=LoadLibrary('kernel32.dll');
++  if kernel32dll=0 then Exit;
++
++  Pointer(FindFirstFileU) := GetProcAddress(kernel32dll, 'FindFirstFileW');
++  Pointer(FindNextFileU) := GetProcAddress(kernel32dll, 'FindNextFileW');
++
++  Pointer(SetFileAttributesU) := GetProcAddress(kernel32dll, 'SetFileAttributesW');
++  Pointer(GetFileAttributesU) := GetProcAddress(kernel32dll, 'GetFileAttributesW');
++
++  Pointer(CreateFileU) := GetProcAddress(kernel32dll, 'CreateFileW');
++
++  Pointer(CreateDirectoryU) := GetProcAddress(kernel32dll, 'CreateDirectoryW');
++  Pointer(RemoveDirectoryU) := GetProcAddress(kernel32dll, 'RemoveDirectoryW');
++  Pointer(SetCurrentDirectoryU) := GetProcAddress(kernel32dll, 'SetCurrentDirectoryW');
++  Pointer(GetCurrentDirectoryU) := GetProcAddress(kernel32dll, 'GetCurrentDirectoryW');
++
++  Pointer(DeleteFileU) := GetProcAddress(kernel32dll, 'DeleteFileW');
++  Pointer(MoveFileU) := GetProcAddress(kernel32dll, 'MoveFileW');
++  Pointer(GetVolumeInformationU) := GetProcAddress(kernel32dll, 'GetVolumeInformationW');
++
++  if Assigned(FindFirstFileU) and Assigned(FindNextFileU) then begin
++    DoFindFirst:=@FindFirstWin;
++    DoFindNext:=@FindNextWin;
++    DoFindClose:=@FindCloseWin;
++  end;
++
++  if Assigned(SetFileAttributesU) and Assigned(GetFileAttributesU) then begin
++    DoFileGetAttr:=@FileGetAttrWin;
++    DoFileSetAttr:=@FileSetAttrWin;
++  end;
++
++  if Assigned(CreateFileU) then begin
++    DoFileOpen:=@FileOpenWin;
++    DoFileCreate:=@FileCreateWin;
++  end;
++
++  if Assigned(CreateDirectoryU) then begin
++    DoCreateDir:=@CreateDirWin;
++    DoRemoveDir:=@RemoveDirWin;
++  end;
++
++  if Assigned(CreateDirectoryU) then begin
++    DoSetCurrentDir:=@SetCurrentDirWin;
++    DoGetCurrentDir:=@GetCurrentDirWin;
++  end;
++
++  if Assigned(DeleteFileU) then DoDeleteFile:=@DeleteFileWin;
++  if Assigned(MoveFileU) then DoRenameFile:=@RenameFileWin;
++  if Assigned(GetVolumeInformationU) then DoPathCaseSensitive:=@PathCaseSensitiveWin;
++end;
++
++procedure ReleaseWindows;
++begin
++  if kernel32dll<>0 then FreeLibrary(kernel32dll);
++end;
++
++initialization
++  InitWindows;
++
++finalization
++  ReleaseWindows;
++
++end.
+\ No newline at end of file
+diff -rupN Y:\home\alegzz\transmisson-remote-gui-read-only\/VERSION.txt D:\transmisson-remote-gui-read-only/VERSION.txt
+--- Y:\home\alegzz\transmisson-remote-gui-read-only\/VERSION.txt	2011-11-29 11:23:27.461733700 +0400
++++ D:\transmisson-remote-gui-read-only/VERSION.txt	2011-11-23 19:31:03.068625900 +0400
+@@ -1 +1 @@
+-3.2
+\ No newline at end of file
++3.2.1
+\ No newline at end of file

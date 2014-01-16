@@ -1,0 +1,2371 @@
+<!DOCTYPE html>
+<html><head>
+ <link rel="icon" type="image/vnd.microsoft.icon" href="http://www.gstatic.com/codesite/ph/images/phosting.ico">
+ 
+ 
+ <script type="text/javascript">
+ 
+ 
+ 
+ 
+ var codesite_token = null;
+ 
+ 
+ var CS_env = {"profileUrl":null,"token":null,"assetHostPath":"http://www.gstatic.com/codesite/ph","domainName":null,"assetVersionPath":"http://www.gstatic.com/codesite/ph/4349413266511071651","projectHomeUrl":"/p/transmisson-remote-gui","relativeBaseUrl":"","projectName":"transmisson-remote-gui","loggedInUserEmail":null};
+ var _gaq = _gaq || [];
+ _gaq.push(
+ ['siteTracker._setAccount', 'UA-18071-1'],
+ ['siteTracker._trackPageview']);
+ 
+ 
+ </script>
+ 
+ 
+ <title>Issue 463 - 
+ transmisson-remote-gui -
+ 
+ transmission 2.4x support: Status of all torrents is incorrect/unknown, no status icons - 
+ Cross platform remote GUI for the Transmission daemon - Google Project Hosting
+ </title>
+ <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+ <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+ 
+ <meta name="ROBOTS" content="NOARCHIVE">
+ 
+ <link type="text/css" rel="stylesheet" href="detail_files/core.css">
+ 
+ <link type="text/css" rel="stylesheet" href="detail_files/ph_detail.css">
+ 
+ 
+ 
+ 
+<!--[if IE]>
+ <link type="text/css" rel="stylesheet" href="http://www.gstatic.com/codesite/ph/4349413266511071651/css/d_ie.css" >
+<![endif]-->
+ <style type="text/css">
+ .menuIcon.off { background: no-repeat url(http://www.gstatic.com/codesite/ph/images/dropdown_sprite.gif) 0 -42px }
+ .menuIcon.on { background: no-repeat url(http://www.gstatic.com/codesite/ph/images/dropdown_sprite.gif) 0 -28px }
+ .menuIcon.down { background: no-repeat url(http://www.gstatic.com/codesite/ph/images/dropdown_sprite.gif) 0 0; }
+ 
+ 
+ .attachments { width:33%; border-top:2px solid #999; padding-top: 3px; margin-left: .7em;}
+ .attachments table { margin-bottom: 0.75em; }
+ .attachments table tr td { padding: 0; margin: 0; font-size: 95%; }
+ .preview { border: 2px solid #c3d9ff; padding: 1px; }
+ .preview:hover { border: 2px solid blue; }
+ .label { white-space: nowrap; }
+ .derived { font-style:italic }
+ .cursor_on .author {
+ background: url(http://www.gstatic.com/codesite/ph/images/show-arrow.gif) no-repeat 2px;
+ }
+
+ 
+ </style>
+<script src="detail_files/ga.js" async="" type="text/javascript"></script></head>
+<body class="t3">
+<script type="text/javascript">
+ (function() {
+ var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+ ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+ (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(ga);
+ })();
+</script>
+<div class="headbg">
+
+ <div id="gaia">
+ 
+
+ <span>
+ 
+ <a href="#" id="projects-dropdown" onclick="return false;"><u>My favorites</u> <small>▼</small></a>
+ | <a href="https://www.google.com/accounts/ServiceLogin?service=code&amp;ltmpl=phosting&amp;continue=http%3A%2F%2Fcode.google.com%2Fp%2Ftransmisson-remote-gui%2Fissues%2Fdetail%3Fid%3D463&amp;followup=http%3A%2F%2Fcode.google.com%2Fp%2Ftransmisson-remote-gui%2Fissues%2Fdetail%3Fid%3D463" onclick="_CS_click('/gb/ph/signin');"><u>Sign in</u></a>
+ 
+ </span>
+
+ </div>
+
+ <div class="gbh" style="left: 0pt;"></div>
+ <div class="gbh" style="right: 0pt;"></div>
+ 
+ 
+ <div style="height: 1px"></div>
+<!--[if lte IE 7]>
+<div style="text-align:center;">
+Your version of Internet Explorer is not supported. Try a browser that
+contributes to open source, such as <a href="http://www.firefox.com">Firefox</a>,
+<a href="http://www.google.com/chrome">Google Chrome</a>, or
+<a href="http://code.google.com/chrome/chromeframe/">Google Chrome Frame</a>.
+</div>
+<![endif]-->
+
+
+
+
+ <table style="padding: 0px; margin: 0px 0px 10px; width: 100%;" itemscope="" itemtype="http://schema.org/CreativeWork" cellpadding="0" cellspacing="0">
+ <tbody><tr style="height: 58px;">
+ 
+ <td id="plogo">
+ <link itemprop="url" href="http://code.google.com/p/transmisson-remote-gui">
+ <a href="http://code.google.com/p/transmisson-remote-gui/">
+ 
+ 
+ <img src="detail_files/logo.png" alt="Logo" itemprop="image">
+ 
+ </a>
+ </td>
+ 
+ <td style="padding-left: 0.5em;">
+ 
+ <div id="pname">
+ <a href="http://code.google.com/p/transmisson-remote-gui/"><span itemprop="name">transmisson-remote-gui</span></a>
+ </div>
+ 
+ <div id="psum">
+ <a id="project_summary_link" href="http://code.google.com/p/transmisson-remote-gui/"><span itemprop="description">Cross platform remote GUI for the Transmission daemon</span></a>
+ 
+ </div>
+ 
+ 
+ </td>
+ <td style="white-space: nowrap; text-align: right; vertical-align: bottom;">
+ 
+ <form action="/hosting/search">
+ <input size="30" name="q" type="text">
+ 
+ <input name="projectsearch" value="Search projects" type="submit">
+ </form>
+ 
+ </td></tr>
+ </tbody></table>
+
+</div>
+
+ 
+<div id="mt" class="gtb"> 
+ <a href="http://code.google.com/p/transmisson-remote-gui/" class="tab ">Project&nbsp;Home</a>
+ 
+ 
+ 
+ 
+ <a href="http://code.google.com/p/transmisson-remote-gui/downloads/list" class="tab ">Downloads</a>
+ 
+ 
+ 
+ 
+ 
+ <a href="http://code.google.com/p/transmisson-remote-gui/w/list" class="tab ">Wiki</a>
+ 
+ 
+ 
+ 
+ 
+ <a href="http://code.google.com/p/transmisson-remote-gui/issues/list" class="tab active">Issues</a>
+ 
+ 
+ 
+ 
+ 
+ <a href="http://code.google.com/p/transmisson-remote-gui/source/checkout" class="tab ">Source</a>
+ 
+ 
+ 
+ 
+ 
+ <div class="gtbc"></div>
+</div>
+<table class="st" align="center" border="0" cellpadding="0" cellspacing="0" width="100%">
+ <tbody><tr>
+ 
+ 
+ 
+ 
+ 
+ <td class="subt">
+ <div class="issueDetail">
+<div class="isf">
+ 
+ 
+ <span class="inIssueEntry">
+ <a class="buttonify" href="http://code.google.com/p/transmisson-remote-gui/issues/entry">New issue</a>
+ </span> &nbsp;
+ 
+ <span class="inIssueList">
+ <span>Search</span>
+ <form action="list" method="GET" style="display:inline">
+ <select id="can" name="can">
+ 
+<option disabled="disabled">Search within:</option>
+<option value="1">&nbsp;All issues</option>
+<option value="2" selected="selected">&nbsp;Open issues</option>
+
+<option value="6">&nbsp;New issues</option>
+<option value="7">&nbsp;Issues to verify</option>
+
+ </select>
+ <span>for</span>
+ <span id="qq"><input size="38" id="searchq" name="q" autocomplete="off" type="text"></span>
+ 
+ 
+ <span id="search_colspec"><input name="colspec" value="ID Type Status Priority Stars Milestone OpSys Summary" type="hidden"></span>
+ 
+ 
+ 
+ <input name="cells" value="tiles" type="hidden">
+ <input value="Search" type="submit">
+ </form>
+ </span> &nbsp;
+ <span class="inIssueAdvSearch">
+ <a href="http://code.google.com/p/transmisson-remote-gui/issues/advsearch">Advanced search</a>
+ </span> &nbsp;
+ <span class="inIssueSearchTips">
+ <a href="http://code.google.com/p/transmisson-remote-gui/issues/searchtips">Search tips</a>
+ </span>
+</div>
+</div>
+
+ </td>
+ 
+ 
+ 
+ 
+ <td class="bevel-right" align="right" valign="top"></td>
+ </tr>
+</tbody></table>
+
+
+<script type="text/javascript">
+ var cancelBubble = false;
+ function _go(url) { document.location = url; }
+</script>
+<div id="maincol">
+
+ 
+<!-- IE -->
+
+
+
+
+
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+
+ 
+
+<div id="color_control" class="closed_colors">
+<div id="issueheader">
+<table cellpadding="0" cellspacing="0" width="100%"><tbody>
+ <tr>
+ <td class="vt h3" style="padding: 0pt 5px;" nowrap="nowrap">
+ 
+ 
+ Issue <a href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463">463</a>:
+ </td>
+ <td class="vt" width="90%">
+ <span class="h3">transmission 2.4x support: Status of all torrents is incorrect/unknown, no status icons</span>
+ </td>
+ <td>
+ 
+ </td>
+ </tr>
+ <tr>
+ <td></td>
+ <td nowrap="nowrap">
+ 
+ 
+ 30 people starred this issue and may be notified of changes.
+ 
+ 
+ 
+ </td>
+ <td align="center" nowrap="nowrap">
+ 
+ <a href="http://code.google.com/p/transmisson-remote-gui/issues/list?cursor=transmisson-remote-gui%3A463">Back to list</a>
+ 
+ </td>
+ </tr>
+</tbody></table>
+</div>
+<table class="issuepage" id="meta-container" border="0" cellpadding="0" cellspacing="0" width="100%">
+<tbody class="collapse"> 
+ <tr>
+ <td style="min-width: 140px;" id="issuemeta">
+ <div style="width: 140px; position: relative; top: 0pt;" id="meta-float">
+ 
+<table cellpadding="0" cellspacing="0">
+ <tbody><tr><th align="left">Status:&nbsp;</th>
+ <td width="100%">
+ 
+ <span title="Developer made source code changes, QA should verify">Fixed</span>
+ 
+ </td>
+ </tr>
+ 
+ 
+ <tr><th align="left">Owner:&nbsp;</th><td>
+ 
+ 
+ ----
+ 
+ 
+ </td>
+ </tr>
+ 
+ 
+ <tr><th align="left" valign="top">Closed:&nbsp;</th>
+ <td align="left" valign="top" width="100%">
+ Yesterday
+ </td>
+ </tr>
+ 
+ 
+ <tr><td colspan="2">
+ 
+ <div style="padding-top:2px">
+ 
+ <a href="http://code.google.com/p/transmisson-remote-gui/issues/list?q=label:Priority-Low" title="Might slip to later milestone" class="label"><b>Priority-</b>Low</a>
+ 
+ </div>
+ 
+ </td></tr>
+ 
+</tbody></table>
+
+ <br><br>
+ 
+ 
+ <div style="white-space:nowrap"><a href="https://www.google.com/accounts/ServiceLogin?service=code&amp;ltmpl=phosting&amp;continue=http%3A%2F%2Fcode.google.com%2Fp%2Ftransmisson-remote-gui%2Fissues%2Fdetail%3Fid%3D463&amp;followup=http%3A%2F%2Fcode.google.com%2Fp%2Ftransmisson-remote-gui%2Fissues%2Fdetail%3Fid%3D463">Sign in</a> to add a comment</div>
+ 
+ 
+
+<div class="rel_issues">
+ 
+ 
+ 
+</div>
+
+ 
+ </div>&nbsp;
+ </td>
+ <td class="vt issuedescription" id="cursorarea" width="100%">
+ 
+<div class="cursor_off vt issuedescription" id="hc0">
+ <div class="author">
+ Reported by 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/104564077452123470309/">htc.bob....@gmail.com</a>,
+ <span class="date" title="Tue Oct 11 02:13:45 2011">Oct 11, 2011</span>
+ 
+ </div>
+<pre>i'm using transmission 2.41 now and when i open transgui i cant see the status of the torrents anymore. status is unknown.
+
+using transmission-daemon on openindiana, and transgui on win7
+
+
+
+</pre>
+
+
+</div>
+
+ 
+
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc1">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c1" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c1">1</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/114099388751057732181/">lexu...@gmail.com</a></span>,
+ <span class="date" title="Tue Oct 11 02:31:09 2011">Oct 11, 2011</span>
+ 
+<pre>Когда выйдет новая версия transmisson-remote-gui поддерживающая полноценное управление версийе 2.41 transmission ?
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc2">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c2" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c2">2</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/107479091341550866326/">tulio.la...@gmail.com</a></span>,
+ <span class="date" title="Tue Oct 11 03:30:18 2011">Oct 11, 2011</span>
+ 
+<pre>Same issue here, I upgraded my Transmission to 2.41 and I can see status only for my 'Downloading' torrents, not the seeding, paused, finished downloads. Thanks, and congrats for this excellent work you have made so far!!
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc3">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c3" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c3">3</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/100126079604071939054/">matclark...@gmail.com</a></span>,
+ <span class="date" title="Tue Oct 11 05:15:57 2011">Oct 11, 2011</span>
+ 
+<pre>Same here .... Could be down the the new filter that has been add to the web interface in the current version.
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc4">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c4" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c4">4</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/114407244079827725305/">ivanal...@gmail.com</a></span>,
+ <span class="date" title="Tue Oct 11 08:11:10 2011">Oct 11, 2011</span>
+ 
+<pre>Если кому интересно - я сделал (еще для беты 2.4) поддержку RPC 14 (статусы и очереди загрузки) плюс всякую мелочь, типа фильтра торрентов с ошибками. У меня работает нормально, но не проверял нигде кроме вин7 и лазаруса 0.9.31 - так что в линуксе/макоси/с другим компилятором - могут вылезти ошибки.
+Если нужно - могу прикрепить патч.
+
+If you are interested in - I realized (yet for the beta 2.4) support RPC 14 (the download queue and status) plus the different things, such as filter torrents with errors. I have working fine but have not tested anywhere except win7 and Lazarus 0.9.31 - so in Linux / makos / with another compiler - can get out the error.
+If you want to - I can attach a patch.
+(sorry for bad english - translated by google:))
+
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc5">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c5" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c5">5</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/107479091341550866326/">tulio.la...@gmail.com</a></span>,
+ <span class="date" title="Tue Oct 11 08:31:13 2011">Oct 11, 2011</span>
+ 
+<pre>In Transmission 2.40 and newer, domain values of 'status' field have changed, in a non-backward compatible way, maybe due to a new 'torrent queueing' feature, returned by a 'tr_stat' object. See <a href="https://trac.transmissionbt.com/browser/trunk/extras/rpc-spec.txt" rel="nofollow">https://trac.transmissionbt.com/browser/trunk/extras/rpc-spec.txt</a>.
+
+Looking at transmission.h bundled in version 2.41 source code, I found this:
+
+typedef enum
+{
+    TR_STATUS_STOPPED        = 0, /* Torrent is stopped */
+    TR_STATUS_CHECK_WAIT     = 1, /* Queued to check files /*
+    TR_STATUS_CHECK          = 2, /* Checking files */
+    TR_STATUS_DOWNLOAD_WAIT  = 3, /* Queued to download */
+    TR_STATUS_DOWNLOAD       = 4, /* Downloading */
+    TR_STATUS_SEED_WAIT      = 5, /* Queued to seed */
+    TR_STATUS_SEED           = 6  /* Seeding */
+} tr_torrent_activity;
+
+I think Transmission-remote-gui must be recompiled using this new domain.
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc6">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c6" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c6">6</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/100127412377096800771/">wewe...@gmail.com</a></span>,
+ <span class="date" title="Tue Oct 11 12:23:15 2011">Oct 11, 2011</span>
+ 
+<pre>Точно такая-же ошибка после обновления transmission до 2.40. Клиентская система: Win 7,XP. Версии transmisson-remote-gui: 3.1 и 3.2 (из SVN).
+ivanal...@gmail.com - если не трудно, выложите свой патч.
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc7">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c7" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c7">7</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/114407244079827725305/">ivanal...@gmail.com</a></span>,
+ <span class="date" title="Tue Oct 11 13:40:40 2011">Oct 11, 2011</span>
+ 
+<pre>Патч для поддержки RPC 14 (в transmission &gt;= 2.4)
+Работают статусы и очереди.
+Сразу говорю - писалось все для себя, так что там еще и фильтр торрентов с ошибками, добавление сразу нескольких торрентов, еще разная мелочь - выделять только поддержку нового протокола не стал. Компилировал в Lazarus 0.9.31+FPC 2.5.1.
+С 2.33 тоже не проверял, хотя вроде везде поставил проверки на новую версию, но могут и баги быть...
+
+Patch to support RPC 14 (transmission&gt; = 2.4) 
+Work status and queues. 
+Immediately tell - all written for myself, so there is also a filter torrents with bugs, add multiple torrents at the same time and still different things - just select new protocol support was not. Compiled in Lazarus 0.9.31 + FPC 2.5.1. 
+Since 2.33 is also not tested, although like everywhere put checks on the new version, but may be bugs ... 
+(translated by google)
+</pre>
+ 
+ <div class="attachments">
+ 
+ 
+ 
+ 
+
+
+
+
+ <table border="0" cellpadding="2" cellspacing="3">
+ <tbody><tr><td width="20">
+ <a href="http://transmisson-remote-gui.googlecode.com/issues/attachment?aid=4630007000&amp;name=mypatch-3.patch&amp;token=86ed08aa36eb6764292cb102be7c09b6">
+ <img src="detail_files/paperclip.gif" border="0" height="15" width="15">
+ </a>
+ </td>
+ <td style="min-width: 16em;" valign="top">
+ 
+ <b>mypatch-3.patch</b>
+ <br>
+ 53.4 KB
+ 
+ 
+ &nbsp; <a href="http://code.google.com/p/transmisson-remote-gui/issues/attachmentText?id=463&amp;aid=4630007000&amp;name=mypatch-3.patch&amp;token=86ed08aa36eb6764292cb102be7c09b6" target="_blank">View</a>
+ 
+ &nbsp; <a href="http://transmisson-remote-gui.googlecode.com/issues/attachment?aid=4630007000&amp;name=mypatch-3.patch&amp;token=86ed08aa36eb6764292cb102be7c09b6">Download</a>
+ 
+ </td>
+ 
+ </tr>
+ 
+ </tbody></table>
+
+
+ 
+ 
+ 
+ 
+
+
+
+
+ <table border="0" cellpadding="2" cellspacing="3">
+ <tbody><tr><td width="20">
+ <a href="http://transmisson-remote-gui.googlecode.com/issues/attachment?aid=4630007001&amp;name=transgui.ru&amp;token=3684da6372d4d877038f065b6584ac6c">
+ <img src="detail_files/paperclip.gif" border="0" height="15" width="15">
+ </a>
+ </td>
+ <td style="min-width: 16em;" valign="top">
+ 
+ <b>transgui.ru</b>
+ <br>
+ 15.7 KB
+ 
+ 
+ &nbsp; <a href="http://code.google.com/p/transmisson-remote-gui/issues/attachmentText?id=463&amp;aid=4630007001&amp;name=transgui.ru&amp;token=3684da6372d4d877038f065b6584ac6c" target="_blank">View</a>
+ 
+ &nbsp; <a href="http://transmisson-remote-gui.googlecode.com/issues/attachment?aid=4630007001&amp;name=transgui.ru&amp;token=3684da6372d4d877038f065b6584ac6c">Download</a>
+ 
+ </td>
+ 
+ </tr>
+ 
+ </tbody></table>
+
+
+ 
+ </div>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc8">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c8" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c8">8</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/100127412377096800771/">wewe...@gmail.com</a></span>,
+ <span class="date" title="Wed Oct 12 01:42:50 2011">Oct 12, 2011</span>
+ 
+<pre>ivanal...@gmail.com - спасибо за патч. С transmission 2.40 работает отлично.
+При сборке под Windows возникли следующие сложности:
+1. Пришлось заменять unix переносы строк на windows - иначе patch завершался с ошибкой (возможно переносы были изменены при загрузке через сайт).
+2. Собранное приложение не запускалось - ругалось на PrefixOption. После удаления везде "Title.PrefixOption = poNone" - все заработало (я не занимаюсь программированием профессионально, но это изменение показалось мне допустимым).
+Еще раз спасибо за помощь.
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc9">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c9" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c9">9</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/114407244079827725305/">ivanal...@gmail.com</a></span>,
+ <span class="date" title="Wed Oct 12 02:36:10 2011">Oct 12, 2011</span>
+ 
+<pre>"Title.PrefixOption = poNone" это работа лазаруса 0.9.31, в программе реально не используется, так что конечно можно удалять.
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc10">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c10" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c10">10</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/110588824845598061724/">rBos...@gmail.com</a></span>,
+ <span class="date" title="Wed Oct 12 03:24:03 2011">Oct 12, 2011</span>
+ 
+<pre>А можете выложить в сеть уже собранную версию под виндовс?
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc11">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c11" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c11">11</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/114407244079827725305/">ivanal...@gmail.com</a></span>,
+ <span class="date" title="Wed Oct 12 12:16:12 2011">Oct 12, 2011</span>
+ 
+<pre>Исправленная версия - была некорректная работа с предыдущими версиями Transmission.
+Плюс добавил графики, но это пока в весьма сыром виде.
+
+Corrected version - was not work correctly with earlier versions of Transmission.
+Plus, added graphics, but it's still a very raw form.
+</pre>
+ 
+ <div class="attachments">
+ 
+ 
+ 
+ 
+
+
+
+
+ <table border="0" cellpadding="2" cellspacing="3">
+ <tbody><tr><td width="20">
+ <a href="http://transmisson-remote-gui.googlecode.com/issues/attachment?aid=4630011000&amp;name=mypatch-4.patch&amp;token=c64abfe23f8549d69309d790db2a01e5">
+ <img src="detail_files/paperclip.gif" border="0" height="15" width="15">
+ </a>
+ </td>
+ <td style="min-width: 16em;" valign="top">
+ 
+ <b>mypatch-4.patch</b>
+ <br>
+ 63.2 KB
+ 
+ 
+ &nbsp; <a href="http://code.google.com/p/transmisson-remote-gui/issues/attachmentText?id=463&amp;aid=4630011000&amp;name=mypatch-4.patch&amp;token=c64abfe23f8549d69309d790db2a01e5" target="_blank">View</a>
+ 
+ &nbsp; <a href="http://transmisson-remote-gui.googlecode.com/issues/attachment?aid=4630011000&amp;name=mypatch-4.patch&amp;token=c64abfe23f8549d69309d790db2a01e5">Download</a>
+ 
+ </td>
+ 
+ </tr>
+ 
+ </tbody></table>
+
+
+ 
+ 
+ 
+ 
+
+
+
+
+ <table border="0" cellpadding="2" cellspacing="3">
+ <tbody><tr><td width="20">
+ <a href="http://transmisson-remote-gui.googlecode.com/issues/attachment?aid=4630011001&amp;name=transgui.7z&amp;token=24fd0c6b171e569f4d44638dde8771db">
+ <img src="detail_files/paperclip.gif" border="0" height="15" width="15">
+ </a>
+ </td>
+ <td style="min-width: 16em;" valign="top">
+ 
+ <b>transgui.7z</b>
+ <br>
+ 686 KB
+ 
+ 
+ &nbsp; <a href="http://transmisson-remote-gui.googlecode.com/issues/attachment?aid=4630011001&amp;name=transgui.7z&amp;token=24fd0c6b171e569f4d44638dde8771db">Download</a>
+ 
+ </td>
+ 
+ </tr>
+ 
+ </tbody></table>
+
+
+ 
+ </div>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc12">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c12" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c12">12</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/107479091341550866326/">tulio.la...@gmail.com</a></span>,
+ <span class="date" title="Wed Oct 12 12:27:25 2011">Oct 12, 2011</span>
+ 
+<pre>Tested patched transgui.exe here on Win7 x64, it's working, like a charm!
+Greate job, thanks! Still waiting for official corrected version.
+
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc13">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c13" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c13">13</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/117213315554955814962/">s...@yourfreemail.info</a></span>,
+ <span class="date" title="Thu Oct 13 01:54:01 2011">Oct 13, 2011</span>
+ 
+<pre>The patched transgui.exe extracted from  transgui.7z   works PERFECTLY!!!, it works very very nice...
+
+Great big THANKS to --Ivanal--  who coded this fantastic patch.
+</pre>
+ 
+ <div class="attachments">
+ 
+ 
+ 
+ 
+
+
+
+
+ <table border="0" cellpadding="2" cellspacing="3">
+ <tbody><tr><td width="20">
+ <a href="http://transmisson-remote-gui.googlecode.com/issues/attachment?aid=4630013000&amp;name=transgui.exe&amp;token=69341fb1e16e4f36f947235a49c415b6">
+ <img src="detail_files/paperclip.gif" border="0" height="15" width="15">
+ </a>
+ </td>
+ <td style="min-width: 16em;" valign="top">
+ 
+ <b>transgui.exe</b>
+ <br>
+ 2.5 MB
+ 
+ 
+ &nbsp; <a href="http://transmisson-remote-gui.googlecode.com/issues/attachment?aid=4630013000&amp;name=transgui.exe&amp;token=69341fb1e16e4f36f947235a49c415b6">Download</a>
+ 
+ </td>
+ 
+ </tr>
+ 
+ </tbody></table>
+
+
+ 
+ </div>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc14">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c14" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c14">14</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/117213315554955814962/">s...@yourfreemail.info</a></span>,
+ <span class="date" title="Thu Oct 13 02:35:14 2011">Oct 13, 2011</span>
+ 
+<pre>and here is   transgui.exe    that I build with Ivanal's   mypatch-4.patch  and lazarus-0.9.30-fpc-2.4.2  with the "Title.PrefixOption = poNone"  removed to eliminate that error (unless compiled in 0.9.31) see comment 9 of Ivanal's.
+</pre>
+ 
+ <div class="attachments">
+ 
+ 
+ 
+ 
+
+
+
+
+ <table border="0" cellpadding="2" cellspacing="3">
+ <tbody><tr><td width="20">
+ <a href="http://transmisson-remote-gui.googlecode.com/issues/attachment?aid=4630014000&amp;name=transgui.exe&amp;token=78e97f4c3ecce354b2e960bfb793082c">
+ <img src="detail_files/paperclip.gif" border="0" height="15" width="15">
+ </a>
+ </td>
+ <td style="min-width: 16em;" valign="top">
+ 
+ <b>transgui.exe</b>
+ <br>
+ 2.4 MB
+ 
+ 
+ &nbsp; <a href="http://transmisson-remote-gui.googlecode.com/issues/attachment?aid=4630014000&amp;name=transgui.exe&amp;token=78e97f4c3ecce354b2e960bfb793082c">Download</a>
+ 
+ </td>
+ 
+ </tr>
+ 
+ </tbody></table>
+
+
+ 
+ </div>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc15">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c15" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c15">15</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/100126079604071939054/">matclark...@gmail.com</a></span>,
+ <span class="date" title="Thu Oct 13 06:11:12 2011">Oct 13, 2011</span>
+ 
+<pre>Just tested the current patch and have found that all the torrents that are showing as "Seeding" on the web interface are showing as "Stalled" in transgui.exe
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc16">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c16" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c16">16</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/107479091341550866326/">tulio.la...@gmail.com</a></span>,
+ <span class="date" title="Thu Oct 13 06:19:31 2011">Oct 13, 2011</span>
+ 
+<pre>As expected. Seeding torrents with 0kbps upload ratio are reported as 'stalled' by RPC interface. Since this torrents gets uploading again (speed above 0), they return to 'seeding' status. It's a Transmission 2.41 new feature.
+
+Maybe web interface should be adjusted to show the same information transmission-remote send via RPC.
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc17">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c17" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c17">17</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/109163487873474740963/">giga1...@gmail.com</a></span>,
+ <span class="date" title="Thu Oct 13 11:23:10 2011">Oct 13, 2011</span>
+ 
+<pre>Беда отчаянная. Обновился трансмишшион. Отпал ГУИ что за фигня? В опере тоже ничего не показывает. Замена файлов ничего не дает. Процесс трансгуи затем даже не убивается.
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc18">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c18" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c18">18</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/114407244079827725305/">ivanal...@gmail.com</a></span>,
+ <span class="date" title="Thu Oct 13 15:09:30 2011">Oct 13, 2011</span>
+ 
+<pre>giga1...@gmail.com
+А какое это отношение имеет к transmission-remote-gui ?
+После обновления трансмисии до 2.41 все работает и со старой версией гуи, просто некорректно показываются статусы (и уж тем более работает вебинтерфейс)
+Так что ищите, что вы там понаобновляли не так.
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc19">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c19" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c19">19</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/109163487873474740963/">giga1...@gmail.com</a></span>,
+ <span class="date" title="Fri Oct 14 01:15:46 2011">Oct 14, 2011</span>
+ 
+<pre>ivanal...@gmail.com
+Вот есди бы это было только у меня, я бы даже и писать не стал. На форуме wl500 куча жалоб именно с версией 2.41 и гуи 3.1
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc20">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c20" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c20">20</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/114407244079827725305/">ivanal...@gmail.com</a></span>,
+ <span class="date" title="Fri Oct 14 01:47:21 2011">Oct 14, 2011</span>
+ 
+<pre>giga1...@gmail.com
+Ссылку пожалуйста. 
+(как я понимаю wl500 - трансмиссия установлена на каком-то роутере? может в этом проблема)
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc21">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c21" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c21">21</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/109163487873474740963/">giga1...@gmail.com</a></span>,
+ <span class="date" title="Fri Oct 14 08:55:42 2011">Oct 14, 2011</span>
+ 
+<pre>ivanal...@gmail.com
+Вы правы трансмиссия установлена на ASUS RT-N16. 
+Линк на форум <a href="http://wl500g.info/showthread.php?t=12209" rel="nofollow">http://wl500g.info/showthread.php?t=12209</a>
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc22">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c22" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c22">22</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/100520737634191027600/">nafania...@gmail.com</a></span>,
+ <span class="date" title="Fri Oct 14 09:07:05 2011">Oct 14, 2011</span>
+ 
+<pre>У меня transmission на насе стоит, тоже из ipkg 2.4.1.
+GUI под виндой отсюда.
+Все работает нормально, проверяйте, что там у вас.
+Вы из unstable ставили? Попробуйте откатиться на предыдущие версии, пока стабильной работы не будет.
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc23">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c23" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c23">23</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/107479091341550866326/">tulio.la...@gmail.com</a></span>,
+ <span class="date" title="Fri Oct 14 09:16:41 2011">Oct 14, 2011</span>
+ 
+<pre>My transmission-daemon is 2.41 also, upgraded using ipkg, running on an Iomega StorCenter IX2-200 under Linux. Using temporary patch developed by ivanal... and working fine.
+This should be a problem with transmission 2.41 build made for your Asus router. Try to downgrade back to 2.33 and see what you get.
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc24">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c24" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c24">24</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/109163487873474740963/">giga1...@gmail.com</a></span>,
+ <span class="date" title="Fri Oct 14 09:45:07 2011">Oct 14, 2011</span>
+ 
+<pre>Ставил отсюда <a href="http://ipkg.nslu2-linux.org/feeds/optware/oleg/cross/stable/" rel="nofollow">http://ipkg.nslu2-linux.org/feeds/optware/oleg/cross/stable/</a>
+Откатился на 2.33 все нормализовалось, в том числе и гуи.
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc25">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c25" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c25">25</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/117213315554955814962/">s...@yourfreemail.info</a></span>,
+ <span class="date" title="Fri Oct 14 12:13:20 2011">Oct 14, 2011</span>
+ 
+<pre>First of all I wish to again thank Ivanal not only for the patch to that fixed GUI but also for continuing to post comments and spend time and effort with all!!
+
+Ivanal, I have found a very small bug with your  transgui.exe :
+
+select a torrent   then    trackers  tab
+right click with mouse  then   Add tracker
+enter  URL    [OK]
+the error produced is   Unknown type in JSONArray constructor: 18
+
+If I use  transgui.exe  that I compile  comment 14  (above)
+no error results
+
+however if I try   Edit tracker in my compile I get   Error invalid arguement
+                   Edit tracker with your compile    JSONArray constructor: 18
+
+I use NSLU2 with ipkg for transmission and winxp for GUI
+
+sorry for no Russian, only Spanish otherwise.
+
+
+Прежде всего я хотел бы еще раз поблагодарить Ivanal не только для патч к этой постоянной GUI, но и продолжает отправлять комментарии и тратить время и усилия со всеми! 
+
+Ivanal, я нашел очень маленькая ошибка с вашей transgui.exe: 
+
+выберите торрент трекеры затем вкладку 
+правый клик мышкой затем Добавить трекер 
+введите URL [OK] 
+Ошибка произведенного Неизвестный тип в конструкторе JSONArray: 18 
+
+Если я использую transgui.exe, что я компилирую комментарий 14 (выше) 
+то ошибок не происходит 
+
+Однако, если я пытаюсь Редактировать трекер в моей компиляции я получаю Ошибка неверный аргумент 
+Изменить трекера с Вашим компиляции JSONArray конструктор: 18 
+
+Я использую NSLU2 с IPKG для передачи и WinXP для GUI 
+
+жаль не русский, только на испанском языке в противном случае.
+ 
+
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc26">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c26" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c26">26</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/106501856334877094263/">pa3...@gmail.com</a></span>,
+ <span class="date" title="Fri Oct 14 12:15:36 2011">Oct 14, 2011</span>
+ 
+<pre>Notice the same. Status is not showing correct.
+
+Also the tracker information after update is always showing "Could not connect to tracker", but seeding is working.
+
+Running Ubuntu (Natty) and Remote Gui on Win 7.
+Tried the patched transgui versions (both 2.4 and 2.5Mb sized ones.
+Download icons alwasys in "red" and tracker status as mentioned in my message above.
+
+Thanks in advance for your work on this program !!
+
+
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc27">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c27" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c27">27</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/106501856334877094263/">pa3...@gmail.com</a></span>,
+ <span class="date" title="Fri Oct 14 12:46:48 2011">Oct 14, 2011</span>
+ 
+<pre>FYI 
+Checked the Linux client Transmission-gui (gt) and it also shows "Could not connect to tracker" status. 
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc28">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c28" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c28">28</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/114407244079827725305/">ivanal...@gmail.com</a></span>,
+ <span class="date" title="Fri Oct 14 13:54:50 2011">Oct 14, 2011</span>
+ 
+<pre> s...@yourfreemail.info
+thank you for your report, I do not know how it worked before - fpjson.pp not have the handle UnicodeString (may be some changes to the processing of Unicode strings in the treatment of Lazarus, and before he sent the ANSI...)
+Patch to fix
+
+</pre>
+ 
+ <div class="attachments">
+ 
+ 
+ 
+ 
+
+
+
+
+ <table border="0" cellpadding="2" cellspacing="3">
+ <tbody><tr><td width="20">
+ <a href="http://transmisson-remote-gui.googlecode.com/issues/attachment?aid=4630028000&amp;name=json-uu.patch&amp;token=56f3af0a95f75ad3852eaec08a791887">
+ <img src="detail_files/paperclip.gif" border="0" height="15" width="15">
+ </a>
+ </td>
+ <td style="min-width: 16em;" valign="top">
+ 
+ <b>json-uu.patch</b>
+ <br>
+ 651 bytes
+ 
+ 
+ &nbsp; <a href="http://code.google.com/p/transmisson-remote-gui/issues/attachmentText?id=463&amp;aid=4630028000&amp;name=json-uu.patch&amp;token=56f3af0a95f75ad3852eaec08a791887" target="_blank">View</a>
+ 
+ &nbsp; <a href="http://transmisson-remote-gui.googlecode.com/issues/attachment?aid=4630028000&amp;name=json-uu.patch&amp;token=56f3af0a95f75ad3852eaec08a791887">Download</a>
+ 
+ </td>
+ 
+ </tr>
+ 
+ </tbody></table>
+
+
+ 
+ 
+ 
+ 
+
+
+
+
+ <table border="0" cellpadding="2" cellspacing="3">
+ <tbody><tr><td width="20">
+ <a href="http://transmisson-remote-gui.googlecode.com/issues/attachment?aid=4630028001&amp;name=transgui.7z&amp;token=3eaee4e14132e5d97fa1c2f98fac17b8">
+ <img src="detail_files/paperclip.gif" border="0" height="15" width="15">
+ </a>
+ </td>
+ <td style="min-width: 16em;" valign="top">
+ 
+ <b>transgui.7z</b>
+ <br>
+ 686 KB
+ 
+ 
+ &nbsp; <a href="http://transmisson-remote-gui.googlecode.com/issues/attachment?aid=4630028001&amp;name=transgui.7z&amp;token=3eaee4e14132e5d97fa1c2f98fac17b8">Download</a>
+ 
+ </td>
+ 
+ </tr>
+ 
+ </tbody></table>
+
+
+ 
+ </div>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc29">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c29" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c29">29</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/106501856334877094263/">pa3...@gmail.com</a></span>,
+ <span class="date" title="Fri Oct 14 13:56:11 2011">Oct 14, 2011</span>
+ 
+<pre>Added new download to the daemon via remote gui.
+Seems status and tracker information is ok.
+Could it be that only for old seeds it isn't working?
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc30">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c30" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c30">30</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/106501856334877094263/">pa3...@gmail.com</a></span>,
+ <span class="date" title="Fri Oct 14 13:58:46 2011">Oct 14, 2011</span>
+ 
+<pre>Found tracker not working issue.
+DNS resolving on Ubuntu machine was not working. Fixed this (etc/resolv.conf was empty, missing nameserver info)
+
+
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc32">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c32" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c32">32</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/117213315554955814962/">s...@yourfreemail.info</a></span>,
+ <span class="date" title="Fri Oct 14 17:32:59 2011">Oct 14, 2011</span>
+ 
+<pre>Ivanal
+
+Thanks for json-uu.patch !
+
+Your new transgui.exe with json-uu.patch corrects the bug of   Add tracker.
+However there appears to actually be a bug in lazarus-0.9.30-fpc-2.4.2 itself pertaining to UnicodeString.
+
+Free Pascal Compiler version 2.4.2 [2011/03/08] for i386
+Copyright (c) 1993-2010 by Florian Klaempfl
+Target OS: Win32 for i386
+Compiling transgui.lpr
+Compiling .\json\fpjson.pp
+json\fpjson.pp(1080,20) Error: Identifier not found "vtUnicodeString"
+json\fpjson.pp(1080,20) Error: Constant Expression expected
+json\fpjson.pp(1080,20) Error: duplicate case label
+json\fpjson.pp(1080,77) Error: Identifier not found "VUnicodeString"
+json\fpjson.pp(1537) Fatal: There were 4 errors compiling module, stopping
+
+The good news is now both yours and my  comment 14  compiled versions of transgui.exe function exactly the same.
+
+The   Edit tracker   bug is ONLY when a  udp:\\ tracker like udp://tracker.publicbt.com:80.
+
+Then you will always get   Error invalid arguement
+However edit of http:// tracker like
+http: // tracker .publicbt .com:80/announce
+functions correctly.
+And the Edit tracker for udp:\\  bug  also exists in the original UNpatched version 3.1 of transgui.exe
+
+
+
+Спасибо за JSON-uu.patch! 
+
+Ваш новый transgui.exe с JSON-uu.patch исправляет ошибку в Добавить трекера. 
+Однако, как представляется, на самом деле ошибка в Lazarus-0.9.30-FPC-2.4.2 себя, относящихся к UnicodeString.
+
+Free Pascal Compiler version 2.4.2 [2011/03/08] for i386
+Copyright (c) 1993-2010 by Florian Klaempfl
+Target OS: Win32 for i386
+Compiling transgui.lpr
+Compiling .\json\fpjson.pp
+json\fpjson.pp(1080,20) Error: Identifier not found "vtUnicodeString"
+json\fpjson.pp(1080,20) Error: Constant Expression expected
+json\fpjson.pp(1080,20) Error: duplicate case label
+json\fpjson.pp(1080,77) Error: Identifier not found "VUnicodeString"
+json\fpjson.pp(1537) Fatal: There were 4 errors compiling module, stopping
+
+
+Хорошей новостью является то теперь и ваш и мой комментарий 14 скомпилированные версии transgui.exe функции точно так же. 
+
+Изменить ошибка трекера только тогда, когда UDP: \ трекера, как UDP: / / tracker .publicbt. com: 80. 
+
+Тогда вы всегда будете получать ошибки недопустимый аргумент 
+Однако редактирования http:// трекера, как 
+http:// tracker. publicbt. com: 80/announce 
+работает правильно. 
+И Редактировать трекер для UDP: \ ошибка существует и в оригинальной устаревших версии 3.1 transgui.exe
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc33">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c33" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c33">33</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/114407244079827725305/">ivanal...@gmail.com</a></span>,
+ <span class="date" title="Fri Oct 14 22:57:47 2011">Oct 14, 2011</span>
+ 
+<pre>Yes, looks like problem with unicodestring is from changes in fpc 2.4.2-&gt;2.5.1
+And "invalid argument" message - it from transmission, that not accept string with tracker, editing udp trackers not work also in official transmission-qt. I think you should report that to transmission bug tracker (or look - may be this in known problem)
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc34">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c34" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c34">34</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/117213315554955814962/">s...@yourfreemail.info</a></span>,
+ <span class="date" title="Fri Oct 14 23:51:09 2011">Oct 14, 2011</span>
+ 
+<pre>problem of   editing udp trackers   ---&gt;  reported that to transmission bug tracker
+
+DONE
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc35">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c35" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c35">35</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/114407244079827725305/">ivanal...@gmail.com</a></span>,
+ <span class="date" title="Sun Oct 16 14:01:54 2011">Oct 16, 2011</span>
+ 
+<pre>По просьбам трудящихся:)
+Небольшие косметические изменения - добавлены кнопки перемещения торрента в очереди, значки, кнопка форсированного запуска и немного подправлены графики (хотя они еще в альфа состоянии)
+
+Minor cosmetic changes - added the navigation buttons in a torrent queue, icons, forced launch button and slightly tuned graphics (although they are still in alpha state)
+</pre>
+ 
+ <div class="attachments">
+ 
+ 
+ 
+ 
+
+
+
+
+ <table border="0" cellpadding="2" cellspacing="3">
+ <tbody><tr><td width="20">
+ <a href="http://transmisson-remote-gui.googlecode.com/issues/attachment?aid=4630035000&amp;name=mypatch-6.patch&amp;token=2b5efb81830b2b7473436227706b9a1b">
+ <img src="detail_files/paperclip.gif" border="0" height="15" width="15">
+ </a>
+ </td>
+ <td style="min-width: 16em;" valign="top">
+ 
+ <b>mypatch-6.patch</b>
+ <br>
+ 94.7 KB
+ 
+ 
+ &nbsp; <a href="http://code.google.com/p/transmisson-remote-gui/issues/attachmentText?id=463&amp;aid=4630035000&amp;name=mypatch-6.patch&amp;token=2b5efb81830b2b7473436227706b9a1b" target="_blank">View</a>
+ 
+ &nbsp; <a href="http://transmisson-remote-gui.googlecode.com/issues/attachment?aid=4630035000&amp;name=mypatch-6.patch&amp;token=2b5efb81830b2b7473436227706b9a1b">Download</a>
+ 
+ </td>
+ 
+ </tr>
+ 
+ </tbody></table>
+
+
+ 
+ 
+ 
+ 
+
+
+
+
+ <table border="0" cellpadding="2" cellspacing="3">
+ <tbody><tr><td width="20">
+ <a href="http://transmisson-remote-gui.googlecode.com/issues/attachment?aid=4630035001&amp;name=transgui.7z&amp;token=67ce0d0d4c969c72174b0b7724bea3f1">
+ <img src="detail_files/paperclip.gif" border="0" height="15" width="15">
+ </a>
+ </td>
+ <td style="min-width: 16em;" valign="top">
+ 
+ <b>transgui.7z</b>
+ <br>
+ 687 KB
+ 
+ 
+ &nbsp; <a href="http://transmisson-remote-gui.googlecode.com/issues/attachment?aid=4630035001&amp;name=transgui.7z&amp;token=67ce0d0d4c969c72174b0b7724bea3f1">Download</a>
+ 
+ </td>
+ 
+ </tr>
+ 
+ </tbody></table>
+
+
+ 
+ </div>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc36">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c36" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c36">36</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/104507349326096174486/">snbogdan...@gmail.com</a></span>,
+ <span class="date" title="Mon Oct 17 06:13:18 2011">Oct 17, 2011</span>
+ 
+<pre>When I select torrents with error i receive message "List index(xx) out of bounds"
+
+При попытке выбора списка ошибочных торрентов выскакивает ошибка "List index(xx) out of bounds". Лечится только перезапуском приложения.
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc37">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c37" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c37">37</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/114407244079827725305/">ivanal...@gmail.com</a></span>,
+ <span class="date" title="Mon Oct 17 11:34:01 2011">Oct 17, 2011</span>
+ 
+<pre>snbogdan...@gmail.com
+Какая версия lazarus использовалась для сборки?
+Насколько я вижу по тикетам здесь - ошибка эта возникла в 0.9.30/2.4.2 (или 2.4.4) и была устранена (или хорошо замаскирована) в 0.9.31/2.5.1 (по крайней мере у меня она не возникает)
+
+Which version of lazarus used to build?
+As far as I can see on the ticket here - this error occurred in 0.9.30/2.4.2 (or 2.4.4) and has been eliminated (or well-masked) in 0.9.31/2.5.1 (at least for me it does not occur)
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc38">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c38" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c38">38</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/117213315554955814962/">s...@yourfreemail.info</a></span>,
+ <span class="date" title="Mon Oct 17 14:04:19 2011">Oct 17, 2011</span>
+ 
+<pre>very nice --&gt; mypatch-6.patch
+
+here is compile with with Ivanal's   mypatch-6.patch  and lazarus-0.9.30-fpc-2.4.2  with the "Title.PrefixOption = poNone"   removed.
+
+I do NOT receive    "List index(xx) out of bounds"  error(s) when I select torrents with error.
+
+I test with 1 torrent in error,  2 torrents in error,   5 torrents in error   and   selecting in left panel and/or error torrent(s) in main panel, in addition choosing properties, multiple selections, etc.  ; I can NOT seem to reproduce this error. I get NO error of "List index(xx) out of bounds" no matter how I try ????
+
+
+</pre>
+ 
+ <div class="attachments">
+ 
+ 
+ 
+ 
+
+
+
+
+ <table border="0" cellpadding="2" cellspacing="3">
+ <tbody><tr><td width="20">
+ <a href="http://transmisson-remote-gui.googlecode.com/issues/attachment?aid=4630038000&amp;name=transgui.exe&amp;token=d3df3aedca54d1b56e464264701aa641">
+ <img src="detail_files/paperclip.gif" border="0" height="15" width="15">
+ </a>
+ </td>
+ <td style="min-width: 16em;" valign="top">
+ 
+ <b>transgui.exe</b>
+ <br>
+ 2.4 MB
+ 
+ 
+ &nbsp; <a href="http://transmisson-remote-gui.googlecode.com/issues/attachment?aid=4630038000&amp;name=transgui.exe&amp;token=d3df3aedca54d1b56e464264701aa641">Download</a>
+ 
+ </td>
+ 
+ </tr>
+ 
+ </tbody></table>
+
+
+ 
+ </div>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc39">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c39" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c39">39</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/104507349326096174486/">snbogdan...@gmail.com</a></span>,
+ <span class="date" title="Mon Oct 17 21:58:02 2011">Oct 17, 2011</span>
+ 
+<pre>It was with transgui.exe from comment 14.
+
+Это было с transgui.exe из 14-го комментария. До этого был официальный релиз и там не было пункта ошибочных торрентов, так что заметил только с постановкой нового бинаря.
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc40">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c40" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c40">40</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/109109481128663645051/">andrew.s...@gmail.com</a></span>,
+ <span class="date" title="Tue Oct 18 13:19:22 2011">Oct 18, 2011</span>
+ 
+<pre>What about Mac version?
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc41">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c41" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c41">41</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/114407244079827725305/">ivanal...@gmail.com</a></span>,
+ <span class="date" title="Tue Oct 18 23:11:21 2011">Oct 18, 2011</span>
+ 
+<pre>andrew.s...@gmail.com
+Sorry, can not help - I do not have a Mac, and no experience in development on it.
+I have not used in the patch nothing specific to windows, so that if Lazarus runs enough correctly on the Mac - it should work. Try to compile it.
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc42">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c42" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c42">42</a>
+ by
+  project member 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/111075063782031698947/">j...@cp-lab.com</a></span>,
+ <span class="date" title="Mon Oct 24 02:51:32 2011">Oct 24, 2011</span>
+ 
+<pre>Fixed in <a href="http://code.google.com/p/transmisson-remote-gui/source/detail?r=613">r613</a>.
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc43">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c43" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c43">43</a>
+ by
+  project member 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/111075063782031698947/">j...@cp-lab.com</a></span>,
+ <span class="date" title="Mon Oct 24 02:52:37 2011">Oct 24, 2011</span>
+ 
+<pre>I do not close this issue until new binary release of transgui to prevent duplicate issues reporting...
+</pre>
+ 
+ 
+ <div class="updates">
+ <div class="round4"></div>
+ <div class="round2"></div>
+ <div class="round1"></div>
+ <div class="box-inner">
+ <b>Status:</b> Started<br>
+ </div>
+ <div class="round1"></div>
+ <div class="round2"></div>
+ <div class="round4"></div>
+ </div>
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc44">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c44" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c44">44</a>
+ by
+  project member 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/111075063782031698947/">j...@cp-lab.com</a></span>,
+ <span class="date" title="Mon Oct 24 02:53:30 2011">Oct 24, 2011</span>
+ 
+<pre><i>(No comment was entered for this change.)</i>
+</pre>
+ 
+ 
+ <div class="updates">
+ <div class="round4"></div>
+ <div class="round2"></div>
+ <div class="round1"></div>
+ <div class="box-inner">
+ <b>Summary:</b> transmission 2.4x support: Status of all torrents is incorrect/unknown, no status icons<br>
+ </div>
+ <div class="round1"></div>
+ <div class="round2"></div>
+ <div class="round4"></div>
+ </div>
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc45">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c45" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c45">45</a>
+ by
+  project member 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/111075063782031698947/">j...@cp-lab.com</a></span>,
+ <span class="date" title="Mon Oct 24 02:54:04 2011">Oct 24, 2011</span>
+ 
+<pre><a title="Status icons for torrents are not displayed" class="closed_ref" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=464"> Issue 464 </a> has been merged into this issue.
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc46">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c46" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c46">46</a>
+ by
+  project member 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/111075063782031698947/">j...@cp-lab.com</a></span>,
+ <span class="date" title="Mon Oct 24 02:55:17 2011">Oct 24, 2011</span>
+ 
+<pre><a title="Lots of bugs in transmission-remote-gui 3.1 when using transmission 2.33+ --- 2.41" class="closed_ref" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=469"> Issue 469 </a> has been merged into this issue.
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc47">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c47" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c47">47</a>
+ by
+  project member 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/111075063782031698947/">j...@cp-lab.com</a></span>,
+ <span class="date" title="Mon Oct 24 02:55:40 2011">Oct 24, 2011</span>
+ 
+<pre><a title="Please upgrade for Transmission 2.41" class="closed_ref" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=472"> Issue 472 </a> has been merged into this issue.
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc48">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c48" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c48">48</a>
+ by
+  project member 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/111075063782031698947/">j...@cp-lab.com</a></span>,
+ <span class="date" title="Mon Oct 24 03:15:08 2011">Oct 24, 2011</span>
+ 
+<pre><a title="Status unknown after update to transmission 2.34" class="closed_ref" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=456"> Issue 456 </a> has been merged into this issue.
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc49">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c49" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c49">49</a>
+ by
+  project member 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/111075063782031698947/">j...@cp-lab.com</a></span>,
+ <span class="date" title="Mon Oct 24 04:20:55 2011">Oct 24, 2011</span>
+ 
+<pre><a title="Status icon - disabled." class="closed_ref" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=475"> Issue 475 </a> has been merged into this issue.
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc50">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c50" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c50">50</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/109490593131793817031/">Show...@gmx.net</a></span>,
+ <span class="date" title="Tue Oct 25 02:05:34 2011">Oct 25, 2011</span>
+ 
+<pre>I just upgraded to Transmission 2.42 and I am experiencing the same issue. Old transgui-2.2.1 can not connect any more, and 3.1 from the download section has strange issues, as detailed above.
+
+I do not know how to patch and build transgui by myself, I am using Ubuntu Linux (Lucid).
+
+Can you please prepare a new linux binary archive?
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc51">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c51" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c51">51</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/109490593131793817031/">Show...@gmx.net</a></span>,
+ <span class="date" title="Tue Oct 25 02:30:34 2011">Oct 25, 2011</span>
+ 
+<pre>Just installed gpc (GNU Pascal Compiler) and lazarus on my Ubuntu Linux (Lucid i386) machine, and checked out the transgui sources with svn (<a href="http://code.google.com/p/transmisson-remote-gui/source/detail?r=617">Revision 617</a>), but it does not compile (I did nothing else than to change to the source directory and type "make"):
+
+Compiling vargrid.pas
+vargrid.pas(446,53) Error: Wrong number of parameters specified for call to "DrawGridCheckboxBitmaps"
+vargrid.pas(545,59) Error: Wrong number of parameters specified for call to "DrawGridCheckboxBitmaps"
+vargrid.pas(1006) Fatal: There were 2 errors compiling module, stopping
+Fatal: Compilation aborted
+make: *** [transgui] Fehler 1
+
+Hopefully a new linux binary gets available soon, or someone can point out how to compile the latest svn revision.
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc52">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c52" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c52">52</a>
+ by
+  project member 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/111075063782031698947/">j...@cp-lab.com</a></span>,
+ <span class="date" title="Tue Oct 25 03:00:56 2011">Oct 25, 2011</span>
+ 
+<pre>You should use Lazarus 0.9.30 to build trunk version of transgui.
+
+I hope to release the new transgui 3.2 in a few days...
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc53">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c53" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c53">53</a>
+ by
+ 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/109490593131793817031/">Show...@gmx.net</a></span>,
+ <span class="date" title="Tue Oct 25 03:10:13 2011">Oct 25, 2011</span>
+ 
+<pre>I'll have to wait then, because that would get too messy, since there is no Lazarus 0.9.30 package for Ubuntu Lucid.
+
+Thanks for your quick response, and good luck with further development, transgui is a very fine piece of software, that I would not want to miss any more.
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc54">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c54" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c54">54</a>
+ by
+  project member 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/111075063782031698947/">j...@cp-lab.com</a></span>,
+ <span class="date" title="Sun Oct 30 02:41:30 2011">Oct 30 (3 days ago)</span>
+ 
+<pre><a title="Unknown status is reported for completed torrents" class="closed_ref" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=477"> Issue 477 </a> has been merged into this issue.
+</pre>
+ 
+ 
+ </div>
+ 
+
+ 
+ 
+ 
+ 
+ <div class="cursor_off vt issuecomment" id="hc55">
+ 
+ 
+ 
+ <span class="author">Comment
+ <a name="c55" href="http://code.google.com/p/transmisson-remote-gui/issues/detail?id=463#c55">55</a>
+ by
+  project member 
+ <a style="white-space: nowrap;" href="http://code.google.com/u/111075063782031698947/">j...@cp-lab.com</a></span>,
+ <span class="date" title="Tue Nov  1 05:34:53 2011">Yesterday (28 hours ago)</span>
+ 
+<pre><i>(No comment was entered for this change.)</i>
+</pre>
+ 
+ 
+ <div class="updates">
+ <div class="round4"></div>
+ <div class="round2"></div>
+ <div class="round1"></div>
+ <div class="box-inner">
+ <b>Status:</b> Fixed<br>
+ </div>
+ <div class="round1"></div>
+ <div class="round2"></div>
+ <div class="round4"></div>
+ </div>
+ 
+ </div>
+ 
+
+
+ 
+
+
+ </td>
+ </tr>
+
+ 
+ <tr>
+ <td></td>
+ <td class="vt issuecomment">
+ <span class="indicator">►</span> <a href="https://www.google.com/accounts/ServiceLogin?service=code&amp;ltmpl=phosting&amp;continue=http%3A%2F%2Fcode.google.com%2Fp%2Ftransmisson-remote-gui%2Fissues%2Fdetail%3Fid%3D463&amp;followup=http%3A%2F%2Fcode.google.com%2Fp%2Ftransmisson-remote-gui%2Fissues%2Fdetail%3Fid%3D463">Sign in</a> to add a comment
+ </td>
+ </tr>
+ 
+
+</tbody>
+</table>
+<br>
+<script type="text/javascript" src="detail_files/dit_scripts.js"></script>
+
+
+
+
+
+ 
+
+
+</div> 
+<form name="delcom" action="delComment.do?q=&amp;can=2&amp;groupby=&amp;sort=&amp;colspec=ID+Type+Status+Priority+Stars+Milestone+OpSys+Summary" method="POST">
+ <input name="sequence_num" value="" type="hidden">
+ <input name="mode" value="" type="hidden">
+ <input name="id" value="463" type="hidden">
+ <input name="token" value="" type="hidden">
+</form>
+<div id="helparea"></div>
+<script type="text/javascript">
+ _onload();
+ function delComment(sequence_num, delete_mode) {
+ var f = document.forms["delcom"];
+ f.sequence_num.value = sequence_num;
+ f.mode.value = delete_mode;
+ 
+ f.submit();
+ return false;
+ }
+ _floatMetadata();
+</script>
+<script type="text/javascript" src="detail_files/kibbles-1.txt"></script>
+<script type="text/javascript">
+ _setupKibblesOnDetailPage(
+ 'http://code.google.com/p/transmisson-remote-gui/issues/list?cursor\x3dtransmisson-remote-gui%3A463',
+ '/p/transmisson-remote-gui/issues/entry',
+ '',
+ '',
+ '', 'transmisson-remote-gui', 463,
+ false, false, codesite_token);
+</script>
+ 
+ 
+ 
+ <script type="text/javascript" src="detail_files/ph_core.js"></script>
+ 
+ 
+ 
+ 
+ <script type="text/javascript" src="detail_files/codesite_product_dictionary_ph.js"></script>
+</div> 
+<div id="footer" dir="ltr">
+ <div class="text">
+ ©2011 Google -
+ <a href="http://code.google.com/projecthosting/terms.html">Terms</a> -
+ <a href="http://www.google.com/privacy.html">Privacy</a> -
+ <a href="http://code.google.com/p/support/">Project Hosting Help</a>
+ </div>
+</div>
+ <div class="hostedBy" style="margin-top: -20px;">
+ <span style="vertical-align: top;">Powered by <a href="http://code.google.com/projecthosting/">Google Project Hosting</a></span>
+ </div>
+ 
+ 
+
+
+ 
+ 
+
+
+<div style="position: absolute; top: 19px; left: 759px; display: none;" id="menuDiv-projects-dropdown" class="menuDiv instance0"><div class="menuCategory controls first"><a href="http://www.google.com/accounts/ServiceLogin?service=code&amp;ltmpl=phosting&amp;continue=http%3A%2F%2Fcode.google.com%2Fp%2Ftransmisson-remote-gui%2Fissues%2Fdetail%3Fid%3D463&amp;amp;followup=http%3A%2F%2Fcode.google.com%2Fp%2Ftransmisson-remote-gui%2Fissues%2Fdetail%3Fid%3D463" style="display: block;" class="menuItem">Sign in to see your favorites</a><hr class="menuSeparator"><a href="http://code.google.com/more/" style="display: block;" class="menuItem">Find developer products...</a><a href="http://code.google.com/hosting/" style="display: block;" class="menuItem">Find open source projects...</a></div></div></body></html>
