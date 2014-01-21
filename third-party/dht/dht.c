@@ -326,8 +326,7 @@ debugf(const char *format, ...)
 {
     va_list args;
     va_start(args, format);
-    if(dht_debug)
-        vfprintf(dht_debug, format, args);
+    vfprintf(dht_debug, format, args);
     va_end(args);
     fflush(dht_debug);
 }
@@ -336,10 +335,8 @@ static void
 debug_printable(const unsigned char *buf, int buflen)
 {
     int i;
-    if(dht_debug) {
-        for(i = 0; i < buflen; i++)
-            putc(buf[i] >= 32 && buf[i] <= 126 ? buf[i] : '.', dht_debug);
-    }
+    for(i = 0; i < buflen; i++)
+        putc(buf[i] >= 32 && buf[i] <= 126 ? buf[i] : '.', dht_debug);
 }
 
 static void
@@ -630,7 +627,7 @@ send_cached_ping(struct bucket *b)
     if(b->cached.ss_family == 0)
         return 0;
 
-    debugf("Sending ping to cached node.\n");
+    if(dht_debug) debugf("Sending ping to cached node.\n");
     make_tid(tid, "pn", 0);
     rc = send_ping((struct sockaddr*)&b->cached, b->cachedlen, tid, 4);
     b->cached.ss_family = 0;
@@ -656,7 +653,7 @@ blacklist_node(const unsigned char *id, const struct sockaddr *sa, int salen)
 {
     int i;
 
-    debugf("Blacklisting broken node.\n");
+    if(dht_debug) debugf("Blacklisting broken node.\n");
 
     if(id) {
         struct node *n;
@@ -818,7 +815,7 @@ new_node(const unsigned char *id, const struct sockaddr *sa, int salen,
                 dubious = 1;
                 if(n->pinged_time < now.tv_sec - 15) {
                     unsigned char tid[4];
-                    debugf("Sending ping to dubious node.\n");
+                    if(dht_debug) debugf("Sending ping to dubious node.\n");
                     make_tid(tid, "pn", 0);
                     send_ping((struct sockaddr*)&n->ss, n->sslen,
                               tid, 4);
@@ -843,7 +840,7 @@ new_node(const unsigned char *id, const struct sockaddr *sa, int salen,
         }
 
         if(split) {
-            debugf("Splitting.\n");
+            if(dht_debug) debugf("Splitting.\n");
             b = split_bucket(b);
             return new_node(id, sa, salen, confirm);
         }
@@ -942,7 +939,7 @@ insert_search_node(unsigned char *id,
     int i, j;
 
     if(sa->sa_family != sr->af) {
-        debugf("Attempted to insert node in the wrong family.\n");
+        if(dht_debug) debugf("Attempted to insert node in the wrong family.\n");
         return 0;
     }
 
@@ -982,7 +979,7 @@ found:
     }
     if(token) {
         if(token_len >= 40) {
-            debugf("Eek!  Overlong token.\n");
+            if(dht_debug) debugf("Eek!  Overlong token.\n");
         } else {
             memcpy(n->token, token, token_len);
             n->token_len = token_len;
@@ -1042,7 +1039,7 @@ search_send_get_peers(struct search *sr, struct search_node *n)
        n->request_time >= now.tv_sec - 15)
         return 0;
 
-    debugf("Sending get_peers.\n");
+    if(dht_debug) debugf("Sending get_peers.\n");
     make_tid(tid, "gp", sr->tid);
     send_get_peers((struct sockaddr*)&n->ss, n->sslen, tid, 4, sr->id, -1,
                    n->reply_time >= now.tv_sec - 15);
@@ -1096,7 +1093,7 @@ search_step(struct search *sr, dht_callback *callback, void *closure)
                     n->acked = 1;
                 if(!n->acked) {
                     all_acked = 0;
-                    debugf("Sending announce_peer.\n");
+                    if(dht_debug) debugf("Sending announce_peer.\n");
                     make_tid(tid, "ap", sr->tid);
                     send_announce_peer((struct sockaddr*)&n->ss,
                                        sizeof(struct sockaddr_storage),
@@ -1371,7 +1368,7 @@ expire_storage(void)
                 st = storage;
             numstorage--;
             if(numstorage < 0) {
-                debugf("Eek... numstorage became negative.\n");
+                if(dht_debug) debugf("Eek... numstorage became negative.\n");
                 numstorage = 0;
             }
         } else {
@@ -1776,7 +1773,7 @@ neighbourhood_maintenance(int af)
         n = random_node(q);
         if(n) {
             unsigned char tid[4];
-            debugf("Sending find_node for%s neighborhood maintenance.\n",
+            if(dht_debug) debugf("Sending find_node for%s neighborhood maintenance.\n",
                    af == AF_INET6 ? " IPv6" : "");
             make_tid(tid, "fn", 0);
             send_find_node((struct sockaddr*)&n->ss, n->sslen,
@@ -1845,7 +1842,7 @@ bucket_maintenance(int af)
                             want = WANT4 | WANT6;
                     }
 
-                    debugf("Sending find_node for%s bucket maintenance.\n",
+                    if(dht_debug) debugf("Sending find_node for%s bucket maintenance.\n",
                            af == AF_INET6 ? " IPv6" : "");
                     make_tid(tid, "fn", 0);
                     send_find_node((struct sockaddr*)&n->ss, n->sslen,
@@ -1887,12 +1884,12 @@ dht_periodic(const void *buf, size_t buflen,
             goto dontread;
 
         if(node_blacklisted(from, fromlen)) {
-            debugf("Received packet from blacklisted node.\n");
+            if(dht_debug) debugf("Received packet from blacklisted node.\n");
             goto dontread;
         }
 
         if(((char*)buf)[buflen] != '\0') {
-            debugf("Unterminated message.\n");
+            if(dht_debug) debugf("Unterminated message.\n");
             errno = EINVAL;
             return -1;
         }
@@ -1904,21 +1901,23 @@ dht_periodic(const void *buf, size_t buflen,
                                 &want);
 
         if(message < 0 || message == ERROR || id_cmp(id, zeroes) == 0) {
-            debugf("Unparseable message: ");
-            debug_printable(buf, buflen);
-            debugf("\n");
+            if(dht_debug) {
+                debugf("Unparseable message: ");
+                debug_printable(buf, buflen);
+                debugf("\n");
+            }
             goto dontread;
         }
 
         if(id_cmp(id, myid) == 0) {
-            debugf("Received message from self.\n");
+            if(dht_debug) debugf("Received message from self.\n");
             goto dontread;
         }
 
         if(message > REPLY) {
             /* Rate limit requests. */
             if(!token_bucket()) {
-                debugf("Dropping request due to rate limiting.\n");
+                if(dht_debug) debugf("Dropping request due to rate limiting.\n");
                 goto dontread;
             }
         }
@@ -1926,9 +1925,11 @@ dht_periodic(const void *buf, size_t buflen,
         switch(message) {
         case REPLY:
             if(tid_len != 4) {
-                debugf("Broken node truncates transaction ids: ");
-                debug_printable(buf, buflen);
-                debugf("\n");
+                if(dht_debug) {
+                    debugf("Broken node truncates transaction ids: ");
+                    debug_printable(buf, buflen);
+                    debugf("\n");
+                }
                 /* This is really annoying, as it means that we will
                    time-out all our searches that go through this node.
                    Kill it. */
@@ -1936,7 +1937,7 @@ dht_periodic(const void *buf, size_t buflen,
                 goto dontread;
             }
             if(tid_match(tid, "pn", NULL)) {
-                debugf("Pong!\n");
+                if(dht_debug) debugf("Pong!\n");
                 new_node(id, from, fromlen, 2);
             } else if(tid_match(tid, "fn", NULL) ||
                       tid_match(tid, "gp", NULL)) {
@@ -1946,13 +1947,13 @@ dht_periodic(const void *buf, size_t buflen,
                     gp = 1;
                     sr = find_search(ttid, from->sa_family);
                 }
-                debugf("Nodes found (%d+%d)%s!\n", nodes_len/26, nodes6_len/38,
+                if(dht_debug) debugf("Nodes found (%d+%d)%s!\n", nodes_len/26, nodes6_len/38,
                        gp ? " for get_peers" : "");
                 if(nodes_len % 26 != 0 || nodes6_len % 38 != 0) {
-                    debugf("Unexpected length for node info!\n");
+                    if(dht_debug) debugf("Unexpected length for node info!\n");
                     blacklist_node(id, from, fromlen);
                 } else if(gp && sr == NULL) {
-                    debugf("Unknown search!\n");
+                    if(dht_debug) debugf("Unknown search!\n");
                     new_node(id, from, fromlen, 1);
                 } else {
                     int i;
@@ -2001,7 +2002,7 @@ dht_periodic(const void *buf, size_t buflen,
                     insert_search_node(id, from, fromlen, sr,
                                        1, token, token_len);
                     if(values_len > 0 || values6_len > 0) {
-                        debugf("Got values (%d+%d)!\n",
+                        if(dht_debug) debugf("Got values (%d+%d)!\n",
                                values_len / 6, values6_len / 18);
                         if(callback) {
                             if(values_len > 0)
@@ -2016,10 +2017,10 @@ dht_periodic(const void *buf, size_t buflen,
                 }
             } else if(tid_match(tid, "ap", &ttid)) {
                 struct search *sr;
-                debugf("Got reply to announce_peer.\n");
+                if(dht_debug) debugf("Got reply to announce_peer.\n");
                 sr = find_search(ttid, from->sa_family);
                 if(!sr) {
-                    debugf("Unknown search!\n");
+                    if(dht_debug) debugf("Unknown search!\n");
                     new_node(id, from, fromlen, 1);
                 } else {
                     int i;
@@ -2036,30 +2037,32 @@ dht_periodic(const void *buf, size_t buflen,
                     search_send_get_peers(sr, NULL);
                 }
             } else {
-                debugf("Unexpected reply: ");
-                debug_printable(buf, buflen);
-                debugf("\n");
+                if(dht_debug) {
+                    debugf("Unexpected reply: ");
+                    debug_printable(buf, buflen);
+                    debugf("\n");
+                }
             }
             break;
         case PING:
-            debugf("Ping (%d)!\n", tid_len);
+            if(dht_debug) debugf("Ping (%d)!\n", tid_len);
             new_node(id, from, fromlen, 1);
-            debugf("Sending pong.\n");
+            if(dht_debug) debugf("Sending pong.\n");
             send_pong(from, fromlen, tid, tid_len);
             break;
         case FIND_NODE:
-            debugf("Find node!\n");
+            if(dht_debug) debugf("Find node!\n");
             new_node(id, from, fromlen, 1);
-            debugf("Sending closest nodes (%d).\n", want);
+            if(dht_debug) debugf("Sending closest nodes (%d).\n", want);
             send_closest_nodes(from, fromlen,
                                tid, tid_len, target, want,
                                0, NULL, NULL, 0);
             break;
         case GET_PEERS:
-            debugf("Get_peers!\n");
+            if(dht_debug) debugf("Get_peers!\n");
             new_node(id, from, fromlen, 1);
             if(id_cmp(info_hash, zeroes) == 0) {
-                debugf("Eek!  Got get_peers with no info_hash.\n");
+                if(dht_debug) debugf("Eek!  Got get_peers with no info_hash.\n");
                 send_error(from, fromlen, tid, tid_len,
                            203, "Get_peers with no info_hash");
                 break;
@@ -2068,7 +2071,7 @@ dht_periodic(const void *buf, size_t buflen,
                 unsigned char token[TOKEN_SIZE];
                 make_token(from, 0, token);
                 if(st && st->numpeers > 0) {
-                     debugf("Sending found%s peers.\n",
+                     if(dht_debug) debugf("Sending found%s peers.\n",
                             from->sa_family == AF_INET6 ? " IPv6" : "");
                      send_closest_nodes(from, fromlen,
                                         tid, tid_len,
@@ -2076,7 +2079,7 @@ dht_periodic(const void *buf, size_t buflen,
                                         from->sa_family, st,
                                         token, TOKEN_SIZE);
                 } else {
-                    debugf("Sending nodes for get_peers.\n");
+                    if(dht_debug) debugf("Sending nodes for get_peers.\n");
                     send_closest_nodes(from, fromlen,
                                        tid, tid_len, info_hash, want,
                                        0, NULL, token, TOKEN_SIZE);
@@ -2084,22 +2087,22 @@ dht_periodic(const void *buf, size_t buflen,
             }
             break;
         case ANNOUNCE_PEER:
-            debugf("Announce peer!\n");
+            if(dht_debug) debugf("Announce peer!\n");
             new_node(id, from, fromlen, 1);
             if(id_cmp(info_hash, zeroes) == 0) {
-                debugf("Announce_peer with no info_hash.\n");
+                if(dht_debug) debugf("Announce_peer with no info_hash.\n");
                 send_error(from, fromlen, tid, tid_len,
                            203, "Announce_peer with no info_hash");
                 break;
             }
             if(!token_match(token, token_len, from)) {
-                debugf("Incorrect token for announce_peer.\n");
+                if(dht_debug) debugf("Incorrect token for announce_peer.\n");
                 send_error(from, fromlen, tid, tid_len,
                            203, "Announce_peer with wrong token");
                 break;
             }
             if(port == 0) {
-                debugf("Announce_peer with forbidden port %d.\n", port);
+                if(dht_debug) debugf("Announce_peer with forbidden port %d.\n", port);
                 send_error(from, fromlen, tid, tid_len,
                            203, "Announce_peer with forbidden port number");
                 break;
@@ -2108,7 +2111,7 @@ dht_periodic(const void *buf, size_t buflen,
             /* Note that if storage_store failed, we lie to the requestor.
                This is to prevent them from backtracking, and hence
                polluting the DHT. */
-            debugf("Sending peer announced.\n");
+            if(dht_debug) debugf("Sending peer announced.\n");
             send_peer_announced(from, fromlen, tid, tid_len);
         }
     }
@@ -2283,7 +2286,7 @@ dht_ping_node(struct sockaddr *sa, int salen)
 {
     unsigned char tid[4];
 
-    debugf("Sending ping.\n");
+    if(dht_debug) debugf("Sending ping.\n");
     make_tid(tid, "pn", 0);
     return send_ping(sa, salen, tid, 4);
 }
@@ -2318,7 +2321,7 @@ dht_send(const void *buf, size_t len, int flags,
         abort();
 
     if(node_blacklisted(sa, salen)) {
-        debugf("Attempting to send to blacklisted node.\n");
+        if(dht_debug) debugf("Attempting to send to blacklisted node.\n");
         errno = EPERM;
         return -1;
     }
@@ -2572,7 +2575,7 @@ send_closest_nodes(const struct sockaddr *sa, int salen,
                 numnodes6 = buffer_closest_nodes(nodes6, numnodes6, id, b);
         }
     }
-    debugf("  (%d+%d nodes.)\n", numnodes, numnodes6);
+    if(dht_debug) debugf("  (%d+%d nodes.)\n", numnodes, numnodes6);
 
     return send_nodes_peers(sa, salen, tid, tid_len,
                             nodes, numnodes * 26,
@@ -2737,7 +2740,7 @@ parse_message(const unsigned char *buf, int buflen,
 
     /* This code will happily crash if the buffer is not NUL-terminated. */
     if(buf[buflen] != '\0') {
-        debugf("Eek!  parse_message with unterminated buffer.\n");
+        if(dht_debug) debugf("Eek!  parse_message with unterminated buffer.\n");
         return -1;
     }
 
@@ -2869,14 +2872,14 @@ parse_message(const unsigned char *buf, int buflen,
                         memcpy((char*)values6_return + j6, q + 1, l);
                         j6 += l;
                     } else {
-                        debugf("Received weird value -- %d bytes.\n", (int)l);
+                        if(dht_debug) debugf("Received weird value -- %d bytes.\n", (int)l);
                     }
                 } else {
                     break;
                 }
             }
             if(i >= buflen || buf[i] != 'e')
-                debugf("eek... unexpected end for values.\n");
+                if(dht_debug) debugf("eek... unexpected end for values.\n");
             if(values_len)
                 *values_len = j;
             if(values6_len)
@@ -2902,11 +2905,11 @@ parse_message(const unsigned char *buf, int buflen,
                 else if(buf[i] == '2' && memcmp(buf + i + 2, "n6", 2) == 0)
                     *want_return |= WANT6;
                 else
-                    debugf("eek... unexpected want flag (%c)\n", buf[i]);
+                    if(dht_debug) debugf("eek... unexpected want flag (%c)\n", buf[i]);
                 i += 2 + buf[i] - '0';
             }
             if(i >= buflen || buf[i] != 'e')
-                debugf("eek... unexpected end for want.\n");
+                if(dht_debug) debugf("eek... unexpected end for want.\n");
         } else {
             *want_return = -1;
         }
@@ -2931,6 +2934,6 @@ parse_message(const unsigned char *buf, int buflen,
     return -1;
 
  overflow:
-    debugf("Truncated message.\n");
+    if(dht_debug) debugf("Truncated message.\n");
     return -1;
 }
