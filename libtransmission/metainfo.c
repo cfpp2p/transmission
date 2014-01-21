@@ -141,7 +141,8 @@ static bool
 path_is_suspicious( const char * path )
 {
     return ( path == NULL )
-        || ( strstr( path, "../" ) != NULL );
+        || ( !strncmp( path, "../", 3 ) )
+        || ( strstr( path, "/../" ) != NULL );
 }
 
 static bool
