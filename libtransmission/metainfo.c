@@ -140,9 +140,16 @@ tr_metainfoMigrate( tr_session * session,
 static bool
 path_is_suspicious( const char * path )
 {
-    return ( path == NULL )
+    bool isBadPath;
+    isBadPath = ( ( path == NULL )
         || ( !strncmp( path, "../", 3 ) )
-        || ( strstr( path, "/../" ) != NULL );
+        || ( strstr( path, "/../" ) != NULL ) );
+#ifdef SYS_DARWIN
+    if   ( ( !strncmp( path, "..:", 3 ) )
+	    || ( strstr( path, ":..:" ) != NULL ) )
+        isBadPath = true;
+#endif
+    return isBadPath;
 }
 
 static bool
