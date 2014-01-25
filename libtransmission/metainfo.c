@@ -138,18 +138,35 @@ tr_metainfoMigrate( tr_session * session,
 ***/
 
 static bool
-path_is_suspicious( const char * path )
+path_is_harmful( const char * path )
 {
-    bool isBadPath;
-    isBadPath = ( ( path == NULL )
-        || ( !strncmp( path, "../", 3 ) )
-        || ( strstr( path, "/../" ) != NULL ) );
-#ifdef SYS_DARWIN
-    if   ( ( !strncmp( path, "..:", 3 ) )
-	    || ( strstr( path, ":..:" ) != NULL ) )
-        isBadPath = true;
-#endif
-    return isBadPath;
+    if( path == NULL ) return true;
+	
+    //do NOT allow backward traverse
+    if( !strncmp( path, "../", 3 ) ) return true;
+    if( ( strstr( path, "/../" ) != NULL ) ) return true;
+
+    const char * endOfString = strrchr( path, '\0' );
+
+    // - error for all below will be -->  Is a direcrory  <-- by OS
+
+    // illegal - slash as final
+    if( !strcmp( --endOfString, "/" ) ) return true;
+
+    // check for filename is just one or two dots
+    if( strlen( path ) > 2 ) {
+        if( ( !strcmp( --endOfString, "/." ) ) ) return true;
+        if( ( !strcmp( --endOfString, "/.." ) ) ) return true;
+        return false;
+    }
+    if( strlen( path ) == 2 ) {
+        if( ( !strcmp( path, ".." ) ) || ( !strcmp( path, "/." ) ) ) return true;
+        return false;
+    }
+    if( ( strlen( path ) == 1 )
+        && ( !strcmp( path, "." ) ) ) return true;
+
+    return false;
 }
 
 static bool
@@ -179,7 +196,7 @@ getfile( char ** setme, const char * root, tr_benc * path, struct evbuffer * buf
         success = true;
     }
 
-    if( ( *setme != NULL ) && path_is_suspicious( *setme ) )
+    if( ( *setme != NULL ) && path_is_harmful( *setme ) )
     {
         tr_free( *setme );
         *setme = NULL;
@@ -232,7 +249,7 @@ parseFiles( tr_info * inf, tr_benc * files, const tr_benc * length )
     }
     else if( tr_bencGetInt( length, &len ) ) /* single-file mode */
     {
-        if( path_is_suspicious( inf->name ) )
+        if( path_is_harmful( inf->name ) )
             return "path";
 
         inf->isMultifile      = 0;
