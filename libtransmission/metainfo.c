@@ -144,7 +144,13 @@ path_is_harmful( const char * path )
 	
     //do NOT allow backward traverse
     if( !strncmp( path, "../", 3 ) ) return true;
+    if( !strncmp( path, "..\\", 3 ) ) return true;
+
     if( ( strstr( path, "/../" ) != NULL ) ) return true;
+    if( ( strstr( path, "/..\\" ) != NULL ) ) return true;
+
+    if( ( strstr( path, "\\..\\" ) != NULL ) ) return true;
+    if( ( strstr( path, "\\../" ) != NULL ) ) return true;
 
     const char * endOfString = strrchr( path, '\0' );
 
@@ -152,15 +158,22 @@ path_is_harmful( const char * path )
 
     // illegal - slash as final
     if( !strcmp( --endOfString, "/" ) ) return true;
+    if( !strcmp( endOfString, "\\" ) ) return true;
 
     // check for filename is just one or two dots
     if( strlen( path ) > 2 ) {
-        if( ( !strcmp( --endOfString, "/." ) ) ) return true;
-        if( ( !strcmp( --endOfString, "/.." ) ) ) return true;
+        if( !strcmp( --endOfString, "/." ) ) return true;
+        if( !strcmp( endOfString, "\\." ) ) return true;
+
+        if( !strcmp( --endOfString, "/.." ) ) return true;
+        if( !strcmp( endOfString, "\\.." ) ) return true;
+
         return false;
     }
     if( strlen( path ) == 2 ) {
-        if( ( !strcmp( path, ".." ) ) || ( !strcmp( path, "/." ) ) ) return true;
+        if( !strcmp( path, ".." ) ) return true;
+        if( !strcmp( path, "/." ) ) return true;
+        if( !strcmp( path, "\\." ) ) return true;
         return false;
     }
     if( ( strlen( path ) == 1 )
