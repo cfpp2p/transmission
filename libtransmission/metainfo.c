@@ -41,7 +41,7 @@ tr_metainfoGetBasename( const tr_info * inf )
     char * ret = tr_strdup_printf( "%s.%16.16s", inf->name, inf->hashString );
 
     for( i=0; i<name_len; ++i )
-        if( ret[i] == '/' )
+        if( ( ret[i] == '/' ) || ( ret[i] == '\\' ) )
             ret[i] = '_';
 
 
