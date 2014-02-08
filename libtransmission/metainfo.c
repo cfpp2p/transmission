@@ -7,7 +7,7 @@
  * This exemption does not extend to derived works not owned by
  * the Transmission project.
  *
- * $Id: metainfo.c 13547 2012-10-05 16:44:36Z jordan $
+ * $Id: metainfo.c 14234 2014-02-08 15:25:18Z cfpp2p $
  */
 
 #include <assert.h>
@@ -241,18 +241,26 @@ parseFiles( tr_info * inf, tr_benc * files, const tr_benc * length )
             tr_benc * path;
 
             file = tr_bencListChild( files, i );
-            if( !tr_bencIsDict( file ) )
+            if( !tr_bencIsDict( file ) ) {
+                evbuffer_free( buf );
                 return "files";
+            }
 
             if( !tr_bencDictFindList( file, "path.utf-8", &path ) )
-                if( !tr_bencDictFindList( file, "path", &path ) )
+                if( !tr_bencDictFindList( file, "path", &path ) ) {
+                    evbuffer_free( buf );
                     return "path";
+                }
 
-            if( !getfile( &inf->files[i].name, inf->name, path, buf ) )
+            if( !getfile( &inf->files[i].name, inf->name, path, buf ) ) {
+                evbuffer_free( buf );
                 return "path";
+            }
 
-            if( !tr_bencDictFindInt( file, "length", &len ) )
+            if( !tr_bencDictFindInt( file, "length", &len ) ) {
+                evbuffer_free( buf );
                 return "length";
+            }
 
             inf->files[i].length = len;
             inf->totalSize      += len;
