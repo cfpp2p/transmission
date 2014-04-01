@@ -2010,6 +2010,9 @@ end;
 
 procedure TMainForm.BeforeCloseApp;
 begin
+
+  HideApp;
+
   if WindowState = wsNormal then begin
     FIni.WriteInteger('MainForm', 'Left', Left);
     FIni.WriteInteger('MainForm', 'Top', Top);
@@ -2947,6 +2950,9 @@ end;
 
 procedure TMainForm.edSearchChange(Sender: TObject);
 begin
+  AppBusy;
+  PageInfo.ActivePage:=tabGeneral;
+  AppNormal;
   DoRefresh(True);
 end;
 
@@ -3142,6 +3148,9 @@ end;
 
 procedure TMainForm.lvFilterClick(Sender: TObject);
 begin
+  AppBusy;
+  PageInfo.ActivePage:=tabGeneral;
+  AppNormal;
   if VarIsNull(lvFilter.Items[0, lvFilter.Row]) then
     if (FLastFilerIndex > lvFilter.Row) or (lvFilter.Row = lvFilter.Items.Count - 1) then
       lvFilter.Row:=lvFilter.Row - 1
