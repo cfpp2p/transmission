@@ -211,6 +211,7 @@ end;
 procedure TVarGrid.ItemsChanged(Sender: TObject);
 var
   i, OldRows, OldCols: integer;
+  pt: TPoint;
 begin
   FItemsChanging:=True;
   try
@@ -241,6 +242,9 @@ begin
     end
     else
       Invalidate;
+    pt:=ScreenToClient(Mouse.CursorPos);
+    if PtInRect(ClientRect, pt) then
+      MouseMove([], pt.x, pt.y);
   finally
     FItemsChanging:=False;
   end;
@@ -675,8 +679,6 @@ var
 begin
   r:=Row;
   k:=Key;
-  if goRowSelect in Options then
-    Col:=FixedCols;
 
   if (Shift = []) and ( (k = VK_SPACE) or (k = VK_LEFT) or (k = VK_RIGHT) or (k = VK_ADD) or (k = VK_SUBTRACT) ) then begin
     SetupCell(FixedCols, inherited Row, [], ca);
@@ -750,14 +752,15 @@ end;
 
 procedure TVarGrid.AutoAdjustColumn(aCol: Integer);
 var
-  i, j, wd, h: integer;
+  i, j, wd, h, fr: integer;
   ca: TCellAttributes;
 begin
   wd:=4;
+  fr:=FixedRows;
   for i:=0 to FItems.Count - 1 do begin
-    h:=RowHeights[i + FixedRows];
+    h:=RowHeights[i + fr];
     if h > 0 then begin
-      SetupCell(aCol, i, [], ca);
+      SetupCell(aCol, i + fr, [], ca);
       j:=Canvas.TextWidth(ca.Text) + 6;
       Inc(j, ca.Indent);
       if coDrawTreeButton in ca.Options then
