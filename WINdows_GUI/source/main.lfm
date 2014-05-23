@@ -214,7 +214,7 @@ object MainForm: TMainForm
           Width = 80
         end      
         item
-          Title.Caption = 'Ratio'
+          Title.Caption = 'U-D Ratio'
           
         end      
         item
@@ -303,6 +303,13 @@ object MainForm: TMainForm
           Alignment = taRightJustify
           SizePriority = 0
           Title.Caption = 'x Announce'
+          Width = 0
+          Visible = False
+        end      
+        item
+          Alignment = taRightJustify
+          SizePriority = 0
+          Title.Caption = 'Seed Ratio'
           Width = 0
           Visible = False
         end>

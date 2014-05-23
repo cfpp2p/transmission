@@ -99,7 +99,8 @@ resourcestring
   sOf = 'of';
   sNoTracker = 'No tracker';
   sTorrents = 'Torrents';
-  sBlocklistUpdateComplete = 'The block list has been updated successfully.' + LineEnding + 'The list entries count: %d.';
+  sBlocklistUpdateComplete = 'The old list entries count was: %d.' + LineEnding + 'The new list  entries  count is: %d.' + LineEnding + 'The block list has been updated successfully.';
+  sBlocklistUpdateCompleteNPS = 'The old list entries count was: unknown' + LineEnding + 'The new list  entries  count is: %d.' + LineEnding + 'The block list has been updated successfully.';
   sSeveralTorrents = '%d torrents';
   sUnableToExecute = 'Unable to execute "%s".';
   sSSLLoadError = 'Unable to load OpenSSL library files: %s and %s';
@@ -609,6 +610,7 @@ const
   idxQueue = 21;
   idxSeedingTime = 22;
   idxCheatMode = 23;
+  idxSdRatio = 24;
 
   idxTag = -1;
   idxSeedsTotal = -2;
@@ -688,11 +690,11 @@ const
 
   StatusFiltersCount = 7;
 
-  TorrentFieldsMap: array[idxName..idxCheatMode] of string =
+  TorrentFieldsMap: array[idxName..idxSdRatio] of string =
     ('', 'totalSize', '', 'status', 'peersSendingToUs,seeders',
      'peersGettingFromUs,leechers', 'rateDownload', 'rateUpload', 'eta', 'uploadRatio',
      'downloadedEver', 'uploadedEver', '', '', 'addedDate', 'doneDate', 'activityDate', '', 'bandwidthPriority',
-     '', '','queuePosition', 'secondsSeeding', 'cheatMode');
+     '', '', 'queuePosition', 'secondsSeeding', 'cheatMode', '');
 
 implementation
 
@@ -2310,9 +2312,13 @@ begin
             txMinutes.Visible:=False;
           end;
 
-          if args.IndexOfName('blocklist-url') >= 0 then
-            edBlocklistURL.Text:=UTF8Encode(args.Strings['blocklist-url'])
-          else begin
+          if args.IndexOfName('blocklist-url') >= 0 then begin
+            edBlocklistURL.Text:=UTF8Encode(args.Strings['blocklist-url']);
+            if cbBlocklist.Checked then
+              cbBlocklist.Caption:=cbBlocklist.Caption + ' ' + IntToStr(args.Integers['blocklist-size']) + ' entries in list'
+            else
+              cbBlocklist.Caption:=cbBlocklist.Caption + ' (' + IntToStr(args.Integers['blocklist-size']) + ' disabled entries in list)';
+          end else begin
             edBlocklistURL.Visible:=False;
             cbBlocklist.Left:=cbPEX.Left;
             cbBlocklist.Caption:=StringReplace(cbBlocklist.Caption, ':', '', [rfReplaceAll]);
@@ -2836,14 +2842,27 @@ procedure TMainForm.acUpdateBlocklistExecute(Sender: TObject);
 var
   req: TJSONObject;
   res: TJSONObject;
+  argsbl: TJSONObject;
+  reqbl: TJSONObject;
+
 begin
   Application.ProcessMessages;
   AppBusy;
 
   PageInfo.ActivePage:=tabGeneral;
 
+  reqbl:=TJSONObject.Create;
   req:=TJSONObject.Create;
   try
+
+        reqbl.Add('method', 'session-get');
+        argsbl:=RpcObj.SendRequest(reqbl);
+        if argsbl = nil then begin
+          AppNormal;
+          CheckStatus(False);
+          AppBusy;
+        end;
+
     req.Add('method', 'blocklist-update');
     res:=RpcObj.SendRequest(req, True, 3*60000);
     AppNormal;
@@ -2851,9 +2870,15 @@ begin
       CheckStatus(False);
       exit;
     end;
-    MessageDlg(Format(sBlocklistUpdateComplete, [res.Integers[('blocklist-size')]]), mtInformation, [mbOK], 0);
+    if argsbl = nil then
+      MessageDlg(Format(sBlocklistUpdateCompleteNPS, [res.Integers[('blocklist-size')]]), mtInformation, [mbOK], 0)
+    else
+    MessageDlg(Format(sBlocklistUpdateComplete, [argsbl.Integers[('blocklist-size')], res.Integers[('blocklist-size')]]), mtInformation, [mbOK], 0);
     res.Free;
   finally
+    if argsbl <> nil then
+      argsbl.Free;
+    reqbl.Free;
     req.Free;
   end;
 end;
@@ -3028,6 +3053,9 @@ begin
           else
             Text:='';
         end;
+
+      idxSdRatio:
+        Text:=RatioToString(Sender.Items[idxSdRatio, ARow]);
 
     end;
   end;
@@ -4273,6 +4301,14 @@ begin
 
     if t.IndexOfName('cheatMode') >= 0 then
       FTorrents[idxCheatMode, row]:=t.Integers['cheatMode'];
+
+    if (t.IndexOfName('sizeWhenDone') >= 0) and (t.IndexOfName('uploadedEver') >= 0) then
+      begin
+        if (t.Floats['sizeWhenDone'] > 0) then
+          FTorrents[idxSdRatio, row]:=t.Floats['uploadedEver']/t.Floats['sizeWhenDone']
+        else FTorrents[idxSdRatio, row]:=NULL;
+      end
+    else FTorrents[idxSdRatio, row]:=NULL;
 
     DownSpeed:=DownSpeed + FTorrents[idxDownSpeed, row];
     UpSpeed:=UpSpeed + FTorrents[idxUpSpeed, row];
