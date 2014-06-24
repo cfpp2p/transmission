@@ -383,9 +383,9 @@ tr_clientForId( char * buf, size_t buflen, const void * id_in )
     {
         tr_snprintf( buf, buflen, "Plus! v2 %c.%c%c", id[4], id[5], id[6] );
     }
-    else if( !memcmp( id, "XBT", 3 ) )
+    else if( !memcmp( id, "-BT", 3 ) )
     {
-        tr_snprintf( buf, buflen, "XBT Client %c.%c.%c%s", id[3], id[4], id[5], getMnemonicEnd(id[6]) );
+        tr_snprintf( buf, buflen, "BitTorrent %c.%c.%c%s", id[3], id[4], id[5], getMnemonicEnd(id[6]) );
     }
     else if( !memcmp( id, "Mbrst", 5 ) )
     {
