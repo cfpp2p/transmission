@@ -1,0 +1,529 @@
+This file:
+  What is cygrunsrv?
+  What does it do?
+  How do I use it?
+    Informative options...
+    Querying a service
+    Removing a service
+    Starting a service
+    Stopping a service
+    Installing a service
+  General Notes
+  Generic Examples (but very informative)
+  Specific Examples (for common cygwin services)
+
+**********************************************
+What is cygrunsrv?
+  cygrunsrv is an implementation of an NT/W2K service starter, similar 
+to Microsoft's INSTSRV and SRVANY programs, or the FireDaemon program.
+However, cygrunsrv is a cygwin program itself, so it obviously supports 
+Cygwin applications better.
+
+**********************************************
+What does it do?
+  cygrunsrv can operate in two basic modes.  The first is the 
+'service management' or 'commandline' mode.  This allows you 
+to install and remove a service from the system registry, or 
+to start and stop a previously installed service.  The second 
+mode is the 'run a service' or 'daemonize' mode.  This mode is
+reached ONLY via a special entry point called by the Windows 
+Service Mananger -- you can't put cygrunsrv in that mode from 
+the command line.  In the 'daemonize' mode, cygrunsrv sets up 
+the environment (according to flags set via the 'commandline' 
+mode). It adds '/bin' to the front of the PATH so that the 
+target service can find cygwin1.dll easily.  It (optionally)
+redirects stdout, stdin, and stderr to log files or to the
+NT/W2K Event Log (event log access not yet implemented).
+Finally, cygrunsrv starts the target daemon.
+
+**********************************************
+How do I use it?
+  As stated earlier, there are four basic operations that 
+cygrunsrv can do in its 'service management' or 'commandline' 
+mode: install a service (-I or --install), remove a service 
+(-R or --remove), start a service (-S or --start), or stop
+a service (-E or --stop).  In addition, the informative
+options return information about cygrunsrv itself.
+Each mode is discussed in turn, below:
+
+**********************************************
+Informative Options
+
+cygrunsrv -h
+cygrunsrv --help
+  print comprehensive help/option listing for cygrunsrv
+
+cygrunsrv -v
+cygrunsrv --version
+  print version information about the cygrunsrv executable
+
+**********************************************
+Query a service:
+
+cygrunsrv -Q <svc_name>
+cygrunsrv --query <svc_name>
+  reports on the existence and status of the service.  Use the 
+  --verbose or -V flag to receive extra information.
+
+  <svc_name> can either specify a local service name, or it can be
+  "server/svc_name" or "server\svc_name" to specify a service on a
+  remote machine.  The server name can be given as simple name or as
+  fully qualified domain name (server.example.com).
+
+**********************************************
+List services installed with cygrunsrv:
+
+cygrunsrv -L [server]
+cygrunsrv --list [server]
+  lists all services that have been installed with cygrunsrv, 
+  one per line. You can use this for example to stop all 
+  running cygwin services as follows:
+  
+  $ cygrunsrv -L | (while read S; do cygrunsrv -E $S; done)
+  
+  You can combine this with the -V / --verbose option to get 
+  full details of each service instead of just names.
+
+  You can optionally specify a server name to list services installed on
+  a remote machine.  The server name can be given as simple name or as
+  fully qualified domain name (server.example.com).
+
+**********************************************
+Remove a service:
+
+cygrunsrv -R <svc_name>
+cygrunsrv --remove <svc_name>
+  removes the service from the registry
+
+  <svc_name> can either specify a local service name, or it can be
+  "server/svc_name" or "server\svc_name" to specify a service on a
+  remote machine.  The server name can be given as simple name or as
+  fully qualified domain name (server.example.com).
+
+**********************************************
+Start a service:
+
+cygrunsrv -S <svc_name>
+cygrunsrv --start <svc_name>
+  attempts to start a previously installed service
+
+  <svc_name> can either specify a local service name, or it can be
+  "server/svc_name" or "server\svc_name" to specify a service on a
+  remote machine.  The server name can be given as simple name or as
+  fully qualified domain name (server.example.com).
+
+**********************************************
+Stop a service:
+
+cygrunsrv -E <svc_name>
+cygrunsrv --stop <svc_name>
+  attempts to stop a previously started service
+
+  <svc_name> can either specify a local service name, or it can be
+  "server/svc_name" or "server\svc_name" to specify a service on a
+  remote machine.  The server name can be given as simple name or as
+  fully qualified domain name (server.example.com).
+
+**********************************************
+Install a service:
+  At minimum, the following options and arguments MUST be specified 
+(of course, the short options -I and -p can be used instead of the
+long options --install and --path):
+
+  cygrunsrv --install svc_name --path /cygwin/style/path/to/daemon.exe
+
+Note that the "svc_name" is the name of the key in the registry under
+which the information for this service is stored.  More importantly, 
+it is the name that appears in the Service Manager control panel 
+applet, and is the name that can be used by 'cygrunsrv --start' (or 
+'net start') to start the service (* see --disp option).  Note that
+the svc_name does not HAVE to be the same as the executable name, 
+but by convention they are usually the same.
+
+<svc_name> can either specify a local service name, or it can be
+"server/svc_name" or "server\svc_name" to specify a service on a
+remote machine.  The server name can be given as simple name or as
+fully qualified domain name (server.example.com).
+
+There are a number of additional, optional arguments that may be 
+specified.
+
+-------------------------------
+-P, --crs-path <path>
+  Optional path to the cygrunsrv.exe executable.  Specifying this can be
+  useful in several situations. 
+  
+  On the local machine, the path to cygrunsrv is by default the path to
+  the very executable you execute for the -I command.  For testing
+  purposes you could wish to use another cygrunsrv executable than the
+  one which should be used for starting the service. 
+  
+  On a remote server, the path to cygrunsrv is by default the path in
+  the system registry key for the Cygwin root directory (what you get
+  when running `mount | grep " / "' on the remote machine), concatentated
+  with "\bin\cygrunsrv.exe".  This is not failsafe.  It might be better
+  to specify the path to cygrunsrv on the remote machine manually here.
+
+  The path can be given in POSIX or Win32 notation.  For remote services
+  it's advisable to use the Win32 notation.
+
+-------------------------------
+-a, --args <args>
+  Optional string with command line options which shall be passed 
+to the target service when it is started.  This option may only be
+specified one; to call the target service with two arguments, list 
+both arguments surrounded by quotes.  For example,
+
+  cygrunsrv -I foo -p /usr/bin/bar -a "-D -e"
+
+calls with two arguments, as in "/usr/bin/bar -D -e". If you need
+to specify a single argument which contains spaces, you can 
+protect it with single (') or double (") quotes:
+
+  (a) cygrunsrv -I foo -p /usr/bin/bar -a "\"foo bar\""
+  (b) cygrunsrv -I foo -p /usr/bin/bar -a "'foo bar'"
+  (c) cygrunsrv -I foo -p /usr/bin/bar -a '"foo bar"'
+
+each result in
+
+  (a) /usr/bin/bar "foo bar"
+  (b) /usr/bin/bar 'foo bar'
+  (c) /usr/bin/bar "foo bar"
+
+(symmetry suggests the following, but it doesn't work.  Trust me)
+  cygrunsrv -I foo -p /usr/bin/bar -a '\'foo bar\''
+
+-------------------------------
+-e, --env <VAR=value>
+  Optional environment strings which are added to the environment 
+when the service is started. You can add up to 255 environment strings 
+using multiple `--env' options.  Note that '/bin:' is always appended
+to the path to allow started applications to find cygwin1.dll.  You
+may also specify PATH=/a/path:/list if you like, but /bin WILL be
+appended.
+
+  cygrunsrv -I foo -p /usr/bin/bar -e HOME=/e/services -e TMP=/var/tmp
+
+A single level of quoting with either single (') or double (") quotes
+is allowed:
+
+  cygrunsrv -I foo -p /usr/bin/bar -e BAR="\"/d/My Documents/services\""
+
+results in an environment where BAR has the value 
+"/d/My Documents/services" *including the quotes* (the \-escaping and 
+the outer quotes are required to protect the command itself from bash).
+If you don't understand this discussion about quoting, don't worry -- 
+you probably don't need it.
+
+-------------------------------
+-d, --disp <display name>
+  Optional string which contains the display name of the service. 
+The default value is the service name (svc_name). 
+
+  cygrunsrv -I svc_name -p /usr/bin/svc.exe -d baz
+
+results in a service whose parameters are stored under the registry key
+'svc_name', executes the daemon svc.exe, but shows up in the Services 
+control panel applet with the name 'baz'.  You can start/stop the daemon 
+using 'cygrunsrv -S svc_name' or 'net start svc_name' -- but it will 
+report 'The baz service is starting' etc.
+
+-------------------------------
+-f, --desc <service description>
+  Optional service description string. The description string is
+displayed in the Windows graphical display for starting and stopping
+the service.
+
+-------------------------------
+-t, --type [auto|manual]
+  Optional start type of service. Defaults to `auto' (e.g. this service
+will be automatically started at system bootup).  'manual' means the
+service must be explicitly started using 'cygrunsrv -S svc_name'
+
+-------------------------------
+-u, --user <user name>
+  Optional user name to start service as. Defaults to SYSTEM account
+(also known as the 'LocalSystem' account).  The user must have the
+"Logon as a service" privilege.
+
+The user name can be given as Cygwin user name as stored in /etc/passwd:
+
+  $ grep "LocalService" /etc/passwd
+  ls:*:19:0:U-NT AUTHORITY\LocalService,S-1-5-19:/tmp:/bin/false
+  $ cygrunsrv -I svc -p cmd -u ls
+
+or it can be given in NT user name notation.  The backslash used to
+separate doamin name and user name can be replaced with a slash.
+Examples:
+
+  $ cygrunsrv -I svc -p cmd -u MY_DOMAIN\\user
+  $ cygrunsrv -I svc -p cmd -u MY_DOMAIN/user
+  $ cygrunsrv -I svc -p cmd -u "NT AUTHORITY/LocalService"
+  $ cygrunsrv -I svc -p cmd -u "NT AUTHORITY"\\LocalService
+
+-------------------------------
+-w, --passwd <password>
+  Optional password for user. Only needed if a user is given. If a 
+user has an empty password, enter `-w ' with no <password>.
+
+  cygrunsrv -I svc_name -p /usr/bin/svc.exe -u foo -w ""
+
+If a user is given but the -w option is not used, then cygrunsrv will
+ask for a password interactively.  Note that the password is stored in
+encrypted form in the registry.
+
+Beginning with Windows XP and 2003 Server, there's a new security setting
+turned on by default, which disallows starting services for accounts without
+passwords.  When you start the Security Policy MMC Snap-In, you'll find it
+under Securiy Settings/Local Policies/Security Options.  The setting is
+called "Accounts: Limit local account use of blank password to console
+logon only."  You can disable it, but it's highly discouraged.  There's
+usually no good reason to install a service under an account without
+password.
+
+-------------------------------
+-0, --stdin <file>
+  Optional input file used for stdin redirection. Default is /dev/null.
+
+-------------------------------
+-1, --stdout <file>
+  Optional output file used for stdout redirection. Default is 
+/var/log/<svc_name>.log.
+
+-------------------------------
+-2, --stderr <file>
+  Optional output file used for stderr redirection. Default is 
+/var/log/<svc_name>.log.  (Thus, by default, both stdout and
+stderr are redirected to /var/log/<svc_name>.log).
+
+Note, it may soon be possible to redirect thru a pipe to the 
+logger program (which is part of the inetutils package) so that 
+messages printed by the target service are stored in the NT/W2K 
+Event Application Log. For example,
+
+  THIS IS NOT YET IMPLEMENTED!!!!
+  cygrunsrv -I svc_name -p /usr/bin/foo.exe \
+    --stderr "|/usr/bin/logger -p INFO -t svc_name"
+
+-------------------------------
+-x, --pidfile <file>
+  Optional path for .pid file written by application after fork().
+  Default is that the application must not fork().
+
+With this option, it is possible to run daemons not providing a
+(usually Cygwin-specific) option to prevent fork()ing.
+
+-------------------------------
+-s, --termsig <signal>
+  Optional signal to send to service application to stop
+the service.  <signal> can be a number or a signal name such as 
+HUP, INT, QUIT, etc. Default is TERM, which is appropriate for
+most daemons.
+
+-------------------------------
+-z, --shutsig <signal>
+  Optional signal to send to service application to stop the service
+in case of a system shutdown.  This is useful if your service
+application wants to allow different actions to be taken on a normal
+service stop and on system shutdown.  Note that the --shutsig option
+only has an effect if you use the --preshutdown or --shutdown option
+(see there for more information).  The default signal on shutdown is the
+termination signal set with --termsig, TERM otherwise.
+
+-------------------------------
+-y, --dep <svc_name2>
+  Optional name of service that must be started before this 
+new service.  The --dep option may be given up to 16 times, listing 
+another dependent service each time.  Try to avoid dependency loops:
+that is, if svc_A depends on svc_B, but svc_B depends on svc_A...
+
+-------------------------------
+-n, --neverexits
+
+  Optional flag that causes cygrunsrv to only report a succesful
+shutdown of the service to windows when cygrunsrv itself was told
+to shutdown and the exec'ed process exited with a zero status. Use
+this option when the service should only be started or stopped via
+the Windows service mechanism (e.g. cygrunsrv -E, net stop, or via
+the services GUI).
+
+-------------------------------
+-O, --preshutdown
+-o, --shutdown
+
+  Optional flags that causes cygrunsrv to terminate the service
+application during system shutdown.  When in effect, cygrunsrv sends the
+shutdown signal (see --shutsig) to the application process when
+cygrunsrv learns that the system is shutting down.  This gives the
+application a short time (usually not more than up to 20 secs) to clean
+up and exit gracefully.  Note that each Cygwin process also sends SIGHUP
+to itself (implicitly) during system shutdown.
+
+Starting with Windows Vista/Longhorn, the --preshutdown option allows to
+terminate the service before the real shutdown takes place, giving the
+service up to 3 minutes for its shutdown actions.
+
+Only one of the --preshutdown/--shutdown options is allowed.  If you use
+--preshutdown on operating systems prior to Windows Vista/Longhorn, it
+will be silently converted to --shutdown at service runtime.
+
+-------------------------------
+-i, --interactive
+
+  Optional flag that allows cygrunsrv to interact with the desktop.
+When in effect, cygrunsrv can open windows and pop up message boxes.
+Equivalent to the "Allow service to interact with desktop" box.
+Cannot be used unless the service runs as SYSTEM.
+
+NOTE: The interactive option has not the desired effect anymore,
+starting with Windows Vista/Longhorn.  Interactive services which are
+allowed to interact with the local desktop are deprecated by Microsoft.
+To get desktop interaction, your service needs to use other means of
+interprocess communication between the actual service application and a
+desktop application running in the user context of the desktop user.
+
+-------------------------------
+-j, --nohide
+
+  When running services interactively (see -i, --interactive option above),
+  usually a console window pops up, which has been opened by the service
+  control manager.  Beginning with version 0.99, cygrunsrv hides that
+  console window by default.  If you need that console window open, use
+  the -j or --nohide option.  In that case, cygrunsrv keeps the console
+  window untouched.
+
+**********************************************
+Information on mounts:
+
+Services by default are run as the local system account, not your regular
+user account.  This means that if you have user-mode mounts (i.e. you 
+selected 'Just Me' in setup.exe) the service will not see them and fail to
+start.  Cygrunsrv will now attempt to detect this an warn you if /usr/bin
+is mounted in user mode.  See also <http://cygwin.com/faq/faq.html#SEC33>.
+
+**********************************************
+General Notes:
+
+There's currently one caveat, though. If the application behaves as
+a "normal" unix daemon and exits after forking a child, cygrunsrv 
+will immediately stop the service (but the actual daemon keeps running
+in the background).  This means that you cannot then STOP the daemon
+using cygrunsrv, but you must explicit kill it via 'kill -9 <daemon_pid>'
+
+If you fail to do this, you will probably see something like this in
+the Windows Application Event Log:
+  Cygwin Apache : Win32 Process Id = 0xFE : Cygwin Process Id = 0xFE :
+  `Cygwin Apache' service started.
+immediately followed by
+  Cygwin Apache : Win32 Process Id = 0xFE : Cygwin Process Id = 0xFE :
+  `Cygwin Apache' service stopped.
+but 'ps -eaf | grep httpd' shows that httpd IS still running.
+
+To avoid this problem, you must start the application so that it 
+doesn't fork a daemon but stays resident instead.  sshd
+for example has to be called with the -D option.  squid must be
+called with the -N option.
+
+For example,
+  cygrunsrv -I sshd -p /usr/sbin/sshd -a -D
+  cygrunsrv -I squid -p /usr/bin/squid -a -N
+although other options may be necessary.
+
+**********************************************
+Generic Examples
+
+To install the Cygwin application /bin/foo as service "foo" running under
+LocalSystem account, no special options:
+
+    cygrunsrv -I foo -p /bin/foo
+
+To install /bin/foo as a service "bar" which requires command line options:
+
+    cygrunsrv -I bar -p /bin/foo -a '--opt1 --opt2 -x'
+
+To install /bin/foo as a service "baz" which requires a command line option
+which contains spaces:
+
+    cygrunsrv -I baz -p /bin/foo -a "-x 'this has spaces inside'"
+or
+    cygrunsrv -I baz -p /bin/foo -a '-x "this has spaces inside"'
+
+To install /bin/foo as a service "foo bar" which doesn't automatically
+startup when the system boots:
+
+    cygrunsrv -I "foo bar" -p /bin/foo -t manual
+
+To install /bin/foo as a service "bongo" which requires settings for the
+environment variables "ENV_VAR_1" and "ENV_VAR_2" to run correctly:
+
+    cygrunsrv -I bongo -p /bin/foo -e "ENV_VAR_1=important_1" \
+                                 -e "ENV_VAR_2=also_important"
+
+To install sshd as service under user `joey' account:
+
+    cygrunsrv -I "Joey sshd" -p /usr/sbin/sshd -a '-d' -u joey
+
+cygrunsrv asks for `joey's password interactively. If one wants
+to give joey's password (say, "privy23") on the command line:
+
+    cygrunsrv -I "Joey sshd" -p /usr/sbin/sshd -a '-D' -u joey -w privy23
+
+To start the service `foo':
+
+    cygrunsrv -S foo
+
+To stop the service `foo':
+
+    cygrunsrv -E foo
+
+To uninstall the service `foo':
+
+    cygrunsrv -R foo
+
+
+**********************************************
+Specific Examples
+
+Please add suggestions for this list...
+
+------------
+postgresql:
+  cygrunsrv --install postmaster \
+    --path /usr/bin/postmaster \
+    --args "-D /usr/share/postgresql/data -i" \
+    --dep ipc-daemon --termsig INT --user postgresql --shutdown
+
+------------
+sshd:
+  cygrunsrv --install sshd \
+    --path /usr/sbin/sshd \
+    --args -D
+
+------------
+xinetd:
+  cygrunsrv --install xinetd \
+    --pidfile /var/run/xinetd.pid \
+    --path /usr/sbin/xinetd \
+    --args "-pidfile /var/run/xinetd.pid"
+
+Note that at present, ipc-daemon.exe and inetd.exe contain the 
+appropriate code to run as Windows services WITHOUT the assistance 
+of cygrunsrv.
+
+**********************************************
+Troubleshooting
+
+If the service fails to start, consider whether the service process
+depends on other services and reinstall the service using the `--dep'
+parameter to ensure that those other services are running first.  In 
+particular, any service application that uses network services (such 
+as socket connections) depends on the "LanmanWorkstation" service; this    
+dependency can be declared as `--dep LanmanWorkstation'.  On systems 
+where "LanmanWorkstation" isn't started you can try using a dependency
+on the "Tcpip" service.  In that case just add `--dep Tcpip' to the
+command line when installing the service.
+
+**********************************************
+Contact Information
+
+For support, contact the cygwin mailing list cygwin@cygwin.com.  cygrunsrv was originally created by Corinna Vinschen.
