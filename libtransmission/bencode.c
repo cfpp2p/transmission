@@ -7,7 +7,7 @@
  * This exemption does not extend to derived works not owned by
  * the Transmission project.
  *
- * $Id: bencode.c 12463 2011-05-27 23:28:40Z jordan $
+ * $Id: bencode.c 14304 2014-06-29 23:28:40Z jordan $
  */
 
 #include <assert.h>
@@ -130,32 +130,42 @@ tr_bencParseStr( const uint8_t *  buf,
                  const uint8_t ** setme_str,
                  size_t *         setme_strlen )
 {
-    size_t       len;
     const void * end;
-    char *       endptr;
+    size_t       len;
+    char * ulend;
+    const uint8_t * strbegin;
+    const uint8_t * strend;
 
     if( buf >= bufend )
-        return EILSEQ;
+        goto err;
 
     if( !isdigit( *buf  ) )
-        return EILSEQ;
+        goto err;
 
     end = memchr( buf, ':', bufend - buf );
     if( end == NULL )
-        return EILSEQ;
+        goto err;
 
     errno = 0;
-    len = strtoul( (const char*)buf, &endptr, 10 );
-    if( errno || endptr != end )
-        return EILSEQ;
+  len = strtoul ((const char*)buf, &ulend, 10);
+  if (errno || ulend != end)
+    goto err;
 
-    if( (const uint8_t*)end + 1 + len > bufend )
-        return EILSEQ;
+  strbegin = (const uint8_t*)end + 1;
+  strend = strbegin + len;
+  if ((strend<strbegin) || (strend>bufend))
+    goto err;
 
     *setme_end = (const uint8_t*)end + 1 + len;
     *setme_str = (const uint8_t*)end + 1;
     *setme_strlen = len;
     return 0;
+	
+err:
+  *setme_end = NULL;
+  *setme_str = NULL;
+  *setme_strlen= 0;
+  return EILSEQ;
 }
 
 /* set to 1 to help expose bugs with tr_bencListAdd and tr_bencDictAdd */
