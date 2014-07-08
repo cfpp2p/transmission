@@ -37,6 +37,10 @@
 #include "utils.h"
 #include "version.h"
 
+#ifndef EBADMSG
+ #define EBADMSG EINVAL
+#endif
+
 /**
 ***
 **/
@@ -1252,7 +1256,8 @@ messageLengthIsCorrect( const tr_peermsgs * msg, uint8_t id, uint32_t len )
 
         case BT_BITFIELD:
             if( tr_torrentHasMetadata( msg->torrent ) )
-                return len == ( msg->torrent->info.pieceCount + 7u ) / 8u + 1u;
+                return len == ( msg->torrent->info.pieceCount >> 3 ) + ( msg->torrent->info.pieceCount & 7 ? 1 : 0 ) + 1u;
+               // ( msg->torrent->info.pieceCount + 7u ) / 8u + 1u  --- (x + 7u) / 8u --- (x >> 3) + (x & 7 ? 1 : 0)
             /* we don't know the piece count yet,
                so we can only guess whether to send true or false */
             if( msg->metadata_size_hint > 0 )
@@ -1359,6 +1364,13 @@ readBtMessage( tr_peermsgs * msgs, struct evbuffer * inbuf, size_t inlen )
 
     if( inlen < msglen )
         return READ_LATER;
+
+    if( msglen == SIZE_MAX )
+    {
+        dbgmsg( msgs, "bad packet - BT message #%d with a length of %d", (int)id, (int)msglen );
+        fireError( msgs, EMSGSIZE );
+        return READ_ERR;
+    }
 
     if( !messageLengthIsCorrect( msgs, id, msglen + 1 ) )
     {
@@ -1560,6 +1572,11 @@ clientGotBlock( tr_peermsgs                * msgs,
 
     assert( msgs );
     assert( req );
+
+    if (!requestIsValid (msgs, req)) {
+        dbgmsg (msgs, "dropping invalid block %u:%u->%u", req->index, req->offset, req->length);
+        return EBADMSG;
+    }
 
     if( req->length != tr_torBlockCountBytes( msgs->torrent, block ) ) {
         dbgmsg( msgs, "wrong block size -- expected %u, got %d",

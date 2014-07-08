@@ -577,7 +577,7 @@ tr_metainfoParseImpl( const tr_session  * session,
 
     /* piece length */
     if( !isMagnet ) {
-        if( !tr_bencDictFindInt( infoDict, "piece length", &i ) || ( i < 1 ) )
+        if( !tr_bencDictFindInt( infoDict, "piece length", &i ) || ( i < 1 ) || ( i >= 4294967296 ) )
             return "piece length";
         inf->pieceSize = i;
     }
