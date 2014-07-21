@@ -7,7 +7,7 @@
  * This exemption does not extend to derived works not owned by
  * the Transmission project.
  *
- * $Id: metainfo.c 14234 2014-02-08 15:25:18Z cfpp2p $
+ * $Id: metainfo.c 14305 2014-07-21 12:27:38Z cfpp2p $
  */
 
 #include <assert.h>
@@ -564,7 +564,7 @@ tr_metainfoParseImpl( const tr_session  * session,
 
     /* piece length */
     if( !isMagnet ) {
-        if( !tr_bencDictFindInt( infoDict, "piece length", &i ) || ( i < 1 ) || ( i >= 4294967296 ) )
+        if( !tr_bencDictFindInt( infoDict, "piece length", &i ) || ( i < 1 ) || ( i >= 536870912 ) )
             return "piece length";
         inf->pieceSize = i;
     }
