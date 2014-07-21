@@ -705,12 +705,30 @@ static void torrentStart( tr_torrent * tor, bool bypass_queue );
 uint32_t
 tr_getBlockSize( uint32_t pieceSize )
 {
-    uint32_t b = pieceSize;
+    uint32_t b = MAX_BLOCK_SIZE;
 
-    while( b > MAX_BLOCK_SIZE )
-        b /= 2u;
+//  this was established in the previos revision logic
+//  do we really want to allow ANY piece sizes less than MAX_BLOCK_SIZE?	
+  if( pieceSize <= MAX_BLOCK_SIZE ) return pieceSize;
 
-    if( !b || ( pieceSize % b ) ) /* not cleanly divisible */
+  /**
+  * ticket 4005
+  * use a MIN_BLOCK_SIZE of 8193 - same as previous revision 
+  * lesser block sizes create an undo number of requests
+  * note - allowing a block size of 1 would guarantee any piece size
+  * but smaller requests result in higher overhead
+  * due to tracking a greater number of requests
+  * there should be some constraints on this
+  * we cant have everything
+  */
+
+// try for the LARGEST block size we can find
+// not just any one thats greater than 8192 as per previous revision
+// this way we are more efficient and less overhead
+    while( (b > 8193) && (pieceSize % b) )
+        b--;
+
+    if( pieceSize % b ) /* not cleanly divisible */
         return 0;
     return b;
 }
