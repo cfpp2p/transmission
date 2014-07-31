@@ -270,6 +270,30 @@ tr_torrentGetCheatMode( const tr_torrent * tor )
 }
 
 void
+tr_torrentSetStreamingMode( tr_torrent * tor, tr_streamingMode_t mode )
+{
+    assert( tr_isTorrent( tor ) );
+
+    if( ( mode >= TR_STREAMING_OFF ) && ( mode < TR_STREAMING_COUNT ) && ( mode != tor->streamingMode ) )
+    {
+        tr_torrentLock( tor );
+        tor->streamingMode = mode;
+        tr_torrentSetDirty( tor );
+        tr_peerMgrRebuildRequests( tor );
+
+        tr_torrentUnlock( tor );
+    }
+}
+
+tr_streamingMode_t
+tr_torrentGetStreamingMode( const tr_torrent * tor )
+{
+    assert( tr_isTorrent( tor ) );
+
+    return tor->streamingMode;
+}
+
+void
 tr_torrentSetRatioMode( tr_torrent *  tor, tr_ratiolimit mode )
 {
     assert( tr_isTorrent( tor ) );
@@ -966,6 +990,11 @@ torrentInit( tr_torrent * tor, const tr_ctor * ctor )
     {
         tr_torrentSetIdleMode( tor, TR_IDLELIMIT_GLOBAL );
         tr_torrentSetIdleLimit( tor, tr_sessionGetIdleLimit( tor->session ) );
+    }
+
+    if( !( loaded & TR_FR_STREAMINGMODE ) )
+    {
+        tr_torrentSetStreamingMode( tor, TR_STREAMING_OFF );
     }
 
     if( !( loaded & TR_FR_CHEATMODE ) )
@@ -2112,12 +2141,22 @@ removeTorrent( void * vdata )
 {
     struct remove_data * data = vdata;
 
-    if( data->deleteFlag )
-        tr_torrentDeleteLocalData( data->tor, data->deleteFunc );
+// July 25 2014 -cfp- we need to make sure the torrent is stopped
+// and locked to prevent crashes with stalled peer io and cache
+    tr_session * session = data->tor->session;
+    tr_sessionLock( session );
 
+    if( data->deleteFlag )
+    {
+        stopTorrent( data->tor );
+        tr_torrentDeleteLocalData( data->tor, data->deleteFunc );
+    }
     tr_torrentClearCompletenessCallback( data->tor );
     closeTorrent( data->tor );
+
     tr_free( data );
+
+    tr_sessionUnlock( session );
 }
 
 void
@@ -2128,13 +2167,21 @@ tr_torrentRemove( tr_torrent   * tor,
     struct remove_data * data;
 
     assert( tr_isTorrent( tor ) );
+
+    tr_session * session = tor->session;
+    tr_sessionLock( session );
+
     tor->isDeleting = 1;
+    tor->magnetVerify = false;
 
     data = tr_new0( struct remove_data, 1 );
     data->tor = tor;
     data->deleteFlag = deleteFlag;
     data->deleteFunc = deleteFunc;
     tr_runInEventThread( tor->session, removeTorrent, data );
+
+    tr_sessionUnlock( session );
+
 }
 
 /**

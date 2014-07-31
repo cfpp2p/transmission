@@ -274,6 +274,7 @@ struct tr_torrent
     float                      desiredRatio;
     tr_ratiolimit              ratioLimitMode;
 
+    uint8_t                    streamingMode;
     uint8_t                    cheatMode;
     float                      cheatRand;
 
