@@ -302,6 +302,13 @@ object MainForm: TMainForm
         item
           Alignment = taRightJustify
           SizePriority = 0
+          Title.Caption = 'x Streaming'
+          Width = 0
+          Visible = False
+        end      
+        item
+          Alignment = taRightJustify
+          SizePriority = 0
           Title.Caption = 'x Announce'
           Width = 0
           Visible = False

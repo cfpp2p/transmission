@@ -49,6 +49,8 @@ type
     txMinutes: TLabel;
     txName: TLabel;
     txPeerLimit: TLabel;
+    txStreamingModeV: TLabel;
+    txStreamingMode: TLabel;
     txCheatModeV: TLabel;
     txCheatMode: TLabel;
     procedure cbIdleSeedLimitClick(Sender: TObject);

@@ -1,6 +1,6 @@
 object TorrPropsForm: TTorrPropsForm
   Left = 364
-  Height = 251
+  Height = 291
   Top = 185
   Width = 469
   HorzScrollBar.Page = 349
@@ -10,22 +10,22 @@ object TorrPropsForm: TTorrPropsForm
   BorderIcons = [biSystemMenu]
   BorderStyle = bsDialog
   Caption = 'Torrent properties'
-  ClientHeight = 251
+  ClientHeight = 291
   ClientWidth = 469
-  Constraints.MinHeight = 186
+  Constraints.MinHeight = 226
   Constraints.MinWidth = 350
   OnCreate = FormCreate
   Position = poMainFormCenter
   LCLVersion = '0.9.30.1'
   object gbOptions: TGroupBox
     Left = 8
-    Height = 201
+    Height = 241
     Top = 8
     Width = 453
     Align = alClient
     BorderSpacing.Around = 8
     Caption = ' '
-    ClientHeight = 183
+    ClientHeight = 223
     ClientWidth = 449
     TabOrder = 0
     object txKbs1: TLabel
@@ -68,9 +68,10 @@ object TorrPropsForm: TTorrPropsForm
       Height = 14
       Top = 91
       Width = 48
-      Caption = 'Announce mode currently is:'
+      Caption = 'Announce status is normal:'
       ParentColor = False
     end
+
     object txPeerLimitR: TLabel
       Left = 396
       Height = 14
@@ -85,13 +86,32 @@ object TorrPropsForm: TTorrPropsForm
       Height = 14
       Top = 106
       Width = 48
-      Caption = '0 Normal                                         -'
+      Caption = 'To change streaming set Peers to a 99x value:'
       ParentColor = False
     end
+
+    object txStreamingModeV: TLabel
+      Left = 10
+      Height = 14
+      Top = 124
+      Width = 48
+      Caption = 'Streaming mode currently is: '
+      ParentColor = False
+    end
+
+    object txStreamingMode: TLabel
+      Left = 10
+      Height = 14
+      Top = 139
+      Width = 48
+      Caption = 'x 5=Off 6=Weak 7=Priority 8=Weighted  9=FORCED'
+      ParentColor = False
+    end
+
     object txMinutes: TLabel
       Left = 396
       Height = 14
-      Top = 153
+      Top = 193
       Width = 38
       Anchors = [akTop, akRight]
       Caption = 'minutes'
@@ -149,7 +169,7 @@ object TorrPropsForm: TTorrPropsForm
     object cbSeedRatio: TCheckBox
       Left = 10
       Height = 17
-      Top = 121
+      Top = 161
       Width = 71
       AllowGrayed = True
       Caption = 'Seed ratio:'
@@ -159,7 +179,7 @@ object TorrPropsForm: TTorrPropsForm
     object txSeedRatioR: TLabel
       Left = 396
       Height = 14
-      Top = 123
+      Top = 163
       Width = 26
       Anchors = [akTop, akRight]
       Caption = 'Ratio'
@@ -168,7 +188,7 @@ object TorrPropsForm: TTorrPropsForm
     object edSeedRatio: TFloatSpinEdit
       Left = 316
       Height = 21
-      Top = 119
+      Top = 159
       Width = 66
       Anchors = [akTop, akRight]
       Increment = 0.1
@@ -180,7 +200,7 @@ object TorrPropsForm: TTorrPropsForm
     object cbIdleSeedLimit: TCheckBox
       Left = 10
       Height = 17
-      Top = 152
+      Top = 192
       Width = 170
       AllowGrayed = True
       Caption = 'Stop seeding when inactive for:'
@@ -190,7 +210,7 @@ object TorrPropsForm: TTorrPropsForm
     object edIdleSeedLimit: TSpinEdit
       Left = 316
       Height = 21
-      Top = 150
+      Top = 190
       Width = 66
       Anchors = [akTop, akRight]
       MaxValue = 999999
@@ -202,7 +222,7 @@ object TorrPropsForm: TTorrPropsForm
   object Buttons: TButtonPanel
     Left = 0
     Height = 26
-    Top = 217
+    Top = 257
     Width = 469
     BorderSpacing.Bottom = 8
     BorderSpacing.Around = 0

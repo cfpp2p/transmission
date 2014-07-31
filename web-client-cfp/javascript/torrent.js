@@ -56,6 +56,7 @@ Torrent.Fields.Metadata = [
 
 // commonly used fields which need to be periodically refreshed
 Torrent.Fields.Stats = [
+	'streamingMode',
 	'cheatMode',
 	'downloadDir',
 	'error',
@@ -96,6 +97,7 @@ Torrent.Fields.InfoExtra = [
 
 // fields used in the inspector which need to be periodically refreshed
 Torrent.Fields.StatsExtra = [
+	'streamingMode',
 	'cheatMode',
 	'desiredAvailable',
 	'downloadedEver',
@@ -234,6 +236,7 @@ Torrent.prototype =
 	getUploadedEver: function() { return this.fields.uploadedEver; },
 	getWebseedsSendingToUs: function() { return this.fields.webseedsSendingToUs; },
 	isFinished: function() { return this.fields.isFinished; },
+	getStreamingMode: function() { return this.fields.streamingMode; },
 	getCheatMode: function() { return this.fields.cheatMode; },
 
 

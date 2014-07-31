@@ -211,6 +211,10 @@
 						<div id="torrent_inspector_comment"></div>
 					</div>
 					<div class="inspector_row">
+						<div class="inspector_label">Streaming Mode:</div>
+						<div id="torrent_inspector_streaming_mode"></div>
+					</div>
+					<div class="inspector_row">
 						<div class="inspector_label">Announce Mode:</div>
 						<div id="torrent_inspector_cheat_mode"></div>
 					</div>
@@ -495,6 +499,16 @@
 				<li class="separator"></li>
 				<li id="context_toggle_inspector">Show Inspector</li>
 				<li class="separator"></li>
+				<li id="streamingMode">
+					Streaming Mode:
+					<select id="streamingModeSelect">
+					<option value="0">Streaming Off</option>
+					<option value="1">Streaming Weak</option>
+					<option value="2">Streaming Priority</option>
+					<option value="3">Streaming Weighted</option>
+					<option value="4">Streaming Forced</option>
+					</select>
+				</li>
 <!--	deactivated always, for fun only see "deactivated always, comment out for fun" in announcer.c
 				<li id="cheatMode">
 					Announce Mode:

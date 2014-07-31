@@ -54,7 +54,7 @@ object AddTorrentForm: TAddTorrentForm
       Width = 48
       Alignment = taRightJustify
       Anchors = [akTop, akRight]
-      Caption = '-                                                                                          -'
+      Caption = 'To change MODES, UN-Check Start torrent then set modes with Torrent properties'
       ParentColor = False
     end
     object cbDestFolder: TComboBox
@@ -82,7 +82,7 @@ object AddTorrentForm: TAddTorrentForm
       Top = 46
       Width = 62
       Anchors = [akTop, akRight]
-      MaxValue = 999
+      MaxValue = 989
       MinValue = 1
       TabOrder = 3
       Value = 1

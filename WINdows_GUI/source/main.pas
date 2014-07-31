@@ -609,9 +609,10 @@ const
   idxTorrentId = 20;
   idxQueue = 21;
   idxSeedingTime = 22;
-  idxCheatMode = 23;
-  idxSdRatio = 24;
-
+  idxStreamingMode = 23;
+  idxCheatMode = 24;
+  idxSdRatio = 25;
+ 
   idxTag = -1;
   idxSeedsTotal = -2;
   idxLeechersTotal = -3;
@@ -694,7 +695,7 @@ const
     ('', 'totalSize', '', 'status', 'peersSendingToUs,seeders',
      'peersGettingFromUs,leechers', 'rateDownload', 'rateUpload', 'eta', 'uploadRatio',
      'downloadedEver', 'uploadedEver', '', '', 'addedDate', 'doneDate', 'activityDate', '', 'bandwidthPriority',
-     '', '', 'queuePosition', 'secondsSeeding', 'cheatMode', '');
+     '', '', 'queuePosition', 'secondsSeeding', 'streamingMode', 'cheatMode', '');
 
 implementation
 
@@ -1901,6 +1902,9 @@ begin
     if id <> 0 then
       TorrentAction(VarArrayOf([id]), 'remove');
   end;
+
+
+
 end;
 
 procedure TMainForm.UpdateTray;
@@ -2651,7 +2655,7 @@ begin
     gTorrents.Tag:=1;
     TorrentIds:=GetSelectedTorrents;
     args:=RpcObj.RequestInfo(id, ['downloadLimit', 'downloadLimitMode', 'downloadLimited', 'uploadLimit', 'uploadLimitMode', 'uploadLimited',
-                                  'name', 'maxConnectedPeers', 'seedRatioMode', 'seedRatioLimit', 'seedIdleLimit', 'seedIdleMode', 'cheatMode']);
+                                  'name', 'maxConnectedPeers', 'seedRatioMode', 'seedRatioLimit', 'seedIdleLimit', 'seedIdleMode', 'streamingMode', 'cheatMode']);
     if args = nil then begin
       CheckStatus(False);
       exit;
@@ -2669,9 +2673,14 @@ begin
       txName.Caption:=txName.Caption + ' ' + s;
 
       if gTorrents.SelCount > 1 then
-        txCheatModeV.Caption:=txCheatModeV.Caption + ' 0               Peer Limit:'
+        txStreamingModeV.Caption:=txStreamingModeV.Caption + ' mixed'
       else
-        txCheatModeV.Caption:=txCheatModeV.Caption + ' ' + IntToStr(t.Integers['cheatMode']) + '           Peer Limit:';
+        txStreamingModeV.Caption:=txStreamingModeV.Caption + ' ' + IntToStr(t.Integers['streamingMode'] + 5);
+
+      if gTorrents.SelCount > 1 then
+        txCheatModeV.Caption:=txCheatModeV.Caption + ' 0                     Peer Limit:'
+      else
+        txCheatModeV.Caption:=txCheatModeV.Caption + ' ' + IntToStr(t.Integers['cheatMode']) + '                     Peer Limit:';
 
       if RpcObj.RPCVersion < 5 then begin
         // RPC versions prior to v5
@@ -2800,7 +2809,7 @@ begin
             args.Add('seedIdleLimit', edIdleSeedLimit.Value);
         end;
 
-        if edPeerLimit.Value <= 999 then
+        if edPeerLimit.Value <= 989 then
            args.Add('peer-limit', edPeerLimit.Value);
 
         if edPeerLimit.Value = 990 then
@@ -2817,6 +2826,21 @@ begin
 
         if edPeerLimit.Value = 994 then
            args.Add('cheatMode', 0 );
+
+        if edPeerLimit.Value = 995 then
+           args.Add('streamingMode', 0 );
+
+        if edPeerLimit.Value = 996 then
+           args.Add('streamingMode', 1 );
+
+        if edPeerLimit.Value = 997 then
+           args.Add('streamingMode', 2 );
+
+        if edPeerLimit.Value = 998 then
+           args.Add('streamingMode', 3 );
+
+        if edPeerLimit.Value = 999 then
+           args.Add('streamingMode', 4 );
 
         req.Add('arguments', args);
         args:=nil;
@@ -3041,6 +3065,15 @@ begin
           j:=Sender.Items[idxSeedingTime, ARow];
           if j > 0 then
             Text:=EtaToString(j)
+          else
+            Text:='';
+        end;
+
+      idxStreamingMode:
+        begin
+          j:=Sender.Items[idxStreamingMode, ARow];
+          if j >= 0 then
+            Text:=IntToStr(j)
           else
             Text:='';
         end;
@@ -4299,6 +4332,9 @@ begin
     if t.IndexOfName('secondsSeeding') >= 0 then
       FTorrents[idxSeedingTime, row]:=t.Integers['secondsSeeding'];
 
+    if t.IndexOfName('streamingMode') >= 0 then
+      FTorrents[idxStreamingMode, row]:=t.Integers['streamingMode'] + 5;
+
     if t.IndexOfName('cheatMode') >= 0 then
       FTorrents[idxCheatMode, row]:=t.Integers['cheatMode'];
 
@@ -4329,6 +4365,8 @@ begin
       gTorrents.Items[idxTag, i]:=0;
 
     gTorrents.Items.Sort(idxTorrentId);
+
+
 
     for i:=0 to FTorrents.Count - 1 do begin
       IsActive:=(FTorrents[idxDownSpeed, i] <> 0) or (FTorrents[idxUpSpeed, i] <> 0);

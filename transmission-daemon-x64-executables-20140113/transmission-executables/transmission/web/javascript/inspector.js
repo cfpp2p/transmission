@@ -106,6 +106,8 @@ function Inspector(controller) {
             creator = '',
             date = '',
             directory = '',
+            streaming_modeis = '',
+            streaming_mode = '',
             cheat_modeis = '',
             cheat_mode = '',
             s, i, t;
@@ -136,6 +138,26 @@ function Inspector(controller) {
 				default:
 					cheat_modeis = "???";
 			}
+			switch( t.getStreamingMode() ) {
+				case 0:
+					streaming_modeis = "Off (default)";
+				break;
+				case 1:
+					streaming_modeis = "Weak";
+				break;
+				case 2:
+					streaming_modeis = "Priority";
+				break;
+				case 3:
+					streaming_modeis = "Weighted";
+				break;
+				case 4:
+					streaming_modeis = "FORCED";
+				break;
+				default:
+					streaming_modeis = "???";
+			}
+            streaming_mode  = accumulateString(streaming_mode, streaming_modeis);
             cheat_mode  = accumulateString(cheat_mode, cheat_modeis);
             creator     = accumulateString(creator, t.getCreator());
             date        = accumulateString(date, fmt.timestamp(t.getDateCreated()));
@@ -153,6 +175,7 @@ function Inspector(controller) {
         setInnerHTML(e.hash, hash || na);
         setInnerHTML(e.secure, secure || na);
         setInnerHTML(e.comment, comment.replace(/(https?|ftp):\/\/([\w\-]+(\.[\w\-]+)*(\.[a-z]{2,4})?)(\d{1,5})?(\/([^<>\s]*))?/g, '<a target="_blank" href="$&">$&</a>') || na);
+        setInnerHTML(e.streaming_mode, streaming_mode || na);
         setInnerHTML(e.cheat_mode, cheat_mode || na);
         setInnerHTML(e.creator, creator || na);
         setInnerHTML(e.date, date || na);
@@ -500,6 +523,7 @@ function Inspector(controller) {
 
         data.elements.availability   = $(ti+'availability')[0];
         data.elements.comment        = $(ti+'comment')[0];
+        data.elements.streaming_mode = $(ti+'streaming_mode')[0];
         data.elements.cheat_mode     = $(ti+'cheat_mode')[0];
         data.elements.date           = $(ti+'creator_date')[0];
         data.elements.creator        = $(ti+'creator')[0];

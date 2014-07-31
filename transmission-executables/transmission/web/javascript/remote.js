@@ -137,6 +137,19 @@ TransmissionRemote.prototype =
 	
 	},
 
+	streamingModes: function(torrent_ids, md) {
+		var remote = this;
+        if (md >= 0 && md <= 4) {
+        args = { ids: torrent_ids, streamingMode: md };
+		this.sendRequest({
+			arguments: args,
+			method: 'torrent-set'
+		}, function() {
+			remote._controller.refreshTorrents([torrent_ids]);
+		});
+        }
+	},
+
 	cheatingModes: function(torrent_ids, md) {
 		var remote = this;
         if (md >= 0 && md <= 4) {

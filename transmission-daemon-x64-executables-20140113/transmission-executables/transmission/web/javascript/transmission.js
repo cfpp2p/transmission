@@ -187,6 +187,7 @@ Transmission.prototype =
 			context_move_up:              function() { tr.moveUp(); },
 			context_move_down:            function() { tr.moveDown(); },
 			context_move_bottom:          function() { tr.moveBottom(); },
+			context_streaming_mode:       function() { tr.streamingModeChangeSelected(); },
 			context_cheating_mode:        function() { tr.cheatingModeChangeSelected(); }
 		};
 
@@ -209,6 +210,10 @@ Transmission.prototype =
 			},
 
 			onShowMenu:        function(ev, menu) {
+				streamingMode = tr.getSelectedTorrents()[0].getStreamingMode();
+				option = $('#streamingModeSelect option[value='+streamingMode+']', menu);
+				if(typeof option.attr == 'function')
+					option.attr("selected", "selected");
 				cheatMode = tr.getSelectedTorrents()[0].getCheatMode();
 				option = $('#cheatModeSelect option[value='+cheatMode+']', menu);
 				if(typeof option.attr == 'function')
@@ -216,6 +221,9 @@ Transmission.prototype =
 				return menu;
 			}
 
+		});
+		$('#streamingModeSelect').change(function(ev) {
+			tr.streamingModesChangeSelected(ev.target.selectedIndex);
 		});
 		$('#cheatModeSelect').change(function(ev) {
 			tr.cheatingModesChangeSelected(ev.target.selectedIndex);
@@ -1005,6 +1013,15 @@ Transmission.prototype =
 
 	skipVerifySelectedTorrents: function() {
 		this.skipVerifyTorrents(this.getSelectedTorrents());
+	},
+
+	streamingModesChangeSelected: function(mds) {
+		this.streamingModesChange(this.getSelectedTorrents(), mds);
+	},
+
+	streamingModesChange: function(torrents, mds) {
+		this.remote.streamingModes(this.getTorrentIds(torrents), mds,
+		                           this.refreshTorrents, this);
 	},
 
 	cheatingModesChangeSelected: function(mds) {
