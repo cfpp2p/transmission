@@ -611,6 +611,8 @@ addField( const tr_torrent * const tor,
         tr_bencDictAddInt( d, key, st->addedDate );
     else if( tr_streq( key, keylen, "bandwidthPriority" ) )
         tr_bencDictAddInt( d, key, tr_torrentGetPriority( tor ) );
+    else if( tr_streq( key, keylen, "streamingMode" ) )
+        tr_bencDictAddInt( d, key, tr_torrentGetStreamingMode( tor ) );
     else if( tr_streq( key, keylen, "cheatMode" ) )
         tr_bencDictAddInt( d, key, tr_torrentGetCheatMode( tor ) );
     else if( tr_streq( key, keylen, "comment" ) )
@@ -1132,6 +1134,8 @@ torrentSet( tr_session               * session,
         if( tr_bencDictFindInt( args_in, "bandwidthPriority", &tmp ) )
             if( tr_isPriority( tmp ) )
                 tr_torrentSetPriority( tor, tmp );
+        if( tr_bencDictFindInt( args_in, "streamingMode", &tmp ) )
+                tr_torrentSetStreamingMode( tor, tmp );
         if( tr_bencDictFindInt( args_in, "cheatMode", &tmp ) )
                 tr_torrentSetCheatMode( tor, tmp );
         if( !errmsg && tr_bencDictFindList( args_in, "files-unwanted", &files ) )

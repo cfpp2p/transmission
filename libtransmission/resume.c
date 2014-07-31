@@ -48,6 +48,7 @@
 #define KEY_IDLELIMIT           "idle-limit"
 #define KEY_UPLOADED            "uploaded"
 #define KEY_CHEATMODE           "cheat-mode"
+#define KEY_STREAMINGMODE       "streaming-mode"
 
 #define KEY_SPEED_KiBps            "speed"
 #define KEY_SPEED_Bps              "speed-Bps"
@@ -304,6 +305,13 @@ saveCheatMode( tr_benc * dict, const tr_torrent * tor )
 }
 
 static void
+saveStreamingMode( tr_benc * dict, const tr_torrent * tor )
+{
+    tr_bencDictReserve( dict, 1 );
+    tr_bencDictAddInt( dict, KEY_STREAMINGMODE, tr_torrentGetStreamingMode( tor ) );
+}
+
+static void
 loadSingleSpeedLimit( tr_benc * d, tr_direction dir, tr_torrent * tor )
 {
     int64_t i;
@@ -418,6 +426,21 @@ loadCheatMode( tr_benc * dict, tr_torrent * tor)
     {
         tr_torrentSetCheatMode( tor, (uint8_t) val );
         ret = TR_FR_CHEATMODE;
+    }
+
+    return ret;
+}
+
+static uint64_t
+loadStreamingMode( tr_benc * dict, tr_torrent * tor)
+{
+    uint64_t ret = 0;
+    int64_t val;
+
+    if( tr_bencDictFindInt( dict, KEY_STREAMINGMODE, &val ) )
+    {
+        tr_torrentSetStreamingMode( tor, (uint8_t) val );
+        ret = TR_FR_STREAMINGMODE;
     }
 
     return ret;
@@ -683,6 +706,7 @@ tr_torrentSaveResume( tr_torrent * tor )
     saveSpeedLimits( &top, tor );
     saveRatioLimits( &top, tor );
     saveIdleLimits( &top, tor );
+    saveStreamingMode( &top, tor );
     saveCheatMode( &top, tor );
 
     filename = getResumeFilename( tor );
@@ -848,8 +872,12 @@ loadFromFile( tr_torrent * tor, uint64_t fieldsToLoad )
     if( fieldsToLoad & TR_FR_IDLELIMIT )
         fieldsLoaded |= loadIdleLimits( &top, tor );
 
+    if( fieldsToLoad & TR_FR_STREAMINGMODE )
+        fieldsLoaded |= loadStreamingMode( &top, tor );
+
     if( fieldsToLoad & TR_FR_CHEATMODE )
         fieldsLoaded |= loadCheatMode( &top, tor );
+
 
     /* loading the resume file triggers of a lot of changes,
      * but none of them needs to trigger a re-saving of the

@@ -1277,6 +1277,21 @@ void           tr_torrentSetCheatMode( tr_torrent * tor, tr_cheatMode_t mode );
 
 tr_cheatMode_t tr_torrentGetCheatMode( const tr_torrent * tor );
 
+typedef int8_t tr_streamingMode_t;
+
+enum
+{
+    TR_STREAMING_OFF      =  0,
+    TR_STREAMING_WEAK     =  1,
+    TR_STREAMING_PRIORITY =  2,
+    TR_STREAMING_WEIGHTED =  3,
+    TR_STREAMING_FORCED   =  4,
+    TR_STREAMING_COUNT
+};
+
+void           tr_torrentSetStreamingMode( tr_torrent * tor, tr_streamingMode_t mode );
+
+tr_streamingMode_t tr_torrentGetStreamingMode( const tr_torrent * tor );
 
 /****
 *****  Ratio Limits

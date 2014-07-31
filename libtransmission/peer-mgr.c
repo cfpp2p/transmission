@@ -167,7 +167,7 @@ struct block_request
 struct weighted_piece
 {
     tr_piece_index_t index;
-    int16_t salt;
+    tr_piece_index_t salt;
     int16_t requestCount;
 };
 
@@ -965,6 +965,13 @@ comparePieceByWeight( const void * va, const void * vb )
     const tr_torrent * tor = weightTorrent;
     const uint16_t * rep = weightReplication;
 
+    /* forced streaming */
+    if( tr_torrentGetStreamingMode( tor ) >= TR_STREAMING_FORCED )
+    {
+        if( a->salt < b->salt ) return -1;
+        if( a->salt > b->salt ) return 1;
+    }
+
     /* primary key: weight */
     missing = tr_cpMissingBlocksInPiece( &tor->completion, a->index );
     pending = a->requestCount;
@@ -975,11 +982,25 @@ comparePieceByWeight( const void * va, const void * vb )
     if( ia < ib ) return -1;
     if( ia > ib ) return 1;
 
+    /* weighted streaming */
+    if( tr_torrentGetStreamingMode( tor ) == TR_STREAMING_WEIGHTED )
+    {
+        if( a->salt < b->salt ) return -1;
+        if( a->salt > b->salt ) return 1;
+    }
+
     /* secondary key: higher priorities go first */
     ia = tor->info.pieces[a->index].priority;
     ib = tor->info.pieces[b->index].priority;
     if( ia > ib ) return -1;
     if( ia < ib ) return 1;
+
+    /* priority streaming */
+    if( tr_torrentGetStreamingMode( tor ) == TR_STREAMING_PRIORITY )
+    {
+        if( a->salt < b->salt ) return -1;
+        if( a->salt > b->salt ) return 1;
+    }
 
     /* tertiary key: rarest first. */
     ia = rep[a->index];
@@ -1090,6 +1111,9 @@ pieceListRebuild( Torrent * t )
 
     if( !tr_torrentIsSeed( t->tor ) )
     {
+
+//        tr_streamingMode_t streamingMode = tr_torrentGetStreamingMode( t->tor );
+
         tr_piece_index_t i;
         tr_piece_index_t * pool;
         tr_piece_index_t poolCount = 0;
@@ -1110,7 +1134,14 @@ pieceListRebuild( Torrent * t )
             struct weighted_piece * piece = pieces + i;
             piece->index = pool[i];
             piece->requestCount = 0;
-            piece->salt = tr_cryptoWeakRandInt( 4096 );
+//            piece->salt = tr_cryptoWeakRandInt( 4096 );
+
+            if( tr_torrentGetStreamingMode( t->tor ) > TR_STREAMING_OFF )
+                piece->salt = piece->index;
+            else
+                piece->salt = (tr_piece_index_t)tr_cryptoWeakRandInt( 4096 );
+			
+
         }
 
         /* if we already had a list of pieces, merge it into
