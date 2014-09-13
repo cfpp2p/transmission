@@ -1,0 +1,5 @@
+Nightly changelog
+
+September 12, 2014
+FIX Incorrect error message when failing to write to disk 
+ https://forum.transmissionbt.com/viewtopic.php?f=2&t=16422
