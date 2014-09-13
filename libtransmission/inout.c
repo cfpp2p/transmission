@@ -143,6 +143,12 @@ readOrWriteBytes( tr_session       * session,
                 err = errno;
                 tr_torerr( tor, "tr_fdFileCheckout failed for \"%s\": %s",
                            filename, tr_strerror( err ) );
+
+                if( ( err != 0 ) && (ioMode == TR_IO_WRITE ) && ( tor->error != TR_STAT_LOCAL_ERROR ) )
+                {
+                    tr_torrentSetLocalError( tor, "%s (%s)", tr_strerror( err ), filename );
+                }
+
             }
             else if( doWrite )
             {
@@ -176,6 +182,43 @@ readOrWriteBytes( tr_session       * session,
                 err = errno;
                 tr_torerr( tor, "write failed for \"%s\": %s",
                            file->name, tr_strerror( err ) );
+
+                if( ( err != 0 ) && ( tor->error != TR_STAT_LOCAL_ERROR ) )
+                {
+
+                    char * cSubpath;
+                    const char * cBase;
+                    bool cFileExists;
+
+                    /* see if the file exists... */
+//                    if( !tr_torrentFindFile2( tor, fileIndex, &base, &subpath, NULL ) )
+                    if( file->usept )
+                    {
+                        cFileExists = tr_torrentFindPieceTemp2( tor, pieceIndex,
+                                                                &cBase, &cSubpath );
+                    }
+                    else
+                    {
+                        cFileExists = tr_torrentFindFile2( tor, fileIndex,
+                                                           &cBase, &cSubpath, NULL );
+
+                        if( !cFileExists )
+                        {
+                            cBase = tr_torrentGetCurrentDir( tor );
+
+                            if( tr_sessionIsIncompleteFileNamingEnabled( tor->session ) )
+                                cSubpath = tr_torrentBuildPartial( tor, fileIndex );
+                            else
+                                cSubpath = tr_strdup( file->name );
+                        }
+                    }
+
+                    char * cFilename = tr_buildPath( cBase, cSubpath, NULL );
+                    tr_torrentSetLocalError( tor, "%s (%s)", tr_strerror( err ), cFilename );
+                    tr_free( cFilename );
+                    tr_free( cSubpath );
+                }
+
             }
         } else if( ioMode == TR_IO_PREFETCH ) {
 //          tr_prefetch( fd, fileOffset, buflen );
@@ -290,12 +333,6 @@ readOrWritePiece( tr_torrent       * tor,
 //        ++fileIndex;
 //        fileOffset = 0;
 
-        if( ( err != 0 ) && (ioMode == TR_IO_WRITE ) && ( tor->error != TR_STAT_LOCAL_ERROR ) )
-        {
-            char * path = tr_buildPath( tor->downloadDir, file->name, NULL );
-            tr_torrentSetLocalError( tor, "%s (%s)", tr_strerror( err ), path );
-            tr_free( path );
-        }
     }
 
     return err;
