@@ -304,7 +304,7 @@ tr_sessionGetDefaultSettings( tr_benc * d )
 {
     assert( tr_bencIsDict( d ) );
 
-    tr_bencDictReserve( d, 64 );
+    tr_bencDictReserve( d, 67 );
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_ENABLED,               false );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_BLOCKLIST_URL,                   "http://www.example.com/blocklist" );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_MAX_CACHE_SIZE_MB,               DEFAULT_CACHE_SIZE_MB );
@@ -349,8 +349,10 @@ tr_sessionGetDefaultSettings( tr_benc * d )
     tr_bencDictAddInt ( d, TR_PREFS_KEY_RPC_PORT,                        atoi( TR_DEFAULT_RPC_PORT_STR ) );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_RPC_URL,                         TR_DEFAULT_RPC_URL_STR );
     tr_bencDictAddBool( d, TR_PREFS_KEY_SCRAPE_PAUSED_TORRENTS,          true );
-    tr_bencDictAddBool( d, TR_PREFS_KEY_PREFETCH_MAGNETS,                false );
-    tr_bencDictAddInt ( d, TR_PREFS_KEY_REVERIFY_TORRENTS,                0 );
+    tr_bencDictAddBool( d, TR_PREFS_KEY_PREFETCH_MAGNETS,                true );
+    tr_bencDictAddInt ( d, TR_PREFS_KEY_REVERIFY_TORRENTS,               0 );
+    tr_bencDictAddStr ( d, TR_PREFS_KEY_SCRIPT_TORRENT_ADDED_FILENAME,   "" );
+    tr_bencDictAddBool( d, TR_PREFS_KEY_SCRIPT_TORRENT_ADDED_ENABLED,    false );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_SCRIPT_TORRENT_DONE_FILENAME,    "" );
     tr_bencDictAddBool( d, TR_PREFS_KEY_SCRIPT_TORRENT_DONE_ENABLED,     false );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_SEED_QUEUE_SIZE,                 10 );
@@ -377,7 +379,7 @@ tr_sessionGetSettings( tr_session * s, struct tr_benc * d )
 {
     assert( tr_bencIsDict( d ) );
 
-    tr_bencDictReserve( d, 65 );
+    tr_bencDictReserve( d, 68 );
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_ENABLED,                tr_blocklistIsEnabled( s ) );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_BLOCKLIST_URL,                    tr_blocklistGetURL( s ) );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_MAX_CACHE_SIZE_MB,                tr_sessionGetCacheLimit_MB( s ) );
@@ -425,6 +427,8 @@ tr_sessionGetSettings( tr_session * s, struct tr_benc * d )
     tr_bencDictAddBool( d, TR_PREFS_KEY_SCRAPE_PAUSED_TORRENTS,           s->scrapePausedTorrents );
     tr_bencDictAddBool( d, TR_PREFS_KEY_PREFETCH_MAGNETS,                 s->prefetchMagnets );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_REVERIFY_TORRENTS,                s->reverifyTorrents );
+    tr_bencDictAddBool( d, TR_PREFS_KEY_SCRIPT_TORRENT_ADDED_ENABLED,     tr_sessionIsTorrentAddedScriptEnabled( s ) );
+    tr_bencDictAddStr ( d, TR_PREFS_KEY_SCRIPT_TORRENT_ADDED_FILENAME,    tr_sessionGetTorrentAddedScript( s ) );
     tr_bencDictAddBool( d, TR_PREFS_KEY_SCRIPT_TORRENT_DONE_ENABLED,      tr_sessionIsTorrentDoneScriptEnabled( s ) );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_SCRIPT_TORRENT_DONE_FILENAME,     tr_sessionGetTorrentDoneScript( s ) );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_SEED_QUEUE_SIZE,                  tr_sessionGetQueueSize( s, TR_UP ) );
@@ -919,6 +923,11 @@ sessionSetImpl( void * vdata )
     /**
     ***  Scripts
     **/
+
+    if( tr_bencDictFindBool( settings, TR_PREFS_KEY_SCRIPT_TORRENT_ADDED_ENABLED, &boolVal ) )
+        tr_sessionSetTorrentAddedScriptEnabled( session, boolVal );
+    if( tr_bencDictFindStr( settings, TR_PREFS_KEY_SCRIPT_TORRENT_ADDED_FILENAME, &str ) )
+        tr_sessionSetTorrentAddedScript( session, str );
 
     if( tr_bencDictFindBool( settings, TR_PREFS_KEY_SCRIPT_TORRENT_DONE_ENABLED, &boolVal ) )
         tr_sessionSetTorrentDoneScriptEnabled( session, boolVal );
@@ -1912,6 +1921,7 @@ tr_sessionClose( tr_session * session )
         tr_bencFree( session->metainfoLookup );
         tr_free( session->metainfoLookup );
     }
+    tr_free( session->torrentAddedScript );
     tr_free( session->torrentDoneScript );
     tr_free( session->tag );
     tr_free( session->configDir );
@@ -2631,6 +2641,47 @@ tr_sessionGetRPCBindAddress( const tr_session * session )
     assert( tr_isSession( session ) );
 
     return tr_rpcGetBindAddress( session->rpcServer );
+}
+
+/****
+*****
+****/
+
+bool
+tr_sessionIsTorrentAddedScriptEnabled( const tr_session * session )
+{
+    assert( tr_isSession( session ) );
+
+    return session->isTorrentAddedScriptEnabled;
+}
+
+void
+tr_sessionSetTorrentAddedScriptEnabled( tr_session * session, bool isEnabled )
+{
+    assert( tr_isSession( session ) );
+    assert( tr_isBool( isEnabled ) );
+
+    session->isTorrentAddedScriptEnabled = isEnabled;
+}
+
+const char *
+tr_sessionGetTorrentAddedScript( const tr_session * session )
+{
+    assert( tr_isSession( session ) );
+
+    return session->torrentAddedScript;
+}
+
+void
+tr_sessionSetTorrentAddedScript( tr_session * session, const char * scriptFilename )
+{
+    assert( tr_isSession( session ) );
+
+    if( session->torrentAddedScript != scriptFilename )
+    {
+        tr_free( session->torrentAddedScript );
+        session->torrentAddedScript = tr_strdup( scriptFilename );
+    }
 }
 
 /****

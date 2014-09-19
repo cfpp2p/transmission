@@ -207,6 +207,8 @@ const char* tr_getDefaultDownloadDir( void );
 #define TR_PREFS_KEY_SCRAPE_PAUSED_TORRENTS             "scrape-paused-torrents-enabled"
 #define TR_PREFS_KEY_PREFETCH_MAGNETS                   "prefetch-magnets-enabled"
 #define TR_PREFS_KEY_REVERIFY_TORRENTS                  "reverify-torrents-tries"
+#define TR_PREFS_KEY_SCRIPT_TORRENT_ADDED_FILENAME      "script-torrent-added-filename"
+#define TR_PREFS_KEY_SCRIPT_TORRENT_ADDED_ENABLED       "script-torrent-added-enabled"
 #define TR_PREFS_KEY_SCRIPT_TORRENT_DONE_FILENAME       "script-torrent-done-filename"
 #define TR_PREFS_KEY_SCRIPT_TORRENT_DONE_ENABLED        "script-torrent-done-enabled"
 #define TR_PREFS_KEY_SEED_QUEUE_SIZE                    "seed-queue-size"
@@ -859,6 +861,18 @@ void tr_torrentSetQueueStartCallback( tr_torrent * torrent, void (*callback)( tr
 tr_torrent ** tr_sessionLoadTorrents( tr_session  * session,
                                       tr_ctor     * ctor,
                                       int         * setmeCount );
+
+/**
+***
+**/
+
+bool tr_sessionIsTorrentAddedScriptEnabled( const tr_session * );
+
+void tr_sessionSetTorrentAddedScriptEnabled( tr_session *, bool isEnabled );
+
+const char * tr_sessionGetTorrentAddedScript( const tr_session * );
+
+void tr_sessionSetTorrentAddedScript( tr_session *, const char * scriptFilename );
 
 /**
 ***
