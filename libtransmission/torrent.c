@@ -7,7 +7,7 @@
  * This exemption does not extend to derived works not owned by
  * the Transmission project.
  *
- * $Id: torrent.c 12931 2011-09-28 16:06:19Z jordan $
+ * $Id: torrent.c 14308 2014-09-19 14:54:41Z jordan $
  */
 
 #include <signal.h> /* signal() */
@@ -885,19 +885,77 @@ torrentDataExists( const tr_torrent * tor )
     spath = tr_strdup_printf( "%s.part", tr_torrentName( tor ) );
     path = tr_buildPath( tr_torrentGetCurrentDir( tor ), spath, NULL );
     exists = fileExists( path, NULL );
-        if( !exists )
-        {
-            path = NULL;
-            spath = NULL;
-            spath = tr_metainfoGetBasename( &tor->info );
-            path = tr_buildPath( tr_sessionGetPieceTempDir( tor->session ), spath, NULL );
-            exists = fileExists( path, NULL );
-        }
     tr_free( spath );
+    if( !exists )
+        exists = fileExists( tor->pieceTempDir, NULL );
     }
     tr_free( path );
     return exists;
 
+}
+
+static void
+onSigCHLD (int i UNUSED)
+{
+#ifdef WIN32
+
+  _cwait (NULL, -1, WAIT_CHILD);
+
+#else
+
+  int rc;
+  do
+    rc = waitpid (-1, NULL, WNOHANG);
+  while (rc>0 || (rc==-1 && errno==EINTR));
+
+#endif
+}
+
+static void
+torrentCallScript( const tr_torrent * tor, const char * script )
+{
+    char timeStr[128];
+    const time_t now = tr_time( );
+
+    tr_strlcpy( timeStr, ctime( &now ), sizeof( timeStr ) );
+    *strchr( timeStr,'\n' ) = '\0';
+
+    if( script && *script )
+    {
+        int i;
+        char * cmd[] = { tr_strdup( script ), NULL };
+        char * env[] = {
+            tr_strdup_printf( "TR_APP_VERSION=%s", SHORT_VERSION_STRING ),
+            tr_strdup_printf( "TR_TIME_LOCALTIME=%s", timeStr ),
+            tr_strdup_printf( "TR_TORRENT_DIR=%s", tor->currentDir ),
+            tr_strdup_printf( "TR_TORRENT_ID=%d", tr_torrentId( tor ) ),
+            tr_strdup_printf( "TR_TORRENT_HASH=%s", tor->info.hashString ),
+            tr_strdup_printf( "TR_TORRENT_NAME=%s", tr_torrentName( tor ) ),
+            NULL };
+
+        tr_torinf( tor, "Calling script \"%s\"", script );
+
+#ifdef WIN32
+        if (_spawnvpe (_P_NOWAIT, script, (const char*)cmd, env) == -1)
+          tr_torerr (tor, "error executing script \"%s\": %s", cmd[0], tr_strerror (errno));
+#else
+        signal( SIGCHLD, onSigCHLD );
+
+        if( !fork( ) )
+        {
+            for (i=0; env[i]; ++i)
+                putenv(env[i]);
+				
+            if (execvp (script, cmd) == -1)
+              tr_torerr (tor, "error executing script \"%s\": %s", cmd[0], tr_strerror (errno));
+
+            _exit( 0 );
+        }
+#endif
+
+        for( i=0; cmd[i]; ++i ) tr_free( cmd[i] );
+        for( i=0; env[i]; ++i ) tr_free( env[i] );
+    }
 }
 
 static void
@@ -966,7 +1024,7 @@ torrentInit( tr_torrent * tor, const tr_ctor * ctor )
     tr_ctorInitTorrentWanted( ctor, tor );
 
     refreshCurrentDir( tor );
-    tr_mkdirp( tor->pieceTempDir, 0777 );
+//    tr_mkdirp( tor->pieceTempDir, 0777 );
 
     doStart = tor->isRunning;
     tor->isRunning = 0;
@@ -1044,7 +1102,15 @@ torrentInit( tr_torrent * tor, const tr_ctor * ctor )
         else
             {
                 tor->startAfterVerify = false;
-                tr_torrentVerify( tor );
+                if( tr_torrentHasMetadata( tor ) )
+                    {
+                        tr_torrentVerify( tor );
+                        tr_mkdirp( tor->pieceTempDir, 0777 );
+
+                        if (tr_sessionIsTorrentAddedScriptEnabled (tor->session))
+                          torrentCallScript (tor, tr_sessionGetTorrentAddedScript (tor->session));
+                    }
+
                 if( doStart ) torrentStart( tor, false );
             }
     }
@@ -1792,7 +1858,10 @@ torrentStart( tr_torrent * tor, bool bypass_queue )
         case TR_STATUS_CHECK_WAIT:
             /* verifying right now... wait until that's done so
              * we'll know what completeness to use/announce */
-            tor->startAfterVerify = true;
+            if( fileExists( tor->pieceTempDir, NULL ) )
+                tor->startAfterVerify = true;
+//            else
+//                tor->startAfterVerify = false;
             return;
             break;
 
@@ -1893,7 +1962,10 @@ verifyTorrent( void * vtor )
         /* don't clobber isStopping */
         const bool startAfter = tor->isStopping ? false : true;
         tr_torrentStop( tor );
-        tor->startAfterVerify = startAfter;
+        if( fileExists( tor->pieceTempDir, NULL ) )
+            tor->startAfterVerify = startAfter;
+        else
+            tor->startAfterVerify = false;
     }
 
     if( localErrFilesDisappearedUE( tor ) )
@@ -1953,8 +2025,12 @@ setTorrentFilesVerified( void * vtor )
     tr_sessionLock( tor->session );
 
     tr_verifyRemove( tor );
-    if( tor->startAfterVerify || tor->isRunning ) {
+    if( ( fileExists( tor->pieceTempDir, NULL ) ) && ( tor->startAfterVerify || tor->isRunning ) ) {
         startAfter = !tor->isStopping;
+
+//        if( !fileExists( tor->pieceTempDir, NULL ) )
+//            startAfter = false;
+
         tr_torrentStop( tor );
     }
 
@@ -2019,7 +2095,16 @@ stopTorrent( void * vtor )
         tor->magnetVerify = false;
         tr_torinf( tor, "Magnet Verify" );
         refreshCurrentDir( tor );
+        const bool startMagAfter = tor->startAfterVerify;
+        tor->startAfterVerify = false;
         tr_torrentVerify( tor );
+        tr_mkdirp( tor->pieceTempDir, 0777 );
+
+        if (tr_sessionIsTorrentAddedScriptEnabled (tor->session))
+          torrentCallScript (tor, tr_sessionGetTorrentAddedScript (tor->session));
+
+        if( startMagAfter ) torrentStart( tor, false );
+
     }
 }
 
@@ -2274,59 +2359,6 @@ tr_torrentClearIdleLimitHitCallback( tr_torrent * torrent )
     tr_torrentSetIdleLimitHitCallback( torrent, NULL, NULL );
 }
 
-static void
-onSigCHLD( int i UNUSED )
-{
-    waitpid( -1, NULL, WNOHANG );
-}
-
-static void
-torrentCallScript( const tr_torrent * tor, const char * script )
-{
-    char timeStr[128];
-    const time_t now = tr_time( );
-
-    tr_strlcpy( timeStr, ctime( &now ), sizeof( timeStr ) );
-    *strchr( timeStr,'\n' ) = '\0';
-
-    if( script && *script )
-    {
-        int i;
-        char * cmd[] = { tr_strdup( script ), NULL };
-        char * env[] = {
-            tr_strdup_printf( "TR_APP_VERSION=%s", SHORT_VERSION_STRING ),
-            tr_strdup_printf( "TR_TIME_LOCALTIME=%s", timeStr ),
-            tr_strdup_printf( "TR_TORRENT_DIR=%s", tor->currentDir ),
-            tr_strdup_printf( "TR_TORRENT_ID=%d", tr_torrentId( tor ) ),
-            tr_strdup_printf( "TR_TORRENT_HASH=%s", tor->info.hashString ),
-            tr_strdup_printf( "TR_TORRENT_NAME=%s", tr_torrentName( tor ) ),
-            NULL };
-
-        tr_torinf( tor, "Calling script \"%s\"", script );
-
-#ifdef WIN32
-        if (_spawnvpe (_P_NOWAIT, script, (const char*)cmd, env) == -1)
-          tr_torerr (tor, "error executing script \"%s\": %s", cmd[0], tr_strerror (errno));
-#else
-        signal( SIGCHLD, onSigCHLD );
-
-        if( !fork( ) )
-        {
-            for (i=0; env[i]; ++i)
-                putenv(env[i]);
-				
-            if (execvp (script, cmd) == -1)
-              tr_torerr (tor, "error executing script \"%s\": %s", cmd[0], tr_strerror (errno));
-
-            _exit( 0 );
-        }
-#endif
-
-        for( i=0; cmd[i]; ++i ) tr_free( cmd[i] );
-        for( i=0; env[i]; ++i ) tr_free( env[i] );
-    }
-}
-
 void
 tr_torrentRecheckCompleteness( tr_torrent * tor )
 {
@@ -2484,7 +2516,7 @@ tr_torrentGetFilePriorities( const tr_torrent * tor )
 ****
 ***/
 
-static bool fileExists( const char * filename, time_t * optional_mtime );
+// static bool fileExists( const char * filename, time_t * optional_mtime );
 
 bool
 tr_torrentFindPieceTemp2( const tr_torrent  * tor,
@@ -3266,7 +3298,7 @@ removeEmptyFoldersAndJunkFiles( const char * folder )
     }
 }
 
-static bool fileExists( const char * filename, time_t * optional_mtime );
+// static bool fileExists( const char * filename, time_t * optional_mtime );
 
 /**
  * This convoluted code does something (seemingly) simple:

@@ -1668,6 +1668,10 @@ sessionSet( tr_session               * session,
         tr_sessionSetQueueEnabled ( session, TR_UP, boolVal );
     if( tr_bencDictFindInt( args_in, TR_PREFS_KEY_SEED_QUEUE_SIZE, &i ) )
         tr_sessionSetQueueSize( session, TR_UP, i );
+    if( tr_bencDictFindStr( args_in, TR_PREFS_KEY_SCRIPT_TORRENT_ADDED_FILENAME, &str ) )
+        tr_sessionSetTorrentAddedScript( session, str );
+    if( tr_bencDictFindBool( args_in, TR_PREFS_KEY_SCRIPT_TORRENT_ADDED_ENABLED, &boolVal ) )
+        tr_sessionSetTorrentAddedScriptEnabled( session, boolVal );
     if( tr_bencDictFindStr( args_in, TR_PREFS_KEY_SCRIPT_TORRENT_DONE_FILENAME, &str ) )
         tr_sessionSetTorrentDoneScript( session, str );
     if( tr_bencDictFindBool( args_in, TR_PREFS_KEY_SCRIPT_TORRENT_DONE_ENABLED, &boolVal ) )
@@ -1796,6 +1800,8 @@ sessionGet( tr_session               * s,
     tr_bencDictAddBool( d, TR_PREFS_KEY_USPEED_ENABLED, tr_sessionIsSpeedLimited( s, TR_UP ) );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_DSPEED_KBps, tr_sessionGetSpeedLimit_KBps( s, TR_DOWN ) );
     tr_bencDictAddBool( d, TR_PREFS_KEY_DSPEED_ENABLED, tr_sessionIsSpeedLimited( s, TR_DOWN ) );
+    tr_bencDictAddStr ( d, TR_PREFS_KEY_SCRIPT_TORRENT_ADDED_FILENAME, tr_sessionGetTorrentAddedScript( s ) );
+    tr_bencDictAddBool( d, TR_PREFS_KEY_SCRIPT_TORRENT_ADDED_ENABLED, tr_sessionIsTorrentAddedScriptEnabled( s ) );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_SCRIPT_TORRENT_DONE_FILENAME, tr_sessionGetTorrentDoneScript( s ) );
     tr_bencDictAddBool( d, TR_PREFS_KEY_SCRIPT_TORRENT_DONE_ENABLED, tr_sessionIsTorrentDoneScriptEnabled( s ) );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_QUEUE_STALLED_MINUTES, tr_sessionGetQueueStalledMinutes( s ) );
