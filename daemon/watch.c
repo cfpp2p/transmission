@@ -86,7 +86,7 @@ watchdir_new_impl( dtr_watchdir * w )
         {
             const char * name = d->d_name;
 
-            if( !tr_str_has_suffix( name, ".torrent" ) ) /* skip non-torrents */
+            if (!tr_str_has_suffix (name, ".torrent") && !tr_str_has_suffix (name, ".magnet") ) /* skip non-torrents */
                 continue;
 
             tr_inf( "Found new .torrent file \"%s\" in watchdir \"%s\"", name, w->dir );
@@ -136,7 +136,7 @@ watchdir_update_impl( dtr_watchdir * w )
         while (i < len) {
             struct inotify_event * event = (struct inotify_event *) &buf[i];
             const char * name = event->name;
-            if( tr_str_has_suffix( name, ".torrent" ) )
+            if (tr_str_has_suffix (name, ".torrent") || tr_str_has_suffix (name, ".magnet") )
             {
                 tr_inf( "Found new .torrent file \"%s\" in watchdir \"%s\"", name, w->dir );
                 w->callback( w->session, w->dir, name );
@@ -217,7 +217,7 @@ watchdir_update_impl( dtr_watchdir * w )
 
             if( !name || *name=='.' ) /* skip dotfiles */
                 continue;
-            if( !tr_str_has_suffix( name, ".torrent" ) ) /* skip non-torrents */
+            if (!tr_str_has_suffix (name, ".torrent") && !tr_str_has_suffix (name, ".magnet") ) /* skip non-torrents */
                 continue;
 
             len = strlen( name );

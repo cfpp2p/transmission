@@ -261,7 +261,18 @@ onFileAdded( tr_session * session, const char * dir, const char * file )
 {
     char * filename = tr_buildPath( dir, file, NULL );
     tr_ctor * ctor = tr_ctorNew( session );
-    int err = tr_ctorSetMetainfoFromFile( ctor, filename );
+//    int err = tr_ctorSetMetainfoFromFile( ctor, filename );
+
+    int err;
+    if (tr_str_has_suffix (file, ".torrent"))
+        err = tr_ctorSetMetainfoFromFile (ctor, filename);
+    else {
+        char * link;
+        size_t    len;
+        link = (char*)tr_loadFile (filename, &len);
+        err = tr_ctorSetMetainfoFromMagnetLink (ctor, link);
+        tr_free(link);
+    }
 
     if( !err )
     {
