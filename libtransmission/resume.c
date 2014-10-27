@@ -7,7 +7,7 @@
  * This exemption does not extend to derived works not owned by
  * the Transmission project.
  *
- * $Id: resume.c 12921 2011-09-26 22:50:42Z jordan $
+ * $Id: resume.c 14309 2014-10-26 12:24:48Z jordan $
  */
 
 #include <unistd.h> /* unlink */
@@ -687,10 +687,12 @@ tr_torrentSaveResume( tr_torrent * tor )
     tr_bencDictAddInt( &top, KEY_ADDED_DATE, tor->addedDate );
     tr_bencDictAddInt( &top, KEY_CORRUPT, tor->corruptPrev + tor->corruptCur );
     tr_bencDictAddInt( &top, KEY_DONE_DATE, tor->doneDate );
-    tr_bencDictAddStr( &top, KEY_DOWNLOAD_DIR, tor->downloadDir );
+    if( tor->downloadDir != NULL )
+        tr_bencDictAddStr( &top, KEY_DOWNLOAD_DIR, tor->downloadDir );
     if( tor->incompleteDir != NULL )
         tr_bencDictAddStr( &top, KEY_INCOMPLETE_DIR, tor->incompleteDir );
-    tr_bencDictAddStr( &top, KEY_PIECE_TEMP_DIR, tor->pieceTempDir );
+    if( tor->pieceTempDir != NULL )
+        tr_bencDictAddStr( &top, KEY_PIECE_TEMP_DIR, tor->pieceTempDir );
     tr_bencDictAddInt( &top, KEY_DOWNLOADED, tor->downloadedPrev + tor->downloadedCur );
     tr_bencDictAddInt( &top, KEY_UPLOADED, tor->uploadedPrev + tor->uploadedCur );
     tr_bencDictAddInt( &top, KEY_MAX_PEERS, tor->maxConnectedPeers );
@@ -710,12 +712,20 @@ tr_torrentSaveResume( tr_torrent * tor )
     saveCheatMode( &top, tor );
 
     filename = getResumeFilename( tor );
-    if(( err = tr_bencToFile( &top, TR_FMT_BENC, filename )))
+
+    if( ( tor->downloadDir == NULL ) || ( tor->pieceTempDir == NULL ) )
     {
-        bool was = tor->isStopping;
-        tr_torrentSetLocalError( tor, "Unable to save resume file: %s", tr_strerror( err ) );
-        tor->isStopping = was;
+        bool wasn = tor->isStopping;
+        tr_torrentSetLocalError( tor, "%s", _( "Illegal (null) download and/or pieceTemp directory" ) );
+        tor->isStopping = wasn;
     }
+    else if(( err = tr_bencToFile( &top, TR_FMT_BENC, filename )))
+        {
+            bool was = tor->isStopping;
+            tr_torrentSetLocalError( tor, "Unable to save resume file: %s", tr_strerror( err ) );
+            tor->isStopping = was;
+        }
+
     tr_free( filename );
 
     tr_bencFree( &top );
