@@ -494,7 +494,7 @@ static char * auth = NULL;
 static char * netrc = NULL;
 static char * sessionId = NULL;
 static bool UseSSL = false;
-
+/*
 static char*
 tr_getcwd( void )
 {
@@ -528,7 +528,7 @@ absolutify( const char * path )
 
     return buf;
 }
-
+*/
 static char*
 getEncodedMetainfo( const char * filename )
 {
@@ -2179,6 +2179,7 @@ processArgs( const char * rpcurl, int argc, const char ** argv )
             if( tadd )
             {
                 tr_benc * args = tr_bencDictFind( tadd, ARGUMENTS );
+
                 tr_bencDictAddStr( args, "download-dir", optarg );
             }
             else
@@ -2188,7 +2189,9 @@ processArgs( const char * rpcurl, int argc, const char ** argv )
                 tr_bencInitDict( top, 2 );
                 tr_bencDictAddStr( top, "method", "torrent-set-location" );
                 args = tr_bencDictAddDict( top, ARGUMENTS, 3 );
+
                 tr_bencDictAddStr( args, "location", optarg );
+
                 tr_bencDictAddBool( args, "move", false );
                 addIdArg( args, id );
                 status |= flush( rpcurl, &top );
@@ -2234,6 +2237,7 @@ processArgs( const char * rpcurl, int argc, const char ** argv )
             }
             case 'w':
             {
+/*
                 char * path = absolutify( optarg );
                 if( tadd )
                     tr_bencDictAddStr( tr_bencDictFind( tadd, "arguments" ), "download-dir", path );
@@ -2242,6 +2246,11 @@ processArgs( const char * rpcurl, int argc, const char ** argv )
                     tr_bencDictAddStr( args, "download-dir", path );
                 }
                 tr_free( path );
+*/
+                tr_benc * args = tadd ? tr_bencDictFind( tadd, "arguments" ) : ensure_sset( &sset );
+
+                tr_bencDictAddStr( args, "download-dir", optarg );
+
                 break;
             }
             case 850:
@@ -2335,7 +2344,9 @@ processArgs( const char * rpcurl, int argc, const char ** argv )
                 tr_bencInitDict( top, 2 );
                 tr_bencDictAddStr( top, "method", "torrent-set-location" );
                 args = tr_bencDictAddDict( top, ARGUMENTS, 3 );
+
                 tr_bencDictAddStr( args, "location", optarg );
+
                 tr_bencDictAddBool( args, "move", true );
                 addIdArg( args, id );
                 status |= flush( rpcurl, &top );

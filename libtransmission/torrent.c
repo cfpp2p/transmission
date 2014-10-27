@@ -7,7 +7,7 @@
  * This exemption does not extend to derived works not owned by
  * the Transmission project.
  *
- * $Id: torrent.c 14308 2014-09-19 14:54:41Z jordan $
+ * $Id: torrent.c 12931 2011-09-28 16:06:19Z jordan $
  */
 
 #include <signal.h> /* signal() */
@@ -958,6 +958,30 @@ torrentCallScript( const tr_torrent * tor, const char * script )
     }
 }
 
+static bool
+path_is_bad( const char * path )
+{
+    if( ( path == NULL ) || ( *path == '\0' ) ) return true;
+	
+    //do NOT allow backward traverse
+    if( !strncmp( path, "../", 3 ) ) return true;
+    if( ( strstr( path, "/../" ) != NULL ) ) return true;
+
+    // check for path end that allows backward traverse
+    if( strlen( path ) > 2 ) {
+        const char * endOfString = strrchr( path, '\0' );
+        --endOfString;
+        --endOfString;
+        if( ( !strcmp( --endOfString, "/.." ) ) ) return true;
+        return false;
+    }
+
+    if( ( strlen( path ) == 2 )
+        && ( !strcmp( path, ".." ) ) ) return true;
+
+    return false;
+}
+
 static void
 torrentInit( tr_torrent * tor, const tr_ctor * ctor )
 {
@@ -986,10 +1010,12 @@ torrentInit( tr_torrent * tor, const tr_ctor * ctor )
              tor->info.hash, SHA_DIGEST_LENGTH,
              NULL );
 
+    tor->downloadDir = NULL;
     if( !tr_ctorGetDownloadDir( ctor, TR_FORCE, &dir ) ||
         !tr_ctorGetDownloadDir( ctor, TR_FALLBACK, &dir ) )
             tor->downloadDir = tr_strdup( dir );
 
+    tor->incompleteDir = NULL;
     if( tr_ctorGetIncompleteDir( ctor, &dir ) )
         dir = tr_sessionGetIncompleteDir( session );
     if( tr_sessionIsIncompleteDirEnabled( session ) )
@@ -1023,8 +1049,39 @@ torrentInit( tr_torrent * tor, const tr_ctor * ctor )
     tr_ctorInitTorrentPriorities( ctor, tor );
     tr_ctorInitTorrentWanted( ctor, tor );
 
-    refreshCurrentDir( tor );
+    tor->currentDir = NULL;
+    if( ( tor->downloadDir != NULL ) || ( tor->incompleteDir != NULL ) )
+        refreshCurrentDir( tor );
 //    tr_mkdirp( tor->pieceTempDir, 0777 );
+
+    if( path_is_bad( tor->pieceTempDir ) )
+    {
+        tr_torrentSetLocalError( tor, "Illegal pieceTemp directory: (%s) Change default setting then remove/re-add torrent", tor->pieceTempDir );
+        tor->isRunning = 0;
+    }
+
+    if( path_is_bad( tor->currentDir ) )
+    {
+        if( ( path_is_bad( tor->incompleteDir ) ) && ( tor->incompleteDir != NULL ) )
+        {
+            tr_torrentSetLocalError( tor, "Illegal incomplete directory: (%s) restart torrent to IGNORE, maybe change default incomplete directory", tor->incompleteDir );
+            tor->incompleteDir = NULL;
+            refreshCurrentDir( tor );
+            tor->isRunning = 0;
+        }
+        else
+        {
+// should always be redundant with tor downloadDir
+            tr_torrentSetLocalError( tor, "Illegal currentDir: (%s) Use torrent set-location, maybe change default download/incomplete directory, restart torrent", tor->currentDir );
+            tor->isRunning = 0;
+        }
+    }
+
+    if( path_is_bad( tor->downloadDir ) )
+    {
+        tr_torrentSetLocalError( tor, "Illegal download directory: (%s) Use torrent set-location, change default download directory if needed, and restart torrent", tor->downloadDir );
+        tor->isRunning = 0;
+    }
 
     doStart = tor->isRunning;
     tor->isRunning = 0;
@@ -1105,7 +1162,9 @@ torrentInit( tr_torrent * tor, const tr_ctor * ctor )
                 if( tr_torrentHasMetadata( tor ) )
                     {
                         tr_torrentVerify( tor );
-                        tr_mkdirp( tor->pieceTempDir, 0777 );
+
+                        if( ( !path_is_bad( tor->pieceTempDir ) ) )
+                            tr_mkdirp( tor->pieceTempDir, 0777 );
 
                         if (tr_sessionIsTorrentAddedScriptEnabled (tor->session))
                           torrentCallScript (tor, tr_sessionGetTorrentAddedScript (tor->session));
@@ -1841,6 +1900,34 @@ torrentShouldQueue( const tr_torrent * tor )
 static void
 torrentStart( tr_torrent * tor, bool bypass_queue )
 {
+
+    if( path_is_bad( tor->downloadDir ) )
+    {
+        tr_torrentSetLocalError( tor, "Illegal download directory: (%s) Use torrent set-location, change default download directory if needed, and restart torrent", tor->downloadDir );
+        return;
+    }
+
+    if( path_is_bad( tor->currentDir ) )
+    {
+        if( ( path_is_bad( tor->incompleteDir ) ) && ( tor->incompleteDir != NULL ) )
+        {
+            tr_torrentSetLocalError( tor, "Illegal incomplete directory: (%s) Change default setting then remove/re-add torrent", tor->incompleteDir );
+            return;
+        }
+        else
+// this should never happen
+        {
+            tr_torrentSetLocalError( tor, "Illegal currentDir: (%s) Maybe change default incomplete or download directory and restart torrent", tor->currentDir );
+            return;
+        }
+    }
+
+    if( path_is_bad( tor->pieceTempDir ) )
+    {
+        tr_torrentSetLocalError( tor, "Illegal pieceTemp directory: (%s) Change default setting then remove/re-add torrent", tor->pieceTempDir );
+        return;
+    }
+
     switch( torrentGetActivity( tor ) )
     {
         case TR_STATUS_SEED:
@@ -1984,8 +2071,8 @@ verifyTorrent( void * vtor )
 void
 tr_torrentVerify( tr_torrent * tor )
 {
-    if( tr_isTorrent( tor ) )
-        tr_runInEventThread( tor->session, verifyTorrent, tor );
+            if( ( tr_isTorrent( tor ) ) && ( !path_is_bad( tor->currentDir ) )  && ( !path_is_bad( tor->pieceTempDir ) ) )
+                tr_runInEventThread( tor->session, verifyTorrent, tor );
 }
 
 static void
@@ -2189,7 +2276,12 @@ closeTorrent( void * vtor )
     {
         tr_metainfoRemoveSaved( tor->session, &tor->info );
         tr_torrentRemoveResume( tor );
-        tr_torrentRemovePieceTemp( tor );
+
+        if( path_is_bad( tor->pieceTempDir ) )
+	        tr_torerr( tor, "bad path -- skip deleting pieceTemp directory \"%s\" ", tor->pieceTempDir );
+        else
+            tr_torrentRemovePieceTemp( tor );
+
     }
 
     tor->isRunning = 0;
@@ -3326,6 +3418,12 @@ deleteLocalData( tr_torrent * tor, tr_fileFunc func )
     if( !tr_torrentHasMetadata( tor ) )
         return;
 
+    if( path_is_bad( tor->currentDir ) )
+    {
+        tr_torerr( tor, " bad path error deleting  \"%s\" ", tor->currentDir );
+        return;
+    }
+
     /***
     ****  Move the local data to a new tmpdir
     ***/
@@ -3568,6 +3666,20 @@ tr_torrentSetLocation( tr_torrent       * tor,
                        volatile double  * setme_progress,
                        volatile int     * setme_state )
 {
+    if( path_is_bad( tor->currentDir ) ) tr_torerr( tor, "bad path error set-location source \"%s\" ", tor->currentDir );
+
+    if( ( path_is_bad( tor->currentDir ) ) && ( !path_is_bad( location ) ) )
+    {
+        tr_torerr( tor, "bad path set-location source IGNORING \"%s\" ", tor->currentDir );
+        move_from_old_location = false;
+    }
+
+    if( path_is_bad( location ) )
+    {
+        tr_torerr( tor, "bad path error set-location destination \"%s\" ", location );
+        return;
+    }
+
     struct LocationData * data;
 
     assert( tr_isTorrent( tor ) );
@@ -3668,7 +3780,7 @@ tr_torrentFindFile2( const tr_torrent * tor, tr_file_index_t fileNum,
 
     file = &tor->info.files[fileNum];
 
-    if( b == NULL ) {
+    if( ( b == NULL ) && ( tor->downloadDir != NULL ) ) {
         char * filename = tr_buildPath( tor->downloadDir, file->name, NULL );
         if( fileExists( filename, mtime ) ) {
             b = tor->downloadDir;
@@ -3698,7 +3810,7 @@ tr_torrentFindFile2( const tr_torrent * tor, tr_file_index_t fileNum,
         tr_free( filename );
     }
 
-    if( b == NULL) {
+    if( ( b == NULL ) && ( tor->downloadDir != NULL ) ) {
         char * filename = tr_buildPath( tor->downloadDir, part, NULL );
         if( fileExists( filename, mtime ) ) {
             b = tor->downloadDir;
@@ -3745,8 +3857,10 @@ refreshCurrentDir( tr_torrent * tor )
     else if( !tr_torrentFindFile2( tor, 0, &dir, NULL, NULL ) )
         dir = tor->incompleteDir;
 
-    assert( dir != NULL );
-    assert( ( dir == tor->downloadDir ) || ( dir == tor->incompleteDir ) );
+// fail assert when new torrent added to download to NULL directory and no incomplete specified directory either
+// SRS 10-16-2014 so  path_is_bad now handles this without having to assert
+//    assert( dir != NULL );
+//    assert( ( dir == tor->downloadDir ) || ( dir == tor->incompleteDir ) );
     tor->currentDir = dir;
 }
 

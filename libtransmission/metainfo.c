@@ -140,7 +140,7 @@ tr_metainfoMigrate( tr_session * session,
 static bool
 path_is_harmful( const char * path )
 {
-    if( path == NULL ) return true;
+    if( ( path == NULL ) || ( *path == '\0' ) ) return true;
 	
     //do NOT allow backward traverse
     if( !strncmp( path, "../", 3 ) ) return true;
