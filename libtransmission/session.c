@@ -2393,6 +2393,16 @@ tr_sessionIsAddressBlocked( const tr_session * session,
     assert( tr_isSession( session ) );
 
     for( l = session->blocklists; l; l = l->next )
+    {
+        if( tr_stringEndsWith( _tr_blocklistGetFilename( l->data ),
+                               "whitelist.bin" ) )
+        {
+            if( _tr_blocklistHasAddress( l->data, addr ) )
+                return false;
+        }
+    }
+
+    for( l = session->blocklists; l; l = l->next )
         if( _tr_blocklistHasAddress( l->data, addr ) )
             return true;
     return false;
