@@ -185,6 +185,7 @@ static void
 on_announce_done( tr_session   * session,
                   bool           did_connect,
                   bool           did_timeout,
+                  int            is_blocklisted,
                   long           response_code,
                   const void   * msg,
                   size_t         msglen,
@@ -196,6 +197,7 @@ on_announce_done( tr_session   * session,
     response = &data->response;
     response->did_connect = did_connect;
     response->did_timeout = did_timeout;
+    response->is_blocklisted = is_blocklisted;
     dbgmsg( data->log_name, "Got announce response" );
 
     if( response_code != HTTP_OK )
@@ -336,6 +338,7 @@ static void
 on_scrape_done( tr_session   * session,
                 bool           did_connect,
                 bool           did_timeout,
+                int            is_blocklisted,
                 long           response_code,
                 const void   * msg,
                 size_t         msglen,
@@ -347,6 +350,7 @@ on_scrape_done( tr_session   * session,
     response = &data->response;
     response->did_connect = did_connect;
     response->did_timeout = did_timeout;
+    response->is_blocklisted = is_blocklisted;
     dbgmsg( data->log_name, "Got scrape response for \"%s\"", response->url );
 
     if( response_code != HTTP_OK )

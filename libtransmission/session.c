@@ -2395,7 +2395,7 @@ tr_sessionIsAddressBlocked( const tr_session * session,
     for( l = session->blocklists; l; l = l->next )
     {
         if( tr_stringEndsWith( _tr_blocklistGetFilename( l->data ),
-                               "whitelist.bin" ) )
+                               "whitelist.bin" ) ) // skip blacklists
         {
             if( _tr_blocklistHasAddress( l->data, addr ) )
                 return false;
@@ -2403,8 +2403,15 @@ tr_sessionIsAddressBlocked( const tr_session * session,
     }
 
     for( l = session->blocklists; l; l = l->next )
-        if( _tr_blocklistHasAddress( l->data, addr ) )
-            return true;
+    {
+        if( !tr_stringEndsWith( _tr_blocklistGetFilename( l->data ),
+                               "whitelist.bin" ) )  // skip whitelists -- might save a lttle time REsearching
+                                                    // lists we already know that address is not contained in
+        {
+            if( _tr_blocklistHasAddress( l->data, addr ) )
+                return true;
+        }
+    }
     return false;
 }
 
