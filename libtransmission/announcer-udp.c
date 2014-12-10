@@ -227,10 +227,12 @@ tau_scrape_request_fail( struct tau_scrape_request  * request,
 static void
 on_scrape_response( struct tau_scrape_request  * request,
                     tau_action_t                 action,
+                    int                          action_blocklisted,
                     struct evbuffer            * buf )
 {
     request->response.did_connect = true;
     request->response.did_timeout = false;
+    request->response.is_blocklisted = action_blocklisted;
 
     if( action == TAU_ACTION_SCRAPE )
     {
@@ -382,12 +384,14 @@ tau_announce_request_fail( struct tau_announce_request  * request,
 static void
 on_announce_response( struct tau_announce_request  * request,
                       tau_action_t                   action,
+                      int                            action_blocklisted,
                       struct evbuffer              * buf )
 {
     const size_t buflen = evbuffer_get_length( buf );
 
     request->response.did_connect = true;
     request->response.did_timeout = false;
+    request->response.is_blocklisted = action_blocklisted;
 
     if( ( action == TAU_ACTION_ANNOUNCE ) && ( buflen >= 3*sizeof(uint32_t) ) )
     {
@@ -859,6 +863,7 @@ tau_handle_message( tr_session * session, const uint8_t * msg, size_t msglen )
 {
     int i;
     int n;
+    int action_blocklisted = 0;
     struct tr_announcer_udp * tau;
     tau_action_t action_id;
     tau_transaction_t transaction_id;
@@ -875,6 +880,12 @@ tau_handle_message( tr_session * session, const uint8_t * msg, size_t msglen )
     buf = evbuffer_new( );
     evbuffer_add_reference( buf, msg, msglen, NULL, NULL );
     action_id = evbuffer_read_ntoh_32( buf );
+
+    if( action_id >= 4 ) {
+        action_id -= 4;
+        action_blocklisted = 1;
+    }
+
     if( !is_tau_response_message( action_id, msglen ) ) {
         evbuffer_free( buf );
         return false;
@@ -907,7 +918,7 @@ tau_handle_message( tr_session * session, const uint8_t * msg, size_t msglen )
             if( req->sent_at && ( transaction_id == req->transaction_id ) ) {
                 dbgmsg( tracker->key, "%"PRIu32" is an announce request!", transaction_id );
                 tr_ptrArrayRemove( reqs, j );
-                on_announce_response( req, action_id, buf );
+                on_announce_response( req, action_id, action_blocklisted, buf );
                 tau_announce_request_free( req );
                 evbuffer_free( buf );
                 return true;
@@ -921,7 +932,7 @@ tau_handle_message( tr_session * session, const uint8_t * msg, size_t msglen )
             if( req->sent_at && ( transaction_id == req->transaction_id ) ) {
                 dbgmsg( tracker->key, "%"PRIu32" is a scrape request!", transaction_id );
                 tr_ptrArrayRemove( reqs, j );
-                on_scrape_response( req, action_id, buf );
+                on_scrape_response( req, action_id, action_blocklisted, buf );
                 tau_scrape_request_free( req );
                 evbuffer_free( buf );
                 return true;
