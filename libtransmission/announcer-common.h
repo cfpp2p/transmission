@@ -78,6 +78,8 @@ typedef struct
     /* whether or not the scrape timed out */
     bool did_timeout;
 
+    int is_blocklisted;
+
     /* how many info hashes are in the 'rows' field */
     int row_count;
 
@@ -181,6 +183,8 @@ typedef struct
 
     /* whether or not the scrape timed out */
     bool did_timeout;
+
+    int is_blocklisted;
 
     /* preferred interval between announces.
      * transmission treats this as the interval for periodic announces */

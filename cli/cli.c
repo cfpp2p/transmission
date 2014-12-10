@@ -136,6 +136,7 @@ static void
 onTorrentFileDownloaded( tr_session   * session UNUSED,
                          bool           did_connect UNUSED,
                          bool           did_timeout UNUSED,
+                         int            is_blocklisted,
                          long           response_code UNUSED,
                          const void   * response,
                          size_t         response_byte_count,
