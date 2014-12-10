@@ -206,14 +206,6 @@ event_callback(int s, short type UNUSED, void *sv)
     if( !tr_address_from_sockaddr_storage( &addr, &port, &from )
             || tr_sessionIsAddressBlocked( ss, &addr ) ) {
     tr_dbg("UDP Message Blocklisted from: %s:%d", tr_address_to_string( &addr ), (int)ntohs( port ) );
-        if( ( rc >= 8 ) &&
-            buf[0] == 0 && buf[1] == 0 && buf[2] == 0 && buf[3] <= 3 ) {
-            tr_dbg("Allowed UDP tracker %s:%d blocking skipped!", tr_address_to_string( &addr ), (int)ntohs( port ) );
-            buf[3] += 4;
-            rc = tau_handle_message( ss, buf, rc );
-            if( !rc )
-                tr_ndbg("UDP", "Couldn't parse UDP tracker packet.");
-        }
     return;
     }
 

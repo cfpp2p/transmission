@@ -7,7 +7,7 @@
  * This exemption does not extend to derived works not owned by
  * the Transmission project.
  *
- * $Id: web.c 13112 2011-12-14 05:58:23Z jordan $
+ * $Id: web.c 14075 2013-07-05 16:32:45Z jordan $
  */
 
 #include <string.h> /* strlen(), strstr() */
@@ -64,7 +64,6 @@ tr_list * stopeasyhandle=NULL;
 struct tr_web_task
 {
     int torrentId;
-    int is_blocklisted;
     long code;
     long timeout_secs;
     bool did_connect;
@@ -116,7 +115,7 @@ writeFunc( void * ptr, size_t size, size_t nmemb, void * vtask )
     struct tr_web_task * task = vtask;
     if (task->torrentId != -1)
         {
-	    tr_torrent * tor = tr_torrentFindFromId (task->session, task->torrentId);
+      tr_torrent * tor = tr_torrentFindFromId (task->session, task->torrentId);
         if (tor)
             {
             unsigned int n=tr_bandwidthClamp(&(tor->bandwidth), TR_DOWN, nmemb );
@@ -229,7 +228,6 @@ task_finish_func( void * vtask )
         task->done_func( task->session,
                          task->did_connect,
                          task->did_timeout,
-                         task->is_blocklisted,
                          task->code,
                          evbuffer_pullup( task->response, -1 ),
                          evbuffer_get_length( task->response ),
@@ -424,35 +422,15 @@ tr_webThreadFunc( void * vsession )
                 double total_time;
                 struct tr_web_task * task;
                 long req_bytes_sent;
-                char * server_ip;
-                struct tr_address addr;
                 CURL * e = msg->easy_handle;
                 curl_easy_getinfo( e, CURLINFO_PRIVATE, (void*)&task );
                 curl_easy_getinfo( e, CURLINFO_RESPONSE_CODE, &task->code );
-                task->is_blocklisted = 0;
-
-                // hook for blocklist check
-                if( !curl_easy_getinfo( e, CURLINFO_PRIMARY_IP, &server_ip ) )  // CURLE_OK
-                {
-                    if( tr_address_from_string( &addr, server_ip ) )
-                    {
-                        if( tr_sessionIsAddressBlocked( task->session, &addr ) )
-                        task->is_blocklisted = 1;
-                    }
-                }
-
                 curl_easy_getinfo( e, CURLINFO_REQUEST_SIZE, &req_bytes_sent );
                 curl_easy_getinfo( e, CURLINFO_TOTAL_TIME, &total_time );
                 task->did_connect = task->code>0 || req_bytes_sent>0;
                 task->did_timeout = !task->code && ( total_time >= task->timeout_secs );
                 curl_multi_remove_handle( multi, e );
                 curl_easy_cleanup( e );
-
-// http://curl.haxx.se/libcurl/c/curl_easy_getinfo.html
-// You should not free the memory returned by this function unless it is explicitly mentioned below.
-//                tr_free( server_ip );
-
-
 /*fprintf( stderr, "removing a completed task.. taskCount is now %d (response code: %d, response len: %d)\n", taskCount, (int)task->code, (int)evbuffer_get_length(task->response) );*/
                 tr_runInEventThread( task->session, task_finish_func, task );
                 --taskCount;
@@ -614,4 +592,4 @@ tr_http_escape_sha1( char * out, const uint8_t * sha1_digest )
             out += tr_snprintf( out, 4, "%%%02x", (unsigned int)*in++ );
 
     *out = '\0';
-}
+} 

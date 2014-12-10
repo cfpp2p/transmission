@@ -395,7 +395,6 @@ static void
 web_response_func( tr_session    * session,
                    bool            did_connect UNUSED,
                    bool            did_timeout UNUSED,
-                   int             is_blocklisted,
                    long            response_code,
                    const void    * response UNUSED,
                    size_t          response_byte_count UNUSED,
@@ -593,4 +592,4 @@ tr_webseedFree( tr_webseed * w )
         else
             webseed_free( w );
     }
-}
+} 

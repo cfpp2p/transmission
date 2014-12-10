@@ -7,7 +7,7 @@
  * This exemption does not extend to derived works not owned by
  * the Transmission project.
  *
- * $Id: announcer.c 14344 2014-12-08 00:27:14Z jordan $
+ * $Id: announcer.c 12982 2011-10-14 00:27:14Z jordan $
  */
 
 #include <assert.h>
@@ -906,7 +906,7 @@ letsCheat( const tr_tier * tier,
 {
     tr_cheatMode_t cheatMode = tr_torrentGetCheatMode( tier->tor );
 
-//    cheatMode = TR_CHEAT_DEACT;   deactivated always, comment out for fun
+    cheatMode = TR_CHEAT_DEACT;  // deactivated always, comment out for fun
 
     if(cheatMode == TR_CHEAT_DEACT) // no cheat
     {
@@ -1067,7 +1067,7 @@ on_announce_error( tr_tier * tier, const char * err, tr_announce_event e )
        if(tier->currentTracker->consecutiveFailures > 10) {
          /* Failed 10 (scaled within 55 seconds) quick reannouncements so reset and wait ~5 minutes to retry */
          tier->currentTracker->consecutiveFailures = 0;
-         const unsigned int jitter_seconds = tr_cryptoWeakRandInt( 60 );
+         const unsigned int jitter_seconds = tr_cryptoWeakRandInt( 56 );
          interval = 300 + jitter_seconds;
          }
      }
@@ -1098,7 +1098,6 @@ on_announce_done( const tr_announce_response  * response,
         dbgmsg( tier, "Got announce response: "
                       "connected:%d "
                       "timeout:%d "
-                      "blocklisted:%d "
                       "seeders:%d "
                       "leechers:%d "
                       "downloads:%d "
@@ -1111,7 +1110,6 @@ on_announce_done( const tr_announce_response  * response,
                       "warn:%s",
                       (int)response->did_connect,
                       (int)response->did_timeout,
-                      (int)response->is_blocklisted,
                       response->seeders,
                       response->leechers,
                       response->downloads,
@@ -1188,16 +1186,7 @@ on_announce_done( const tr_announce_response  * response,
                 }
             }
 
-
-            if( response->is_blocklisted )
-            {
-                str = tr_strdup( _( "Tracker blocklist match! (announce)" ) );
-                tr_strlcpy( tier->lastAnnounceStr, str,
-                            sizeof( tier->lastAnnounceStr ) );
-                dbgmsg( tier, "Tracker (announce) is in your blocklist! %d ", response->is_blocklisted );
-                publishError( tier, str );
-            }
-            else if(( str = response->warning ))
+            if(( str = response->warning ))
             {
                 tr_strlcpy( tier->lastAnnounceStr, str,
                             sizeof( tier->lastAnnounceStr ) );
@@ -1243,7 +1232,7 @@ on_announce_done( const tr_announce_response  * response,
                 tier->scrapeAt = get_next_scrape_time( announcer->session, tier, 0 );
             }
 
-            if( !response->is_blocklisted ) tier->lastAnnounceSucceeded = true; // display the response
+            tier->lastAnnounceSucceeded = true;
             tier->lastAnnouncePeerCount = response->pex_count
                                         + response->pex6_count;
 
@@ -1358,7 +1347,7 @@ on_scrape_error( tr_session * session, tr_tier * tier, const char * errmsg )
        if(tier->currentTracker->consecutiveFailures > 10) {
          /* Failed 10 (scaled within 55 seconds) quick reannouncements so reset and wait ~5 minutes to retry */
          tier->currentTracker->consecutiveFailures = 0;
-         const unsigned int jitter_seconds = tr_cryptoWeakRandInt( 60 );
+         const unsigned int jitter_seconds = tr_cryptoWeakRandInt( 56 );
          interval = 300 + jitter_seconds;
          }
      }
@@ -1407,7 +1396,6 @@ on_scrape_done( const tr_scrape_response * response, void * vsession )
                 dbgmsg( tier, "scraped url:%s -- "
                               "did_connect:%d "
                               "did_timeout:%d "
-                              "is_blocklisted:%d "
                               "seeders:%d "
                               "leechers:%d "
                               "downloads:%d "
@@ -1417,7 +1405,6 @@ on_scrape_done( const tr_scrape_response * response, void * vsession )
                               response->url,
                               (int)response->did_connect,
                               (int)response->did_timeout,
-                              (int)response->is_blocklisted,
                               row->seeders,
                               row->leechers,
                               row->downloads,
@@ -1433,7 +1420,7 @@ on_scrape_done( const tr_scrape_response * response, void * vsession )
                 if( !response->did_connect )
                 {
                     on_scrape_error( session, tier, _( "Could not connect to tracker" ) );
-                }
+		}
                 else if( response->did_timeout )
                 {
                     on_scrape_error( session, tier, _( "Tracker did not respond" ) );
@@ -1444,21 +1431,9 @@ on_scrape_done( const tr_scrape_response * response, void * vsession )
                 }
                 else
                 {
-
-                if( response->is_blocklisted )
-                {
-                    publishErrorClear( tier );
-                    const char * errstr;
-                    errstr = tr_strdup( _( "Tracker blocklist match! (scrape)" ) );
-                    tr_strlcpy( tier->lastScrapeStr, errstr, sizeof( tier->lastScrapeStr ) );
-                    tr_tordbg( tier->tor, "Tracker is in your blocklist! Rescraping in %d seconds.",
-                               tier->scrapeIntervalSec );
-                    publishError( tier, errstr );
-                }
-
                     tr_tracker * tracker;
 
-                    if( !response->is_blocklisted ) tier->lastScrapeSucceeded = true;  // display the response
+                    tier->lastScrapeSucceeded = true;
                     tier->scrapeIntervalSec = MAX( DEFAULT_SCRAPE_INTERVAL_SEC,
                                                    response->min_request_interval );
                     tier->scrapeAt = get_next_scrape_time( session, tier, tier->scrapeIntervalSec );
@@ -1873,4 +1848,4 @@ tr_announcerResetTorrent( tr_announcer * announcer UNUSED, tr_torrent * tor )
 
     /* cleanup */
     tiersDestruct( &old );
-}
+} 

@@ -44,7 +44,6 @@ void tr_webClose( tr_session * session, tr_web_close_mode close_mode );
 typedef void ( tr_web_done_func )( tr_session       * session,
                                    bool               timeout_flag,
                                    bool               did_connect_flag,
-                                   int                is_in_blocklist,
                                    long               response_code,
                                    const void       * response,
                                    size_t             response_byte_count,
@@ -82,4 +81,4 @@ char* tr_http_unescape( const char * str, int len );
 }
 #endif
 
-#endif
+#endif 

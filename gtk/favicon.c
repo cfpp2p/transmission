@@ -81,7 +81,7 @@ favicon_load_from_cache( const char * host )
     return pixbuf;
 }
 
-static void favicon_web_done_cb( tr_session*, bool, bool, int, long, const void*, size_t, void* );
+static void favicon_web_done_cb( tr_session*, bool, bool, long, const void*, size_t, void* );
 
 static gboolean
 favicon_web_done_idle_cb( gpointer vfav )
@@ -131,7 +131,6 @@ static void
 favicon_web_done_cb( tr_session    * session UNUSED,
                      bool            did_connect UNUSED,
                      bool            did_timeout UNUSED,
-                     int             is_blocklisted,
                      long            code UNUSED,
                      const void    * data,
                      size_t          len,
