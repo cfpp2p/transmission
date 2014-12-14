@@ -71,6 +71,7 @@ struct tr_web_task
     bool did_timeout;
     struct evbuffer * response;
     struct evbuffer * freebuf;
+    char * tracker_addr;
     char * url;
     char * range;
     char * cookies;
@@ -89,6 +90,7 @@ task_free( struct tr_web_task * task )
     tr_free( task->cookies );
     tr_free( task->range );
     tr_free( task->url );
+    tr_free( task->tracker_addr );
     tr_free( task );
 }
 
@@ -230,6 +232,7 @@ task_finish_func( void * vtask )
                          task->did_connect,
                          task->did_timeout,
                          task->is_blocklisted,
+                         task->tracker_addr,
                          task->code,
                          evbuffer_pullup( task->response, -1 ),
                          evbuffer_get_length( task->response ),
@@ -429,7 +432,10 @@ tr_webThreadFunc( void * vsession )
                 CURL * e = msg->easy_handle;
                 curl_easy_getinfo( e, CURLINFO_PRIVATE, (void*)&task );
                 curl_easy_getinfo( e, CURLINFO_RESPONSE_CODE, &task->code );
+
+
                 task->is_blocklisted = 0;
+                tr_address_from_string( &addr, "0.0.0.0" );
 
                 // hook for blocklist check
                 if( !curl_easy_getinfo( e, CURLINFO_PRIMARY_IP, &server_ip ) )  // CURLE_OK
@@ -440,6 +446,8 @@ tr_webThreadFunc( void * vsession )
                         task->is_blocklisted = 1;
                     }
                 }
+                const tr_address * send_address = &addr;
+                task->tracker_addr = tr_strdup( tr_address_to_string( send_address ) );
 
                 curl_easy_getinfo( e, CURLINFO_REQUEST_SIZE, &req_bytes_sent );
                 curl_easy_getinfo( e, CURLINFO_TOTAL_TIME, &total_time );
