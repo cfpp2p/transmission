@@ -176,6 +176,7 @@ on_announce_done_eventthread( void * vdata )
     tr_free( data->response.pex );
     tr_free( data->response.tracker_id_str );
     tr_free( data->response.warning );
+    tr_free( data->response.tracker_addr );
     tr_free( data->response.errmsg );
     tr_free( data );
 }
@@ -186,6 +187,7 @@ on_announce_done( tr_session   * session,
                   bool           did_connect,
                   bool           did_timeout,
                   int            is_blocklisted,
+                  const char   * tracker_addr,
                   long           response_code,
                   const void   * msg,
                   size_t         msglen,
@@ -198,6 +200,7 @@ on_announce_done( tr_session   * session,
     response->did_connect = did_connect;
     response->did_timeout = did_timeout;
     response->is_blocklisted = is_blocklisted;
+    response->tracker_addr = tr_strdup( tracker_addr );
     dbgmsg( data->log_name, "Got announce response" );
 
     if( response_code != HTTP_OK )
@@ -296,6 +299,7 @@ tr_tracker_http_announce( tr_session                 * session,
 	d->response.seeders = -1;
 	d->response.leechers = -1;
 	d->response.downloads = -1;
+	d->response.tracker_addr = tr_strdup( "???.???.???.??? -resolving IP-" );
     d->response_func = response_func;
     d->response_func_user_data = response_func_user_data;
     memcpy( d->response.info_hash, request->info_hash, SHA_DIGEST_LENGTH );
@@ -329,6 +333,7 @@ on_scrape_done_eventthread( void * vdata )
     if( data->response_func != NULL )
         data->response_func( &data->response, data->response_func_user_data );
 
+    tr_free( data->response.tracker_addr );
     tr_free( data->response.errmsg );
     tr_free( data->response.url );
     tr_free( data );
@@ -339,6 +344,7 @@ on_scrape_done( tr_session   * session,
                 bool           did_connect,
                 bool           did_timeout,
                 int            is_blocklisted,
+                const char   * tracker_addr,
                 long           response_code,
                 const void   * msg,
                 size_t         msglen,
@@ -351,6 +357,7 @@ on_scrape_done( tr_session   * session,
     response->did_connect = did_connect;
     response->did_timeout = did_timeout;
     response->is_blocklisted = is_blocklisted;
+    response->tracker_addr = tr_strdup( tracker_addr );
     dbgmsg( data->log_name, "Got scrape response for \"%s\"", response->url );
 
     if( response_code != HTTP_OK )
@@ -468,6 +475,7 @@ tr_tracker_http_scrape( tr_session               * session,
 
     d = tr_new0( struct scrape_data, 1 );
     d->response.url = tr_strdup( request->url );
+    d->response.tracker_addr = tr_strdup( "???.???.???.??? -resolving IP-" );
     d->response_func = response_func;
     d->response_func_user_data = response_func_user_data;
     d->response.row_count = request->info_hash_count;

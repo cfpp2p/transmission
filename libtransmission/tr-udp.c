@@ -194,6 +194,7 @@ event_callback(int s, short type UNUSED, void *sv)
     tr_session *ss = sv;
     tr_address addr;
     tr_port port;
+    bool is_tracker = false;
 
     assert(tr_isSession(sv));
     assert(type == EV_READ);
@@ -202,15 +203,24 @@ event_callback(int s, short type UNUSED, void *sv)
     rc = recvfrom(s, buf, 4096 - 1, 0,
                   (struct sockaddr*)&from, &fromlen);
 
+    if( ( rc >= 8 ) && buf[0] == 0 && buf[1] == 0 && buf[2] == 0 && buf[3] <= 3 )
+    {
+        is_tracker = true;
+        tr_address_from_string( &addr, "0.0.0.0" );
+    }
+
     /* don't process messages from blocked addresses */
     if( !tr_address_from_sockaddr_storage( &addr, &port, &from )
-            || tr_sessionIsAddressBlocked( ss, &addr ) ) {
-    tr_dbg("UDP Message Blocklisted from: %s:%d", tr_address_to_string( &addr ), (int)ntohs( port ) );
-        if( ( rc >= 8 ) &&
-            buf[0] == 0 && buf[1] == 0 && buf[2] == 0 && buf[3] <= 3 ) {
+            || tr_sessionIsAddressBlocked( ss, &addr ) )
+    {
+        tr_dbg("UDP Message Blocklisted from: %s:%d", tr_address_to_string( &addr ), (int)ntohs( port ) );
+        if( is_tracker )
+        {
             tr_dbg("Allowed UDP tracker %s:%d blocking skipped!", tr_address_to_string( &addr ), (int)ntohs( port ) );
             buf[3] += 4;
-            rc = tau_handle_message( ss, buf, rc );
+
+            rc = tau_handle_message( ss, buf, rc, tr_address_to_string( &addr ) );
+
             if( !rc )
                 tr_ndbg("UDP", "Couldn't parse UDP tracker packet.");
         }
@@ -230,9 +240,10 @@ event_callback(int s, short type UNUSED, void *sv)
                 buf[rc] = '\0'; /* required by the DHT code */
                 tr_dhtCallback(buf, rc, (struct sockaddr*)&from, fromlen, sv);
             }
-        } else if( rc >= 8 &&
-                   buf[0] == 0 && buf[1] == 0 && buf[2] == 0 && buf[3] <= 3 ) {
-            rc = tau_handle_message( ss, buf, rc );
+        }
+        else if( is_tracker )
+        {
+            rc = tau_handle_message( ss, buf, rc, tr_address_to_string( &addr ) );
             if( !rc )
                 tr_ndbg("UDP", "Couldn't parse UDP tracker packet.");
         } else {

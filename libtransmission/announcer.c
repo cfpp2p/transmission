@@ -25,6 +25,7 @@
 #include "announcer.h"
 #include "announcer-common.h"
 #include "crypto.h" /* tr_cryptoRandInt(), tr_cryptoWeakRandInt() */
+#include "net.h" /* tr_address_to_string() */
 #include "peer-mgr.h" /* tr_peerMgrCompactToPex() */
 #include "ptrarray.h"
 #include "session.h"
@@ -1104,6 +1105,7 @@ on_announce_done( const tr_announce_response  * response,
                       "downloads:%d "
                       "interval:%d "
                       "min_interval:%d "
+                      "tracker ip:%s -- "
                       "tracker_id_str:%s "
                       "pex:%zu "
                       "pex6:%zu "
@@ -1117,6 +1119,7 @@ on_announce_done( const tr_announce_response  * response,
                       response->downloads,
                       response->interval,
                       response->min_interval,
+                      response->tracker_addr,
                       response->tracker_id_str ? response->tracker_id_str : "none",
                       response->pex_count,
                       response->pex6_count,
@@ -1191,10 +1194,11 @@ on_announce_done( const tr_announce_response  * response,
 
             if( response->is_blocklisted )
             {
-                str = tr_strdup( _( "Tracker blocklist match! (announce)" ) );
+                str = tr_strdup_printf( _( "Tracker IP  \"%s\" blocklist match! (announce)" ), response->tracker_addr );
+
                 tr_strlcpy( tier->lastAnnounceStr, str,
                             sizeof( tier->lastAnnounceStr ) );
-                dbgmsg( tier, "Tracker (announce) is in your blocklist! %d ", response->is_blocklisted );
+                dbgmsg( tier, "Tracker IP \"%s\" is in your blocklist!", response->tracker_addr );
                 publishError( tier, str );
             }
             else if(( str = response->warning ))
@@ -1405,6 +1409,7 @@ on_scrape_done( const tr_scrape_response * response, void * vsession )
             if( tier != NULL )
             {
                 dbgmsg( tier, "scraped url:%s -- "
+                              "tracker ip:%s -- "
                               "did_connect:%d "
                               "did_timeout:%d "
                               "is_blocklisted:%d "
@@ -1415,6 +1420,7 @@ on_scrape_done( const tr_scrape_response * response, void * vsession )
                               "min_request_interval:%d "
                               "err:%s ",
                               response->url,
+                              response->tracker_addr,
                               (int)response->did_connect,
                               (int)response->did_timeout,
                               (int)response->is_blocklisted,
@@ -1449,10 +1455,11 @@ on_scrape_done( const tr_scrape_response * response, void * vsession )
                 {
                     publishErrorClear( tier );
                     const char * errstr;
-                    errstr = tr_strdup( _( "Tracker blocklist match! (scrape)" ) );
+                    errstr = tr_strdup_printf( _( "Tracker IP \"%s\" blocklist match! (scrape)" ), response->tracker_addr );
+
                     tr_strlcpy( tier->lastScrapeStr, errstr, sizeof( tier->lastScrapeStr ) );
-                    tr_tordbg( tier->tor, "Tracker is in your blocklist! Rescraping in %d seconds.",
-                               tier->scrapeIntervalSec );
+                    tr_tordbg( tier->tor, "Tracker IP \"%s\" is in your blocklist! Rescraping in %d seconds.",
+                               response->tracker_addr, tier->scrapeIntervalSec );
                     publishError( tier, errstr );
                 }
 

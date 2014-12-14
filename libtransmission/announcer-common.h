@@ -92,6 +92,9 @@ typedef struct
     /* human-readable error string on failure, or NULL */
     char * errmsg;
 
+    /* tracker IP address */
+    char * tracker_addr;
+
     /* minimum interval (in seconds) allowed between scrapes.
      * this is an unofficial extension that some trackers won't support. */
     int min_request_interval;
@@ -217,6 +220,9 @@ typedef struct
 
     /* human-readable error string on failure, or NULL */
     char * errmsg;
+
+    /* tracker IP address */
+    char * tracker_addr;
 
     /* human-readable warning string or NULL */
     char * warning;

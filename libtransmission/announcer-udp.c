@@ -179,6 +179,7 @@ tau_scrape_request_new( const tr_scrape_request  * in,
     req->callback = callback;
     req->user_data = user_data;
     req->response.url = tr_strdup( in->url );
+    req->response.tracker_addr = tr_strdup( "???.???.???.??? -resolving IP-" );
     req->response.row_count = in->info_hash_count;
     req->payload_len = evbuffer_get_length( buf );
     req->payload = tr_memdup( evbuffer_pullup( buf, -1 ), req->payload_len );
@@ -199,6 +200,7 @@ tau_scrape_request_new( const tr_scrape_request  * in,
 static void
 tau_scrape_request_free( struct tau_scrape_request * req )
 {
+    tr_free( req->response.tracker_addr );
     tr_free( req->response.errmsg );
     tr_free( req->response.url );
     tr_free( req->payload );
@@ -228,11 +230,13 @@ static void
 on_scrape_response( struct tau_scrape_request  * request,
                     tau_action_t                 action,
                     int                          action_blocklisted,
+                    const char                 * tracker_addr,
                     struct evbuffer            * buf )
 {
     request->response.did_connect = true;
     request->response.did_timeout = false;
     request->response.is_blocklisted = action_blocklisted;
+    request->response.tracker_addr = tr_strdup( tracker_addr );
 
     if( action == TAU_ACTION_SCRAPE )
     {
@@ -344,6 +348,7 @@ tau_announce_request_new( const tr_announce_request  * in,
     req->response.seeders = -1;
     req->response.leechers = -1;
     req->response.downloads = -1;
+    req->response.tracker_addr = tr_strdup( "???.???.???.??? -resolving IP-" );
     memcpy( req->response.info_hash, in->info_hash, SHA_DIGEST_LENGTH );
 
     evbuffer_free( buf );
@@ -355,6 +360,7 @@ tau_announce_request_free( struct tau_announce_request * req )
 {
     tr_free( req->response.tracker_id_str );
     tr_free( req->response.warning );
+    tr_free( req->response.tracker_addr );
     tr_free( req->response.errmsg );
     tr_free( req->response.pex6 );
     tr_free( req->response.pex );
@@ -385,6 +391,7 @@ static void
 on_announce_response( struct tau_announce_request  * request,
                       tau_action_t                   action,
                       int                            action_blocklisted,
+                      const char                   * tracker_addr,
                       struct evbuffer              * buf )
 {
     const size_t buflen = evbuffer_get_length( buf );
@@ -392,6 +399,7 @@ on_announce_response( struct tau_announce_request  * request,
     request->response.did_connect = true;
     request->response.did_timeout = false;
     request->response.is_blocklisted = action_blocklisted;
+    request->response.tracker_addr = tr_strdup( tracker_addr );
 
     if( ( action == TAU_ACTION_ANNOUNCE ) && ( buflen >= 3*sizeof(uint32_t) ) )
     {
@@ -862,7 +870,7 @@ tr_tracker_udp_start_shutdown( tr_session * session )
 /* @brief process an incoming udp message if it's a tracker response.
  * @return true if msg was a tracker response; false otherwise */
 bool
-tau_handle_message( tr_session * session, const uint8_t * msg, size_t msglen )
+tau_handle_message( tr_session * session, const uint8_t * msg, size_t msglen, const char * tracker_addr )
 {
     int i;
     int n;
@@ -921,7 +929,7 @@ tau_handle_message( tr_session * session, const uint8_t * msg, size_t msglen )
             if( req->sent_at && ( transaction_id == req->transaction_id ) ) {
                 dbgmsg( tracker->key, "%"PRIu32" is an announce request!", transaction_id );
                 tr_ptrArrayRemove( reqs, j );
-                on_announce_response( req, action_id, action_blocklisted, buf );
+                on_announce_response( req, action_id, action_blocklisted, tracker_addr, buf );
                 tau_announce_request_free( req );
                 evbuffer_free( buf );
                 return true;
@@ -935,7 +943,7 @@ tau_handle_message( tr_session * session, const uint8_t * msg, size_t msglen )
             if( req->sent_at && ( transaction_id == req->transaction_id ) ) {
                 dbgmsg( tracker->key, "%"PRIu32" is a scrape request!", transaction_id );
                 tr_ptrArrayRemove( reqs, j );
-                on_scrape_response( req, action_id, action_blocklisted, buf );
+                on_scrape_response( req, action_id, action_blocklisted, tracker_addr, buf );
                 tau_scrape_request_free( req );
                 evbuffer_free( buf );
                 return true;
