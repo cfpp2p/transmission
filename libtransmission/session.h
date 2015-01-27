@@ -121,6 +121,8 @@ struct tr_session
     bool                         prefetchMagnets;
 
     int                          reverifyTorrents;
+    int                          maxWebseeds;
+    int                          maxWebseedConnectFails;
 
     tr_benc                      removedTorrents;
 

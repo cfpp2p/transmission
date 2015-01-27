@@ -55,6 +55,7 @@ struct tr_webseed
     int                  torrent_id;
     bool                 is_stopping;
     int                  consecutive_failures;
+    int                  wait_factor;
     int                  retry_tickcount;
     int                  retry_challenge;
     int                  idle_connections;
@@ -70,7 +71,9 @@ enum
 
     MAX_CONSECUTIVE_FAILURES = 5,
 
-    MAX_WEBSEED_CONNECTIONS = 4
+    MAX_WEBSEED_CONNECTIONS = 4,
+
+    MAX_WAIT_FACTOR = 288   // -- 24 hours -- 150 * 2000ms * 288
 };
 
 static void
@@ -334,7 +337,7 @@ on_idle( tr_webseed * w )
     if( w->consecutive_failures >= MAX_CONSECUTIVE_FAILURES ) {
         want = w->idle_connections;
 
-        if( w->retry_tickcount >= FAILURE_RETRY_INTERVAL ) {
+        if( w->retry_tickcount >= ( FAILURE_RETRY_INTERVAL * w->wait_factor ) ) {
             /* some time has passed since our connection attempts failed. try again */
             ++want;
             /* if this challenge is fulfilled we will reset consecutive_failures */
@@ -363,7 +366,7 @@ on_idle( tr_webseed * w )
         tr_peerMgrGetNextRequests( tor, &w->parent, want, blocks, &got, true );
 
         w->idle_connections -= MIN( w->idle_connections, got );
-        if( w->retry_tickcount >= FAILURE_RETRY_INTERVAL && got == want )
+        if( w->retry_tickcount >= ( FAILURE_RETRY_INTERVAL * w->wait_factor ) && got == want )
             w->retry_tickcount = 0;
 
         for( i=0; i<got; ++i )
@@ -424,8 +427,16 @@ web_response_func( tr_session    * session,
             if( t->blocks_done )
                 ++w->idle_connections;
             else if( ++w->consecutive_failures >= MAX_CONSECUTIVE_FAILURES && !w->retry_tickcount )
-                /* now wait a while until retrying to establish a connection */
-                ++w->retry_tickcount;
+                     {
+                         /* now wait a while until retrying to establish a connection */
+                         ++w->retry_tickcount;
+                         if( w->wait_factor < MAX_WAIT_FACTOR )
+                         {
+                             if( ++w->wait_factor >= w->session->maxWebseedConnectFails ) w->wait_factor = 28800;
+                                                                                // wait 100 days -- arbitrary
+                         }
+                         else w->wait_factor = 28800;
+                     }
 
             tr_list_remove_data( &w->tasks, t );
             evbuffer_free( t->content );
@@ -519,7 +530,7 @@ task_request_next_chunk( struct tr_webseed_task * t )
         tr_snprintf( range, sizeof range, "%"PRIu64"-%"PRIu64,
                      file_offset, file_offset + this_pass - 1 );
         t->web_task = tr_webRunWithBuffer( w->session, w->torrent_id, urls[file_index],
-                                           range, NULL, web_response_func, t, t->content );
+                      range, "webseedV3rr67UikLj83xAzz560km99geccv4", web_response_func, t, t->content );
     }
 }
 
@@ -570,6 +581,7 @@ tr_webseedNew( struct tr_torrent  * tor,
     tr_bitfieldSetHasAll( &peer->have );
     tr_peerUpdateProgress( tor, peer );
 
+    w->wait_factor = 1;
     w->torrent_id = tr_torrentId( tor );
     w->session = tor->session;
     w->base_url_len = strlen( url );

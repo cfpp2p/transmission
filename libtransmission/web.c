@@ -179,6 +179,8 @@ createEasy( tr_session * s, struct tr_web * web, struct tr_web_task * task )
     CURL * e = task->curl_easy = curl_easy_init( );
 
     task->timeout_secs = getTimeoutFromURL( task );
+    if( ( task->cookies != NULL ) && !strcmp( task->cookies, "webseedV3rr67UikLj83xAzz560km99geccv4" ) )
+        task->timeout_secs = 10L;
 
     curl_easy_setopt( e, CURLOPT_AUTOREFERER, 1L );
     curl_easy_setopt( e, CURLOPT_COOKIEFILE, web->cookie_filename );
@@ -205,7 +207,7 @@ createEasy( tr_session * s, struct tr_web * web, struct tr_web_task * task )
     else if ((( addr = tr_sessionGetPublicAddress( s, TR_AF_INET6, &is_default_value ))) && !is_default_value )
         curl_easy_setopt( e, CURLOPT_INTERFACE, tr_address_to_string( addr ) );
 
-    if( task->cookies != NULL )
+    if( ( task->cookies != NULL ) && strcmp( task->cookies, "webseedV3rr67UikLj83xAzz560km99geccv4" ) != 0 )
         curl_easy_setopt( e, CURLOPT_COOKIE, task->cookies );
 
     if( task->range != NULL ) {
