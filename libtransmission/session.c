@@ -368,6 +368,8 @@ tr_sessionGetDefaultSettings( tr_benc * d )
     tr_bencDictAddBool( d, TR_PREFS_KEY_USPEED_ENABLED,                  false );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_UMASK,                           022 );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_UPLOAD_SLOTS_PER_TORRENT,        14 );
+    tr_bencDictAddInt ( d, TR_PREFS_KEY_WEBSEED_MAX_CONNECT_FAILS,       5 );
+    tr_bencDictAddInt ( d, TR_PREFS_KEY_WEBSEEDERS_MAX,                  4 );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_BIND_ADDRESS_IPV4,               TR_DEFAULT_BIND_ADDRESS_IPV4 );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_BIND_ADDRESS_IPV6,               TR_DEFAULT_BIND_ADDRESS_IPV6 );
     tr_bencDictAddBool( d, TR_PREFS_KEY_START,                           true );
@@ -803,6 +805,10 @@ sessionSetImpl( void * vdata )
         tr_sessionSetDeleteSource( session, boolVal );
     if( tr_bencDictFindInt( settings, TR_PREFS_KEY_REVERIFY_TORRENTS, &i ) )
         session->reverifyTorrents = ( i > 0 ) ? i : 0 ;
+    if( tr_bencDictFindInt( settings, TR_PREFS_KEY_WEBSEED_MAX_CONNECT_FAILS, &i ) )
+        session->maxWebseedConnectFails = ( i > 0 ) ? i : 0 ;
+    if( tr_bencDictFindInt( settings, TR_PREFS_KEY_WEBSEEDERS_MAX, &i ) )
+        session->maxWebseeds = ( i > 0 ) ? i : 0 ;
 
     /* torrent queues */
     if( tr_bencDictFindInt( settings, TR_PREFS_KEY_QUEUE_STALLED_MINUTES, &i ) )

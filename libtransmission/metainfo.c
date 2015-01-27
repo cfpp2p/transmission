@@ -423,8 +423,9 @@ fix_webseed_url( const tr_info * inf, const char * url )
 }
 
 static void
-geturllist( tr_info * inf,
-            tr_benc * meta )
+geturllist( tr_info    * inf,
+            tr_benc    * meta,
+            int          maxWebseeders )
 {
     tr_benc * urls;
     const char * url;
@@ -432,7 +433,7 @@ geturllist( tr_info * inf,
     if( tr_bencDictFindList( meta, "url-list", &urls ) )
     {
         int          i;
-        const int    n = tr_bencListSize( urls );
+        const int    n = MIN( tr_bencListSize( urls ), maxWebseeders );
 
         inf->webseedCount = 0;
         inf->webseeds = tr_new0( char*, n );
@@ -599,8 +600,8 @@ tr_metainfoParseImpl( const tr_session  * session,
         return str;
 
     /* get the url-list */
-    if( !isMagnet )
-        geturllist( inf, meta );
+    if( !isMagnet && session )
+        geturllist( inf, meta, session->maxWebseeds );
 
     /* filename of Transmission's copy */
     tr_free( inf->torrent );

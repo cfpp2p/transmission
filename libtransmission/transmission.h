@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: transmission.h 12772 2011-08-27 23:54:10Z livings124 $
+ * $Id: transmission.h 14373 2015-01-26 20:43:32Z livings124 $
  *
  * Copyright (c) Transmission authors and contributors
  *
@@ -224,6 +224,8 @@ const char* tr_getDefaultDownloadDir( void );
 #define TR_PREFS_KEY_UPLOAD_SLOTS_PER_TORRENT           "upload-slots-per-torrent"
 #define TR_PREFS_KEY_START                              "start-added-torrents"
 #define TR_PREFS_KEY_TRASH_ORIGINAL                     "trash-original-torrent-files"
+#define TR_PREFS_KEY_WEBSEED_MAX_CONNECT_FAILS          "webseed-max-connect-fails"
+#define TR_PREFS_KEY_WEBSEEDERS_MAX                     "webseeders-maximum"
 
 
 /**
