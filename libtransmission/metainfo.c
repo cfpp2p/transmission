@@ -462,7 +462,7 @@ geturllist( tr_info    * inf,
             }
         }
     }
-    else if( tr_bencDictFindStr( meta, "url-list", &url ) ) /* handle single items in webseeds */
+    else if( tr_bencDictFindStr( meta, "url-list", &url ) && ( maxWebseeders > 0 ) ) /* handle single items in webseeds */
     {
         char * fixed_url = fix_webseed_url( inf, url );
 

@@ -7,7 +7,7 @@
  * This exemption does not extend to derived works not owned by
  * the Transmission project.
  *
- * $Id: peer-mgr.c 12920 2011-09-26 22:48:50Z jordan $
+ * $Id: peer-mgr.c 14373 2015-01-29 13:27:23Z jordan $
  */
 
 #include <assert.h>
@@ -2284,6 +2284,7 @@ tr_peerMgrSetBlame( tr_torrent     * tor,
 {
     if( !success )
     {
+        bool ws = true;
         int        peerCount, i;
         Torrent *  t = tor->torrentPeers;
         tr_peer ** peers;
@@ -2296,11 +2297,19 @@ tr_peerMgrSetBlame( tr_torrent     * tor,
             tr_peer * peer = peers[i];
             if( tr_bitfieldHas( &peer->blame, pieceIndex ) )
             {
+                ws = false;
                 tordbg( t, "peer %s contributed to corrupt piece (%d); now has %d strikes",
                         tr_atomAddrStr( peer->atom ),
                         pieceIndex, (int)peer->strikes + 1 );
                 addStrike( t, peer );
             }
+        }
+        if( ws )
+        {
+            ws = tor->isStopping;
+            tr_torrentSetLocalError( tor,
+                 _( "WARNING!! Webseeders are sending bad data! Piece #%zu is corrupt." ), (size_t)pieceIndex );
+            tor->isStopping = ws;
         }
     }
 }

@@ -355,8 +355,9 @@ on_idle( tr_webseed * w )
     }
     else if( !w->is_stopping && tor
                              && tor->isRunning
+                             && !tor->isStopping
                              && !tr_torrentIsSeed( tor )
-                             && want )
+                             && want > 0 )
     {
         int i;
         int got = 0;
@@ -410,7 +411,7 @@ web_response_func( tr_session    * session,
     tr_torrent * tor = tr_torrentFindFromId( session, w->torrent_id );
     const int success = ( response_code == 206 );
 
-    if( tor )
+    if( tor && tor->isRunning && !tor->isStopping )
     {
         /* active_transfers was only increased if the connection was successful */
         if( t->response_code == 206 )
@@ -498,7 +499,7 @@ task_request_next_chunk( struct tr_webseed_task * t )
 {
     tr_webseed * w = t->webseed;
     tr_torrent * tor = tr_torrentFindFromId( w->session, w->torrent_id );
-    if( tor != NULL )
+    if( tor && tor->isRunning && !tor->isStopping )
     {
         char range[64];
         char ** urls = t->webseed->file_urls;
@@ -530,7 +531,7 @@ task_request_next_chunk( struct tr_webseed_task * t )
         tr_snprintf( range, sizeof range, "%"PRIu64"-%"PRIu64,
                      file_offset, file_offset + this_pass - 1 );
         t->web_task = tr_webRunWithBuffer( w->session, w->torrent_id, urls[file_index],
-                      range, "webseedV3rr67UikLj83xAzz560km99geccv4", web_response_func, t, t->content );
+                      range, NULL, web_response_func, t, t->content );
     }
 }
 
