@@ -34,6 +34,10 @@
 #include "web.h"
 #include "list.h"
 
+#include <sys/types.h> /* stat */
+#include <sys/stat.h> /* stat */
+#include <unistd.h> /* stat */
+
 #if LIBCURL_VERSION_NUM >= 0x070F06 /* CURLOPT_SOCKOPT* was added in 7.15.6 */
  #define USE_LIBCURL_SOCKOPT
 #endif
@@ -179,11 +183,13 @@ createEasy( tr_session * s, struct tr_web * web, struct tr_web_task * task )
     CURL * e = task->curl_easy = curl_easy_init( );
 
     task->timeout_secs = getTimeoutFromURL( task );
-    if( ( task->cookies != NULL ) && !strcmp( task->cookies, "webseedV3rr67UikLj83xAzz560km99geccv4" ) )
-        task->timeout_secs = 10L;
+    if( task->freebuf==NULL ) task->timeout_secs = 10L;
 
     curl_easy_setopt( e, CURLOPT_AUTOREFERER, 1L );
+
+    if (web->cookie_filename != NULL)
     curl_easy_setopt( e, CURLOPT_COOKIEFILE, web->cookie_filename );
+
     curl_easy_setopt( e, CURLOPT_ENCODING, "gzip;q=1.0, deflate, identity" );
     curl_easy_setopt( e, CURLOPT_FOLLOWLOCATION, 1L );
     curl_easy_setopt( e, CURLOPT_MAXREDIRS, -1L );
@@ -207,7 +213,7 @@ createEasy( tr_session * s, struct tr_web * web, struct tr_web_task * task )
     else if ((( addr = tr_sessionGetPublicAddress( s, TR_AF_INET6, &is_default_value ))) && !is_default_value )
         curl_easy_setopt( e, CURLOPT_INTERFACE, tr_address_to_string( addr ) );
 
-    if( ( task->cookies != NULL ) && strcmp( task->cookies, "webseedV3rr67UikLj83xAzz560km99geccv4" ) != 0 )
+    if( task->cookies != NULL )
         curl_easy_setopt( e, CURLOPT_COOKIE, task->cookies );
 
     if( task->range != NULL ) {
@@ -328,9 +334,28 @@ tr_select( int nfds,
 #endif
 }
 
+#ifdef SYS_DARWIN
+ #define TR_STAT_MTIME(sb) ((sb).st_mtimespec.tv_sec)
+#else
+ #define TR_STAT_MTIME(sb) ((sb).st_mtime)
+#endif
+
+static bool
+fileExists( const char * filename, time_t * mtime )
+{
+    struct stat sb;
+    const bool ok = !stat( filename, &sb );
+
+    if( ok && ( mtime != NULL ) )
+        *mtime = TR_STAT_MTIME( sb );
+
+    return ok;
+}
+
 static void
 tr_webThreadFunc( void * vsession )
 {
+    char * str;
     CURLM * multi;
     struct tr_web * web;
     int taskCount = 0;
@@ -347,7 +372,11 @@ tr_webThreadFunc( void * vsession )
     web->taskLock = tr_lockNew( );
     web->tasks = NULL;
     web->curl_verbose = getenv( "TR_CURL_VERBOSE" ) != NULL;
-    web->cookie_filename = tr_buildPath( session->configDir, "cookies.txt", NULL );
+
+    str = tr_buildPath (session->configDir, "cookies.txt", NULL);
+    if (fileExists (str, NULL))
+        web->cookie_filename = tr_strdup (str);
+    tr_free (str);
 
     multi = curl_multi_init( );
     session->web = web;
@@ -456,6 +485,7 @@ tr_webThreadFunc( void * vsession )
                 task->did_connect = task->code>0 || req_bytes_sent>0;
                 task->did_timeout = !task->code && ( total_time >= task->timeout_secs );
                 curl_multi_remove_handle( multi, e );
+                tr_list_remove_data (&stopeasyhandle, e);
                 curl_easy_cleanup( e );
 
 // http://curl.haxx.se/libcurl/c/curl_easy_getinfo.html
@@ -480,6 +510,7 @@ tr_webThreadFunc( void * vsession )
     }
 
     /* cleanup */
+    tr_list_free (&stopeasyhandle, NULL);
     curl_multi_cleanup( multi );
     tr_lockFree( web->taskLock );
     tr_free( web->cookie_filename );
