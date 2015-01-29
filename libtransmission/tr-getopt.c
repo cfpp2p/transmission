@@ -149,9 +149,11 @@ findOption( const tr_option * opts,
     {
         size_t len = o->longName ? strlen( o->longName ) : 0;
 
-        if( ( matchlen < len ) && !memcmp( str, "--", 2 )
-          && !memcmp( str + 2, o->longName, len )
-          && ( str[len + 2] == '\0' || ( o->has_arg && str[len + 2] == '=' ) ) )
+        if ((matchlen < len)
+          && (str[0] == '-')
+          && (str[1] == '-')
+          && !strncmp (str+2, o->longName, len)
+          && (str[len + 2] == '\0' || (o->has_arg && str[len + 2] == '=')))
         {
             matchlen = len;
             match = o;
@@ -160,9 +162,10 @@ findOption( const tr_option * opts,
 
         len = o->shortName ? strlen( o->shortName ) : 0;
 
-        if( ( matchlen < len ) && !memcmp( str, "-", 1 )
-          && !memcmp( str + 1, o->shortName, len )
-          && ( str[len + 1] == '\0' || o->has_arg ) )
+        if ((matchlen < len)
+          && (str[0] == '-')
+          && !strncmp (str+1, o->shortName, len)
+          && (str[len + 1] == '\0' || o->has_arg))
         {
             matchlen = len;
             match = o;
