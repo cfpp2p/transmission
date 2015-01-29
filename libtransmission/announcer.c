@@ -1199,7 +1199,7 @@ on_announce_done( const tr_announce_response  * response,
                 tr_strlcpy( tier->lastAnnounceStr, str,
                             sizeof( tier->lastAnnounceStr ) );
                 dbgmsg( tier, "Tracker IP \"%s\" is in your blocklist!", response->tracker_addr );
-                publishError( tier, str );
+                publishWarning( tier, str );
             }
             else if(( str = response->warning ))
             {
@@ -1453,14 +1453,14 @@ on_scrape_done( const tr_scrape_response * response, void * vsession )
 
                 if( response->is_blocklisted )
                 {
-                    publishErrorClear( tier );
+                    // publishErrorClear( tier );
                     const char * errstr;
                     errstr = tr_strdup_printf( _( "Tracker IP \"%s\" blocklist match! (scrape)" ), response->tracker_addr );
 
                     tr_strlcpy( tier->lastScrapeStr, errstr, sizeof( tier->lastScrapeStr ) );
                     tr_tordbg( tier->tor, "Tracker IP \"%s\" is in your blocklist! Rescraping in %d seconds.",
                                response->tracker_addr, tier->scrapeIntervalSec );
-                    publishError( tier, errstr );
+                    publishWarning( tier, errstr );
                 }
 
                     tr_tracker * tracker;
