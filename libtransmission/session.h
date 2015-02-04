@@ -119,10 +119,13 @@ struct tr_session
     bool                         deleteSourceTorrent;
     bool                         scrapePausedTorrents;
     bool                         prefetchMagnets;
+    bool                         dropInterruptedWebseeds;
+    bool                         blockListWebseeds;
 
     int                          reverifyTorrents;
     int                          maxWebseeds;
     int                          maxWebseedConnectFails;
+    int                          webseedTimeout;
 
     tr_benc                      removedTorrents;
 
