@@ -20,6 +20,8 @@
 #include "cache.h"
 #include "inout.h" /* tr_ioFindFileLocation() */
 #include "list.h"
+#include "net.h" /* tr_address */
+#include "session.h"
 #include "peer-mgr.h"
 #include "torrent.h"
 #include "trevent.h" /* tr_runInEventThread() */
@@ -242,6 +244,25 @@ connection_succeeded( void * vdata )
     }
 }
 
+static void
+connection_blocklisted( void * vdata )
+{
+    tr_torrent * tor;
+    struct connection_succeeded_data * data = vdata;
+    struct tr_webseed * w = data->webseed;
+
+    if( ( tor = tr_torrentFindFromId( w->session, w->torrent_id ) ) )
+    {
+        uint64_t file_offset;
+        tr_file_index_t file_index;
+
+        tr_ioFindFileLocation( tor, data->piece_index, data->piece_offset,
+                               &file_index, &file_offset );
+        tr_free( w->file_urls[file_index] );
+        w->file_urls[file_index] = data->real_url;
+    }
+}
+
 /***
 ****
 ***/
@@ -255,6 +276,7 @@ on_content_changed( struct evbuffer                * buf,
     const size_t n_added = info->n_added;
     struct tr_webseed_task * task = vtask;
     struct tr_webseed * w = task->webseed;
+    bool is_blocklisted = false;
 
     if( n_added <= 0 )
         return;
@@ -275,25 +297,85 @@ on_content_changed( struct evbuffer                * buf,
         {
             const char * url;
             struct connection_succeeded_data * data;
+            const char * server_ip;
+            const char * effective_ip;
+            struct tr_address addr;
 
             url = NULL;
             tr_webGetTaskInfo( task->web_task, TR_WEB_GET_REAL_URL, &url );
 
-            data = tr_new( struct connection_succeeded_data, 1 );
-            data->webseed = w;
-            data->real_url = tr_strdup( url );
-            data->piece_index = task->piece_index;
-            data->piece_offset = task->piece_offset
-                               + (task->blocks_done * task->block_size)
-                               + (len - 1);
+/////////////////////////////////////////////////////////////////////////////////
 
-            /* processing this uses a tr_torrent pointer,
-               so push the work to the libevent thread... */
-            tr_runInEventThread( w->session, connection_succeeded, data );
+            if( w->session->blockListWebseeds ) {
+                tr_address_from_string( &addr, "0.0.0.0" );
+
+                // blocklist check
+                server_ip = NULL;
+                tr_webGetTaskInfo( task->web_task, TR_WEB_GET_PRIMARY_IP, &server_ip );
+
+                if( tr_address_from_string( &addr, server_ip ) )
+                {
+                    if( tr_sessionIsAddressBlocked( w->session, &addr ) )
+                    is_blocklisted = true;
+                }
+
+                const tr_address * send_address = &addr;
+                effective_ip = tr_strdup( tr_address_to_string( send_address ) );
+
+            // http://curl.haxx.se/libcurl/c/curl_easy_getinfo.html
+            // You should not free the memory returned by this function unless it is explicitly mentioned below.
+            //                tr_free( server_ip );
+				
+//////////////////////////////////////////////////////////////////////////////////
+
+                if( is_blocklisted ) {
+                    struct tr_torrent * tor;
+                    tor = tr_torrentFindFromId( w->session, w->torrent_id );
+                    if( effective_ip )
+                    {
+                        if( tor )
+                            tr_tordbg( tor, "Blocklisted - Webseeder IP:%s - Real URL:%s -", effective_ip, url );
+                        else
+                            tr_nerr("?unknown? torrent", "Blocklisted - Webseeder IP:%s - Real URL:%s -", effective_ip, url );
+                    }
+                    else
+                    {
+                        if( tor )
+                            tr_tordbg( tor, "Blocklisted webseeder - Real URL:%s -", url );
+                        else
+                            tr_nerr("?unknown? torrent", "Blocklisted webseeder - Real URL:%s -", url );
+                    }
+                    // invalidate
+                    w->wait_factor = MAX_WAIT_FACTOR;
+                    data = tr_new( struct connection_succeeded_data, 1 );
+                    data->webseed = w;
+                    data->real_url = tr_strdup( " " );
+                    data->piece_index = task->piece_index;
+                    data->piece_offset = task->piece_offset
+                                       + (task->blocks_done * task->block_size)
+                                       + (len - 1);
+                    /* processing this uses a tr_torrent pointer,
+                      so push the work to the libevent thread... */
+                    tr_runInEventThread( w->session, connection_blocklisted, data );
+                }
+            }
+            else {
+                data = tr_new( struct connection_succeeded_data, 1 );
+                data->webseed = w;
+                data->real_url = tr_strdup( url );
+                data->piece_index = task->piece_index;
+                data->piece_offset = task->piece_offset
+                                   + (task->blocks_done * task->block_size)
+                                   + (len - 1);
+
+                /* processing this uses a tr_torrent pointer,
+                  so push the work to the libevent thread... */
+                tr_runInEventThread( w->session, connection_succeeded, data );
+            }
         }
     }
 
-    if( ( task->response_code == 206 ) && ( len >= task->block_size ) )
+    if( ( task->response_code == 206 ) && ( len >= task->block_size ) && !is_blocklisted )
     {
         /* once we've got at least one full block, save it */
 
@@ -349,13 +431,15 @@ on_idle( tr_webseed * w )
         w->retry_challenge = running_tasks + w->idle_connections + 1;
     }
 
+    // if( want < 1 ) // hmmm - now what 
+    if( w->wait_factor >= MAX_WAIT_FACTOR ) want = 0; //blocklisted webseeder or very very unresponsive server
+
     if( w->is_stopping && !webseed_has_tasks( w ) )
     {
         webseed_free( w );
     }
     else if( !w->is_stopping && tor
                              && tor->isRunning
-                             && !tor->isStopping
                              && !tr_torrentIsSeed( tor )
                              && want > 0 )
     {
@@ -411,10 +495,18 @@ web_response_func( tr_session    * session,
     tr_torrent * tor = tr_torrentFindFromId( session, w->torrent_id );
     const int success = ( response_code == 206 );
 
-    if( tor && tor->isRunning && !tor->isStopping )
+    if( is_blocklisted && w->session->blockListWebseeds )
+    {
+        tr_tordbg( tor, "Blocklisted webseeder - validated on web response - IP:%s -", tracker_addr );
+        w->wait_factor = MAX_WAIT_FACTOR;
+    }
+    else
+        is_blocklisted = 0;
+
+    if( tor )
     {
         /* active_transfers was only increased if the connection was successful */
-        if( t->response_code == 206 )
+        if( t->response_code == 206 && !is_blocklisted )
             --w->active_transfers;
 
         if( !success )
@@ -437,6 +529,7 @@ web_response_func( tr_session    * session,
                                                                                 // wait 100 days -- arbitrary
                          }
                          else w->wait_factor = 28800;
+                         if( w->session->maxWebseedConnectFails == 0 ) w->wait_factor = 1; // yikes! - bypass ALL blocks !!
                      }
 
             tr_list_remove_data( &w->tasks, t );
@@ -450,13 +543,17 @@ web_response_func( tr_session    * session,
 
             if( bytes_done + buf_len < t->length )
             {
-                /* request finished successfully but there's still data missing. that
-                means we've reached the end of a file and need to request the next one */
-                t->response_code = 0;
-                task_request_next_chunk( t );
+                if( !is_blocklisted )
+                {
+                    /* request finished successfully but there's still data missing. that
+                    means we've reached the end of a file and need to request the next one */
+                    t->response_code = 0;
+                    task_request_next_chunk( t );
+                }
             }
             else
             {
+                // if it were blocklisted we have already read to buffer so save it anyway -- it is too late...
                 if( buf_len ) {
                     /* on_content_changed() will not write a block if it is smaller than
                     the torrent's block size, i.e. the torrent's very last block */
@@ -499,7 +596,7 @@ task_request_next_chunk( struct tr_webseed_task * t )
 {
     tr_webseed * w = t->webseed;
     tr_torrent * tor = tr_torrentFindFromId( w->session, w->torrent_id );
-    if( tor && tor->isRunning && !tor->isStopping )
+    if( tor != NULL )
     {
         char range[64];
         char ** urls = t->webseed->file_urls;
@@ -531,7 +628,7 @@ task_request_next_chunk( struct tr_webseed_task * t )
         tr_snprintf( range, sizeof range, "%"PRIu64"-%"PRIu64,
                      file_offset, file_offset + this_pass - 1 );
         t->web_task = tr_webRunWithBuffer( w->session, w->torrent_id, urls[file_index],
-                      range, NULL, web_response_func, t, t->content );
+                                           range, NULL, web_response_func, t, t->content );
     }
 }
 
