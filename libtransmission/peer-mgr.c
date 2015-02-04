@@ -512,30 +512,25 @@ torrentFree( void * vt )
 
 static void peerCallbackFunc( tr_peer *, const tr_peer_event *, void * );
 
-/* Charlie's wicked fix !!!! (commented OUT -- Don't use)
+//Charlie's wicked fix !!!!
 static void
 rebuildWebseedArray( Torrent * t, tr_torrent * tor )
 {
     int i;
-    const tr_info * inf = &tor->info;
 
-    /* clear the array
-    tr_ptrArrayDestruct( &t->webseeds, (PtrArrayForeachFunc)tr_webseedFree );
-    t->webseeds = TR_PTR_ARRAY_INIT;
-
-    /* repopulate it
-    for( i = 0; i < inf->webseedCount; ++i )
+    /* repopulate it */
+    for( i = 0; i < tor->info.webseedCount; ++i )
     {
-        tr_webseed * w = tr_webseedNew( tor, inf->webseeds[i], peerCallbackFunc, t );
+        tr_webseed * w =
+            tr_webseedNew( tor, tor->info.webseeds[i], peerCallbackFunc, t );
         tr_ptrArrayAppend( &t->webseeds, w );
     }
 }
-*/
+
 
 static Torrent*
 torrentNew( tr_peerMgr * manager, tr_torrent * tor )
 {
-    int       i;
     Torrent * t;
 
     t = tr_new0( Torrent, 1 );
@@ -547,12 +542,6 @@ torrentNew( tr_peerMgr * manager, tr_torrent * tor )
 
     if( tr_torrentHasMetadata( tor ) ) {
     t->webseeds = TR_PTR_ARRAY_INIT;
-        for( i = 0; i < tor->info.webseedCount; ++i )
-        {
-            tr_webseed * w =
-                tr_webseedNew( tor, tor->info.webseeds[i], peerCallbackFunc, t );
-            tr_ptrArrayAppend( &t->webseeds, w );
-        }
     }
 
     return t;
@@ -2501,6 +2490,12 @@ tr_peerMgrStartTorrent( tr_torrent * tor )
     t->maxPeers = t->tor->maxConnectedPeers;
     t->pieceSortState = PIECES_UNSORTED;
 
+    /* clear the array - allows new connections of webseeders */
+    tr_ptrArrayDestruct( &t->webseeds, (PtrArrayForeachFunc)tr_webseedFree );
+    t->webseeds = TR_PTR_ARRAY_INIT;
+	
+    rebuildWebseedArray( t, tor );
+
     rechokePulse( 0, 0, t->manager );
 }
 
@@ -2522,6 +2517,9 @@ stopTorrent( Torrent * t )
      * which removes the handshake from t->outgoingHandshakes... */
     while( !tr_ptrArrayEmpty( &t->outgoingHandshakes ) )
         tr_handshakeAbort( tr_ptrArrayNth( &t->outgoingHandshakes, 0 ) );
+
+    /* do not clear the array here - wait intil web.c is finished - use tr_peerMgrStartTorrent instead*/
+
 }
 
 void
@@ -2590,13 +2588,6 @@ tr_peerMgrOnTorrentGotMetainfo( tr_torrent * tor )
 	
     t->webseeds = TR_PTR_ARRAY_INIT;
 
-    /* the webseed list may have changed... */
-    for( i = 0; i < tor->info.webseedCount; ++i )
-    {
-        tr_webseed * w =
-            tr_webseedNew( tor, tor->info.webseeds[i], peerCallbackFunc, t );
-        tr_ptrArrayAppend( &t->webseeds, w );
-    }
 
     /* some peer_msgs' progress fields may not be accurate if we
        didn't have the metadata before now... so refresh them all... */
