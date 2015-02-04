@@ -181,16 +181,21 @@ progress_callback_func( void * vtask, double dltotal, double dlnow,
 {
     struct tr_web_task * task = vtask;
     tr_torrent * wsTor = NULL;
-    if( task->torrentId != -1 )
+    if( task->torrentId != -1 ) {
         wsTor = tr_torrentFindFromId( task->session, task->torrentId );
+        if( !wsTor ) {
+            tr_tordbg( wsTor, "connection closed on deleted torrent - Webseed IP:%s -", task->tracker_addr );
+            return 1;
+        }
+    }
 
-    if( wsTor && ( !wsTor->isRunning || wsTor->isStopping ) ) {
+    if( wsTor && !wsTor->isRunning ) {
         if( task->tracker_addr )
-            tr_tordbg( wsTor, "Webseed IP:%s connection closed correctly by user pause torrent", task->tracker_addr );
+            tr_tordbg( wsTor, "Webseed IP:%s connection closed - torrent was paused by user", task->tracker_addr );
         else
-            tr_tordbg( wsTor, "user paused Webseed torrent IP: ???unknown???" );
+            tr_tordbg( wsTor, "Torrent paused - Webseed disconnected - IP: ???unknown???" );
         if( task->tracker_addr && task->is_blocklisted )
-            tr_tordbg( wsTor, "BLOCKLISTED Webseed IP:%s connection closed correctly by user pausing torrent", task->tracker_addr );
+            tr_tordbg( wsTor, "BLOCKLISTED Webseed IP:%s connection closed by user pausing torrent", task->tracker_addr );
         return 1;
     }
 
@@ -207,11 +212,15 @@ createEasy( tr_session * s, struct tr_web * web, struct tr_web_task * task )
     task->timeout_secs = getTimeoutFromURL( task );
     if( task->freebuf==NULL )
     {
-        task->timeout_secs = 10L;
-        curl_easy_setopt( e, CURLOPT_PROGRESSFUNCTION, progress_callback_func );
-        /* pass the struct pointer into the progress function */
-        curl_easy_setopt( e, CURLOPT_PROGRESSDATA, task );
-        curl_easy_setopt( e, CURLOPT_NOPROGRESS, 0L );
+        task->timeout_secs = (long)s->webseedTimeout;
+
+        // special value to turn off the dropping of connections for stopped torrents
+        if( s->dropInterruptedWebseeds ) {
+            curl_easy_setopt( e, CURLOPT_PROGRESSFUNCTION, progress_callback_func );
+            /* pass the struct pointer into the progress function */
+            curl_easy_setopt( e, CURLOPT_PROGRESSDATA, task );
+            curl_easy_setopt( e, CURLOPT_NOPROGRESS, 0L );
+        }
     }
 
     curl_easy_setopt( e, CURLOPT_AUTOREFERER, 1L );
@@ -487,7 +496,7 @@ tr_webThreadFunc( void * vsession )
                 double total_time;
                 struct tr_web_task * task;
                 long req_bytes_sent;
-                char * server_ip;
+                const char * server_ip;
                 struct tr_address addr;
                 CURL * e = msg->easy_handle;
                 curl_easy_getinfo( e, CURLINFO_PRIVATE, (void*)&task );
@@ -498,6 +507,7 @@ tr_webThreadFunc( void * vsession )
                 tr_address_from_string( &addr, "0.0.0.0" );
 
                 // hook for blocklist check
+                server_ip = NULL;
                 if( !curl_easy_getinfo( e, CURLINFO_PRIMARY_IP, &server_ip ) )  // CURLE_OK
                 {
                     if( tr_address_from_string( &addr, server_ip ) )

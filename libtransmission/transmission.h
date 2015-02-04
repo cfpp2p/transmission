@@ -167,8 +167,10 @@ const char* tr_getDefaultDownloadDir( void );
 #define TR_PREFS_KEY_BIND_ADDRESS_IPV6                  "bind-address-ipv6"
 #define TR_PREFS_KEY_BLOCKLIST_ENABLED                  "blocklist-enabled"
 #define TR_PREFS_KEY_BLOCKLIST_URL                      "blocklist-url"
+#define TR_PREFS_KEY_BLOCKLIST_WEBSEEDS                 "blocklist-webseeds"
 #define TR_PREFS_KEY_MAX_CACHE_SIZE_MB                  "cache-size-mb"
 #define TR_PREFS_KEY_DHT_ENABLED                        "dht-enabled"
+#define TR_PREFS_KEY_DROP_INTERRUPTED_WEBSEEDS          "drop-interrupted-webseeds"
 #define TR_PREFS_KEY_UTP_ENABLED                        "utp-enabled"
 #define TR_PREFS_KEY_LPD_ENABLED                        "lpd-enabled"
 #define TR_PREFS_KEY_DOWNLOAD_QUEUE_SIZE                "download-queue-size"
@@ -224,8 +226,9 @@ const char* tr_getDefaultDownloadDir( void );
 #define TR_PREFS_KEY_UPLOAD_SLOTS_PER_TORRENT           "upload-slots-per-torrent"
 #define TR_PREFS_KEY_START                              "start-added-torrents"
 #define TR_PREFS_KEY_TRASH_ORIGINAL                     "trash-original-torrent-files"
-#define TR_PREFS_KEY_WEBSEED_MAX_CONNECT_FAILS          "webseed-max-connect-fails"
 #define TR_PREFS_KEY_WEBSEEDERS_MAX                     "webseeders-maximum"
+#define TR_PREFS_KEY_WEBSEED_MAX_CONNECT_FAILS          "webseed-max-connect-fails"
+#define TR_PREFS_KEY_WEBSEED_TIMEOUT_VALUE              "webseed-timeout-seconds"
 
 
 /**
