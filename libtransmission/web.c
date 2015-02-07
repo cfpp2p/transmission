@@ -135,8 +135,9 @@ writeFunc( void * ptr, size_t size, size_t nmemb, void * vtask )
             }
         else
             {
-            tr_dbg( "?unknown? torrent has been deleted - cancelled %p's buffer write - old ID was %d - ", task, task->torrentId );
-            tr_dbg( "connection closed - Webseed IP:%s - old ID was %d - ", task->tracker_addr, task->torrentId );
+            tr_dbg( "?unknown? torrent deleted - cancelled webseed %p's buffer write - old ID was %d - ", task, task->torrentId );
+            if( task->tracker_addr )
+                tr_dbg( "connection closed - Webseed IP:%s - old ID was %d - ", task->tracker_addr, task->torrentId );
             return byteCount + 1;
             }
         }
