@@ -133,6 +133,12 @@ writeFunc( void * ptr, size_t size, size_t nmemb, void * vtask )
                 return CURL_WRITEFUNC_PAUSE;
                 }
             }
+        else
+            {
+            tr_dbg( "?unknown? torrent has been deleted - cancelled %p's buffer write - old ID was %d - ", task, task->torrentId );
+            tr_dbg( "connection closed - Webseed IP:%s - old ID was %d - ", task->tracker_addr, task->torrentId );
+            return byteCount + 1;
+            }
         }
     evbuffer_add( task->response, ptr, byteCount );
     dbgmsg( "wrote %zu bytes to task %p's buffer", byteCount, task );
@@ -184,7 +190,8 @@ progress_callback_func( void * vtask, double dltotal, double dlnow,
     if( task->torrentId != -1 ) {
         wsTor = tr_torrentFindFromId( task->session, task->torrentId );
         if( !wsTor ) {
-            tr_tordbg( wsTor, "connection closed on deleted torrent - Webseed IP:%s -", task->tracker_addr );
+            tr_dbg( "connection closed on deleted torrent - Webseed IP:%s - old ID was %d - ", task->tracker_addr, task->torrentId );
+            tr_dbg( "?unknown? torrent deleted - cancelled %p's buffer write - old ID was %d - ", task, task->torrentId );
             return 1;
         }
     }

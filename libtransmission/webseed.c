@@ -336,14 +336,14 @@ on_content_changed( struct evbuffer                * buf,
                         if( tor )
                             tr_tordbg( tor, "Blocklisted - Webseeder IP:%s - Real URL:%s -", effective_ip, url );
                         else
-                            tr_nerr("?unknown? torrent", "Blocklisted - Webseeder IP:%s - Real URL:%s -", effective_ip, url );
+                            tr_dbg( "?unknown? torrent Blocklisted - Webseeder IP:%s - Real URL:%s -", effective_ip, url );
                     }
                     else
                     {
                         if( tor )
                             tr_tordbg( tor, "Blocklisted webseeder - Real URL:%s -", url );
                         else
-                            tr_nerr("?unknown? torrent", "Blocklisted webseeder - Real URL:%s -", url );
+                            tr_dbg( "?unknown? torrent Blocklisted webseeder - Real URL:%s -", url );
                     }
                     // invalidate
                     w->wait_factor = MAX_WAIT_FACTOR;
@@ -497,7 +497,11 @@ web_response_func( tr_session    * session,
 
     if( is_blocklisted && w->session->blockListWebseeds )
     {
-        tr_tordbg( tor, "Blocklisted webseeder - validated on web response - IP:%s -", tracker_addr );
+        if( tor )
+            tr_tordbg( tor, "Blocklisted webseeder - validated on web response - IP:%s -", tracker_addr );
+        else
+            tr_dbg( "??unknown?? webseeder blocklisted - old torrent ID was %d - validated IP:%s -", w->torrent_id, tracker_addr );
+
         w->wait_factor = MAX_WAIT_FACTOR;
     }
     else
