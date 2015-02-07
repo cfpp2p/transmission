@@ -331,20 +331,12 @@ on_content_changed( struct evbuffer                * buf,
                 if( is_blocklisted ) {
                     struct tr_torrent * tor;
                     tor = tr_torrentFindFromId( w->session, w->torrent_id );
-                    if( effective_ip )
-                    {
-                        if( tor )
-                            tr_tordbg( tor, "Blocklisted - Webseeder IP:%s - Real URL:%s -", effective_ip, url );
-                        else
-                            tr_dbg( "?unknown? torrent Blocklisted - Webseeder IP:%s - Real URL:%s -", effective_ip, url );
-                    }
+                    if( !effective_ip ) effective_ip = tr_strdup( "??unknown??" );
+                    if( !url ) url = tr_strdup( "??unknown??" );
+                    if( tor )
+                        tr_tordbg( tor, "Blocklisted - Webseeder IP:%s - Real URL:%s -", effective_ip, url );
                     else
-                    {
-                        if( tor )
-                            tr_tordbg( tor, "Blocklisted webseeder - Real URL:%s -", url );
-                        else
-                            tr_dbg( "?unknown? torrent Blocklisted webseeder - Real URL:%s -", url );
-                    }
+                        tr_dbg( "?unknown? torrent Blocklisted - Webseeder IP:%s - Real URL:%s -", effective_ip, url );
                     // invalidate
                     w->wait_factor = MAX_WAIT_FACTOR;
                     data = tr_new( struct connection_succeeded_data, 1 );
@@ -497,10 +489,13 @@ web_response_func( tr_session    * session,
 
     if( is_blocklisted && w->session->blockListWebseeds )
     {
+        if( !tracker_addr ) tracker_addr = tr_strdup( "??unknown??" );
         if( tor )
             tr_tordbg( tor, "Blocklisted webseeder - validated on web response - IP:%s -", tracker_addr );
+        else if( w->torrent_id )
+		    tr_dbg( "??unknown?? webseeder blocklisted - old torrent ID was %d - validated IP:%s -", w->torrent_id, tracker_addr );
         else
-            tr_dbg( "??unknown?? webseeder blocklisted - old torrent ID was %d - validated IP:%s -", w->torrent_id, tracker_addr );
+            tr_dbg( "??unknown?? webseeder blocklisted - validated IP:%s -", tracker_addr );
 
         w->wait_factor = MAX_WAIT_FACTOR;
     }

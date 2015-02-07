@@ -135,8 +135,9 @@ writeFunc( void * ptr, size_t size, size_t nmemb, void * vtask )
             }
         else
             {
-            tr_dbg( "?unknown? torrent has been deleted - cancelled %p's buffer write - old ID was %d - ", task, task->torrentId );
-            tr_dbg( "connection closed - Webseed IP:%s - old ID was %d - ", task->tracker_addr, task->torrentId );
+            tr_dbg( "?unknown? torrent deleted - cancelled webseed %p's buffer write - old ID was %d - ", task, task->torrentId );
+            if( task->tracker_addr )
+                tr_dbg( "connection closed - Webseed IP:%s - old ID was %d - ", task->tracker_addr, task->torrentId );
             return byteCount + 1;
             }
         }
@@ -190,8 +191,17 @@ progress_callback_func( void * vtask, double dltotal, double dlnow,
     if( task->torrentId != -1 ) {
         wsTor = tr_torrentFindFromId( task->session, task->torrentId );
         if( !wsTor ) {
-            tr_dbg( "connection closed on deleted torrent - Webseed IP:%s - old ID was %d - ", task->tracker_addr, task->torrentId );
-            tr_dbg( "?unknown? torrent deleted - cancelled %p's buffer write - old ID was %d - ", task, task->torrentId );
+            if( task->tracker_addr && task->torrentId ) {
+                tr_dbg( "connection closed on deleted torrent - Webseed IP:%s - old ID was %d - ", task->tracker_addr, task->torrentId );
+                tr_dbg( "?unknown? torrent deleted - cancelled webseed %p's buffer write - old ID was %d - ", task, task->torrentId );
+            }
+            else if( task->tracker_addr )
+                tr_dbg( "connection closed on deleted torrent - cancelled webseed %p's buffer write - Webseed IP:%s - ", task, task->tracker_addr );
+            else if( task->torrentId )
+                tr_dbg( "?unknown? torrent deleted - cancelled webseed %p's buffer write - old ID was %d - ", task, task->torrentId );
+            else
+                tr_dbg( "?unknown? torrent deleted - cancelled webseed %p's buffer write - ", task );
+
             return 1;
         }
     }
