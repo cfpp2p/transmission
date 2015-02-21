@@ -2476,29 +2476,6 @@ ensureMgrTimersExist( struct tr_peerMgr * m )
         m->refillUpkeepTimer = createTimer( m->session, REFILL_UPKEEP_PERIOD_MSEC, refillUpkeep, m );
 }
 
-void
-tr_peerMgrStartTorrent( tr_torrent * tor )
-{
-    Torrent * t = tor->torrentPeers;
-
-    assert( tr_isTorrent( tor ) );
-    assert( tr_torrentIsLocked( tor ) );
-
-    ensureMgrTimersExist( t->manager );
-
-    t->isRunning = true;
-    t->maxPeers = t->tor->maxConnectedPeers;
-    t->pieceSortState = PIECES_UNSORTED;
-
-    /* clear the array - allows new connections of webseeders */
-    tr_ptrArrayDestruct( &t->webseeds, (PtrArrayForeachFunc)tr_webseedFree );
-    t->webseeds = TR_PTR_ARRAY_INIT;
-	
-    rebuildWebseedArray( t, tor );
-
-    rechokePulse( 0, 0, t->manager );
-}
-
 static void
 stopTorrent( Torrent * t )
 {
@@ -2520,6 +2497,36 @@ stopTorrent( Torrent * t )
 
     /* do not clear the array here - wait intil web.c is finished - use tr_peerMgrStartTorrent instead*/
 
+}
+
+void
+tr_peerMgrStartTorrent( tr_torrent * tor )
+{
+    Torrent * t = tor->torrentPeers;
+
+    assert( tr_isTorrent( tor ) );
+    assert( tr_torrentIsLocked( tor ) );
+
+    // fix race conditions with start stop start and rechoke pulse
+    managerLock( t->manager );
+    torrentLock( t );
+    tr_torrentLock( tor );
+
+    /* allows new connections of webseeders */
+    t->webseeds = TR_PTR_ARRAY_INIT;
+    rebuildWebseedArray( t, tor );
+
+    tr_torrentUnlock( tor );
+    torrentUnlock( t );
+    managerUnlock( t->manager );
+
+    ensureMgrTimersExist( t->manager );
+
+    t->isRunning = true;
+    t->maxPeers = t->tor->maxConnectedPeers;
+    t->pieceSortState = PIECES_UNSORTED;
+
+    rechokePulse( 0, 0, t->manager );
 }
 
 void
@@ -2585,9 +2592,8 @@ tr_peerMgrOnTorrentGotMetainfo( tr_torrent * tor )
     int peerCount;
     tr_peer ** peers;
     Torrent * t = tor->torrentPeers;
-	
-    t->webseeds = TR_PTR_ARRAY_INIT;
 
+    t->webseeds = TR_PTR_ARRAY_INIT;
 
     /* some peer_msgs' progress fields may not be accurate if we
        didn't have the metadata before now... so refresh them all... */
