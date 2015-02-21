@@ -123,7 +123,7 @@ writeFunc( void * ptr, size_t size, size_t nmemb, void * vtask )
     if (task->torrentId != -1)
         {
 	    tr_torrent * tor = tr_torrentFindFromId (task->session, task->torrentId);
-        if (tor)
+        if (tor && tor->isRunning && !tor->isStopping && !tr_torrentIsSeed( tor ))
             {
             unsigned int n=tr_bandwidthClamp(&(tor->bandwidth), TR_DOWN, nmemb );
             unsigned int n2=tr_bandwidthClamp(&(task->session->bandwidth), TR_DOWN, nmemb );
@@ -135,9 +135,14 @@ writeFunc( void * ptr, size_t size, size_t nmemb, void * vtask )
             }
         else
             {
-            tr_dbg( "?unknown? torrent deleted - cancelled webseed %p's buffer write - old ID was %d - ", task, task->torrentId );
+            if( !tor )
+                tr_dbg( "?unknown? torrent deleted - cancelled webseed %p's buffer write - old ID was %d - ",
+				         task, task->torrentId );
+            else
+                tr_tordbg( tor, "torrent paused - cancelled webseed %p's buffer write - ", task );
+
             if( task->tracker_addr )
-                tr_dbg( "connection closed - Webseed IP:%s - old ID was %d - ", task->tracker_addr, task->torrentId );
+                tr_dbg( "connection closed - Webseed IP:%s - torrent ID was %d - ", task->tracker_addr, task->torrentId );
             return byteCount + 1;
             }
         }
@@ -191,6 +196,7 @@ progress_callback_func( void * vtask, double dltotal, double dlnow,
     if( task->torrentId != -1 ) {
         wsTor = tr_torrentFindFromId( task->session, task->torrentId );
         if( !wsTor ) {
+            tr_dbg( "not a torrent - progress test %d - ", (int)ulnow );
             if( task->tracker_addr && task->torrentId ) {
                 tr_dbg( "connection closed on deleted torrent - Webseed IP:%s - old ID was %d - ", task->tracker_addr, task->torrentId );
                 tr_dbg( "?unknown? torrent deleted - cancelled webseed %p's buffer write - old ID was %d - ", task, task->torrentId );
@@ -206,13 +212,14 @@ progress_callback_func( void * vtask, double dltotal, double dlnow,
         }
     }
 
-    if( wsTor && !wsTor->isRunning ) {
+    if( wsTor && ( !wsTor->isRunning || wsTor->isStopping || tr_torrentIsSeed( wsTor ) ) ) {
+        tr_dbg( "not running torrent - progress test %d - ", (int)ulnow );
         if( task->tracker_addr )
             tr_tordbg( wsTor, "Webseed IP:%s connection closed - torrent was paused by user", task->tracker_addr );
         else
             tr_tordbg( wsTor, "Torrent paused - Webseed disconnected - IP: ???unknown???" );
         if( task->tracker_addr && task->is_blocklisted )
-            tr_tordbg( wsTor, "BLOCKLISTED Webseed IP:%s connection closed by user pausing torrent", task->tracker_addr );
+            tr_tordbg( wsTor, "Webseed in BLOCKLIST- IP:%s connection closed by user pausing torrent", task->tracker_addr );
         return 1;
     }
 
@@ -550,6 +557,8 @@ tr_webThreadFunc( void * vsession )
 
 
 /*fprintf( stderr, "removing a completed task.. taskCount is now %d (response code: %d, response len: %d)\n", taskCount, (int)task->code, (int)evbuffer_get_length(task->response) );*/
+                if( progress_callback_func( task, 0, 0, 0, (double)999 ) )
+                    task->code = 999L;
                 tr_runInEventThread( task->session, task_finish_func, task );
                 --taskCount;
             }
