@@ -7,7 +7,7 @@
  * This exemption does not extend to derived works not owned by
  * the Transmission project.
  *
- * $Id: webseed.c 14382 2015-02-16 21:38:45Z jordan $
+ * $Id: webseed.c 14427 2015-03-04 17:11:04Z jordan $
  */
 
 #include <string.h> /* strlen() */
@@ -63,6 +63,8 @@ struct tr_webseed
     int                  idle_connections;
     int                  active_transfers;
     char              ** file_urls;
+    struct tr_bitfield   blame;
+    int                  strike_count;
 };
 
 enum
@@ -74,6 +76,8 @@ enum
     MAX_CONSECUTIVE_FAILURES = 5,
 
     MAX_WEBSEED_CONNECTIONS = 4,
+
+    MAX_BAD_PIECES_PER_WEBSEED = 5,
 
     MAX_WAIT_FACTOR = 288   // -- 24 hours -- 150 * 2000ms * 288
 };
@@ -126,6 +130,7 @@ webseed_free( struct tr_webseed * w )
     /* webseed destruct */
     event_free( w->timer );
     tr_bandwidthDestruct( &w->bandwidth );
+    tr_bitfieldDestruct (&w->blame);
     tr_free( w->base_url );
 
     /* parent class destruct */
@@ -250,6 +255,7 @@ write_block_func( void * vdata )
             len -= bytes_this_pass;
         }
 
+        tr_bitfieldAdd (&w->blame, piece);
         fire_client_got_blocks( tor, w, data->block_index, data->count );
     }
 
@@ -694,6 +700,7 @@ web_response_func( tr_session    * session,
                                         t->piece_index, t->piece_offset + bytes_done,
                                         buf_len, t->content );
 
+                    tr_bitfieldAdd (&w->blame, t->piece_index);
                     fire_client_got_blocks( tor, t->webseed,
                                             t->block + t->blocks_done, 1 );
                 }
@@ -713,6 +720,28 @@ web_response_func( tr_session    * session,
         tr_dbg( "?unknown? ID %d webseed deleted torrent web response aborted", w->torrent_id );
         w->wait_factor = MAX_WAIT_FACTOR;
         t->response_code = 999L;
+    }
+}
+
+void
+increment_webseed_strike_count (tr_webseed     * w,
+            tr_torrent     * tor,
+            tr_piece_index_t    pieceIndex)
+{
+  if (tr_bitfieldHas (&w->blame, pieceIndex))
+    {
+      ++w->strike_count;
+     
+      if (w->strike_count < MAX_BAD_PIECES_PER_WEBSEED)
+         tr_tordbg (tor, "Webseed URL:%s contributed to corrupt piece %d, strike_count is %d.",
+              w->base_url, pieceIndex, w->strike_count);
+      else
+      {
+         w->wait_factor = MAX_WAIT_FACTOR;
+         tr_tordbg (tor, "Webseed URL:%s has sent %d bad pieces and has been disabled.",
+              w->base_url, MAX_BAD_PIECES_PER_WEBSEED);
+    
+      }
     }
 }
 
@@ -837,6 +866,7 @@ tr_webseedNew( struct tr_torrent  * tor,
     w->file_urls = tr_new0( char *, inf->fileCount );
     //tr_rcConstruct( &w->download_rate );
     tr_bandwidthConstruct( &w->bandwidth, tor->session, &tor->bandwidth );
+    tr_bitfieldConstruct (&w->blame, tor->blockCount);
     w->timer = evtimer_new( w->session->event_base, webseed_timer_func, w );
     tr_timerAddMsec( w->timer, TR_IDLE_TIMER_MSEC );
     return w;
