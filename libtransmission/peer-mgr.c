@@ -2273,7 +2273,6 @@ tr_peerMgrSetBlame( tr_torrent     * tor,
 {
     if( !success )
     {
-        bool ws = true;
         int        peerCount, i;
         Torrent *  t = tor->torrentPeers;
         tr_peer ** peers;
@@ -2286,19 +2285,23 @@ tr_peerMgrSetBlame( tr_torrent     * tor,
             tr_peer * peer = peers[i];
             if( tr_bitfieldHas( &peer->blame, pieceIndex ) )
             {
-                ws = false;
                 tordbg( t, "peer %s contributed to corrupt piece (%d); now has %d strikes",
                         tr_atomAddrStr( peer->atom ),
                         pieceIndex, (int)peer->strikes + 1 );
                 addStrike( t, peer );
             }
         }
-        if( ws )
+
+      if (&t->webseeds)
         {
-            ws = tor->isStopping;
-            tr_torrentSetLocalError( tor,
-                 _( "WARNING!! Webseeders are sending bad data! Piece #%zu is corrupt." ), (size_t)pieceIndex );
-            tor->isStopping = ws;
+          i = 0;
+          int n = 0;
+
+          for (i=0, n=tr_ptrArraySize(&t->webseeds); i!=n; ++i)
+          {
+            tr_webseed * w = tr_ptrArrayNth (&t->webseeds, i);
+            increment_webseed_strike_count (w, tor, pieceIndex);
+          }
         }
     }
 }

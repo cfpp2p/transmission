@@ -36,5 +36,8 @@ bool        tr_webseedGetSpeed_Bps( const tr_webseed * w,
 /** @return true if a request is being processed, or false if idle */
 bool        tr_webseedIsActive( const tr_webseed * w );
 
+void increment_webseed_strike_count (tr_webseed          * webseed,
+                 struct tr_torrent * torrent,
+                 tr_piece_index_t    pieceIndex);
 
 #endif
