@@ -6,6 +6,7 @@ Commits on March 04, 2015
     fix #5873 patch by x190 Corrupt webseed causes
     excessive bandwidth usage
     https://trac.transmissionbt.com/ticket/5873
+    cfpp2p authored Mar 04, 2015
 
 Commits on Feb 21, 2015 
 
