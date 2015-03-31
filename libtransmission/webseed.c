@@ -248,15 +248,21 @@ write_block_func( void * vdata )
         tr_cache * cache = w->session->cache;
         const tr_piece_index_t piece = data->piece_index;
 
-        while( len > 0 )
+        if( !tr_cpPieceIsComplete( &tor->completion, piece ) )
+        // do not write the block if it is already complete - from libevent thread
+        // also prevents a bug where a corrupt block overwrites a good block
         {
-            const uint32_t bytes_this_pass = MIN( len, block_size );
-            tr_cacheWriteBlock( cache, tor, piece, offset_end - len, bytes_this_pass, buf );
-            len -= bytes_this_pass;
-        }
+            while( len > 0 )
+            {
+                const uint32_t bytes_this_pass = MIN( len, block_size );
+                tr_cacheWriteBlock( cache, tor, piece, offset_end - len, bytes_this_pass, buf );
+                len -= bytes_this_pass;
+            }
 
-        tr_bitfieldAdd (&w->blame, piece);
-        fire_client_got_blocks( tor, w, data->block_index, data->count );
+            tr_bitfieldAdd (&w->blame, piece);
+            fire_client_got_blocks( tor, w, data->block_index, data->count );
+        }
+        else tr_tordbg( tor, "we did ask for this piece, but piece %d is already complete...", piece );
     }
 
     evbuffer_free( buf );
@@ -692,19 +698,24 @@ web_response_func( tr_session    * session,
             }
             else
             {
+
                 // if it were blocklisted we have already read to buffer so save it anyway -- it is too late...
                 if( buf_len ) {
                     /* on_content_changed() will not write a block if it is smaller than
                     the torrent's block size, i.e. the torrent's very last block */
-                    tr_cacheWriteBlock( session->cache, tor,
-                                        t->piece_index, t->piece_offset + bytes_done,
-                                        buf_len, t->content );
+                    if( !tr_cpPieceIsComplete( &tor->completion, t->piece_index ) )
+                    {
+                        tr_cacheWriteBlock( session->cache, tor,
+                                            t->piece_index, t->piece_offset + bytes_done,
+                                            buf_len, t->content );
 
-                    tr_bitfieldAdd (&w->blame, t->piece_index);
-                    fire_client_got_blocks( tor, t->webseed,
-                                            t->block + t->blocks_done, 1 );
+                        tr_bitfieldAdd (&w->blame, t->piece_index);
+                        fire_client_got_blocks( tor, t->webseed,
+                                                t->block + t->blocks_done, 1 );
+                    }
+                    else tr_tordbg( tor, "we did ask for this piece, but piece %d is already complete...",
+                                                                               t->piece_index );
                 }
-
                 ++w->idle_connections;
 
                 tr_list_remove_data( &w->tasks, t );
