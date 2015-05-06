@@ -1004,7 +1004,7 @@ torrentInit( tr_torrent * tor, const tr_ctor * ctor )
     tor->queuePosition = session->torrentCount;
     tor->reverifyTorrent = tor->session->reverifyTorrents;
 
-    tr_peerIdInit( tor->peer_id );
+    tr_peerIdInitTor( tor );
 
     tr_sha1( tor->obfuscatedHash, "req2", 4,
              tor->info.hash, SHA_DIGEST_LENGTH,
@@ -1109,12 +1109,12 @@ torrentInit( tr_torrent * tor, const tr_ctor * ctor )
 
     if( !( loaded & TR_FR_STREAMINGMODE ) )
     {
-        tr_torrentSetStreamingMode( tor, TR_STREAMING_OFF );
+        tr_torrentSetStreamingMode( tor, tor->session->streamModeDefault );
     }
 
     if( !( loaded & TR_FR_CHEATMODE ) )
     {
-        tr_torrentSetCheatMode( tor, TR_CHEAT_DEACT );
+        tr_torrentSetCheatMode( tor, tor->session->cheatModeDefault );
     }
     // random float, range 0.0 to 0.1
     tor->cheatRand = (float)tr_cryptoRandInt(100000)/1000000;
@@ -1979,7 +1979,7 @@ torrentStart( tr_torrent * tor, bool bypass_queue )
      * closed and opened again without quitting Transmission ...
      * change the peerid. It would help sometimes if a stopped event
      * was missed to ensure that we didn't think someone was cheating. */
-    tr_peerIdInit( tor->peer_id );
+    tr_peerIdInitTor( tor );
     tor->isRunning = 1;
     tr_torrentSetDirty( tor );
     tr_runInEventThread( tor->session, torrentStartImpl, tor );

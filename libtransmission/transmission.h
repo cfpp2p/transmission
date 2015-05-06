@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: transmission.h 12772 2011-08-27 23:54:10Z livings124 $
+ * $Id: transmission.h 14485 2015-05-01 14:29:33Z livings124 $
  *
  * Copyright (c) Transmission authors and contributors
  *
@@ -169,6 +169,8 @@ const char* tr_getDefaultDownloadDir( void );
 #define TR_PREFS_KEY_BLOCKLIST_URL                      "blocklist-url"
 #define TR_PREFS_KEY_BLOCKLIST_WEBSEEDS                 "blocklist-webseeds"
 #define TR_PREFS_KEY_MAX_CACHE_SIZE_MB                  "cache-size-mb"
+#define TR_PREFS_KEY_CHEAT_MODE_DEFAULT                 "cheat-mode-default"
+#define TR_PREFS_KEY_CLIENT_VERSION_BEP10               "client-version-bep10"
 #define TR_PREFS_KEY_DHT_ENABLED                        "dht-enabled"
 #define TR_PREFS_KEY_DROP_INTERRUPTED_WEBSEEDS          "drop-interrupted-webseeds"
 #define TR_PREFS_KEY_UTP_ENABLED                        "utp-enabled"
@@ -192,6 +194,7 @@ const char* tr_getDefaultDownloadDir( void );
 #define TR_PREFS_KEY_PEER_PORT_RANDOM_HIGH              "peer-port-random-high"
 #define TR_PREFS_KEY_PEER_SOCKET_TOS                    "peer-socket-tos"
 #define TR_PREFS_KEY_PEER_CONGESTION_ALGORITHM          "peer-congestion-algorithm"
+#define TR_PREFS_KEY_PEER_ID_PREFIX                     "peer-id-prefix"
 #define TR_PREFS_KEY_PEX_ENABLED                        "pex-enabled"
 #define TR_PREFS_KEY_PORT_FORWARDING                    "port-forwarding-enabled"
 #define TR_PREFS_KEY_PREALLOCATION                      "preallocation"
@@ -222,8 +225,10 @@ const char* tr_getDefaultDownloadDir( void );
 #define TR_PREFS_KEY_DSPEED_ENABLED                     "speed-limit-down-enabled"
 #define TR_PREFS_KEY_USPEED_KBps                        "speed-limit-up"
 #define TR_PREFS_KEY_USPEED_ENABLED                     "speed-limit-up-enabled"
+#define TR_PREFS_KEY_STREAM_MODE_DEFAULT                "stream-mode-default"
 #define TR_PREFS_KEY_UMASK                              "umask"
 #define TR_PREFS_KEY_UPLOAD_SLOTS_PER_TORRENT           "upload-slots-per-torrent"
+#define TR_PREFS_KEY_USER_AGENT                         "user-agent"
 #define TR_PREFS_KEY_START                              "start-added-torrents"
 #define TR_PREFS_KEY_TRASH_ORIGINAL                     "trash-original-torrent-files"
 #define TR_PREFS_KEY_WEBSEEDERS_MAX                     "webseeders-maximum"
@@ -883,6 +888,37 @@ void tr_sessionSetTorrentAddedScript( tr_session *, const char * scriptFilename 
 ***
 **/
 
+void tr_sessionSetMaxWebseeds( tr_session *, int maxWebseeds );
+int  tr_sessionGetMaxWebseeds( const tr_session * );
+
+void tr_sessionSetMaxWebseedConnectFails( tr_session *, int maxWebseedConnectFails );
+int  tr_sessionGetMaxWebseedConnectFails( const tr_session * );
+
+void tr_sessionSetWebseedTimeout( tr_session *, int webseedTimeout );
+int  tr_sessionGetWebseedTimeout( const tr_session * );
+
+void tr_sessionSetDropInteruptedWebseeds( tr_session *, bool );
+bool tr_sessionGetDropInteruptedWebseeds( const tr_session * );
+
+void tr_sessionSetBlockListWebseeds( tr_session *, bool );
+bool tr_sessionGetBlockListWebseeds( const tr_session * );
+
+const char * tr_sessionGetClientVersionBep10( const tr_session * );
+
+void tr_sessionSetClientVersionBep10( tr_session *, const char * clientVersionBep10 );
+
+const char * tr_sessionGetPeerIdPrefix( const tr_session * );
+
+void tr_sessionSetPeerIdPrefix( tr_session *, const char * peerIdPrefix );
+
+const char * tr_sessionGetUserAgent( const tr_session * );
+
+void tr_sessionSetUserAgent( tr_session *, const char * userAgent );
+
+/**
+***
+**/
+
 bool tr_sessionIsTorrentDoneScriptEnabled( const tr_session * );
 
 void tr_sessionSetTorrentDoneScriptEnabled( tr_session *, bool isEnabled );
@@ -1311,6 +1347,12 @@ enum
 void           tr_torrentSetStreamingMode( tr_torrent * tor, tr_streamingMode_t mode );
 
 tr_streamingMode_t tr_torrentGetStreamingMode( const tr_torrent * tor );
+
+void tr_sessionSetCheatModeDefault( tr_session *, tr_cheatMode_t cheatModeDefault );
+tr_cheatMode_t  tr_sessionGetCheatModeDefault( const tr_session * );
+
+void tr_sessionSetStreamModeDefault( tr_session *, tr_streamingMode_t streamModeDefault );
+tr_streamingMode_t  tr_sessionGetStreamModeDefault( const tr_session * );
 
 /****
 *****  Ratio Limits

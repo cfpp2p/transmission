@@ -1700,6 +1700,26 @@ sessionSet( tr_session               * session,
         else
             tr_sessionSetEncryption( session, TR_ENCRYPTION_PREFERRED );
     }
+    if( tr_bencDictFindBool( args_in, TR_PREFS_KEY_BLOCKLIST_WEBSEEDS, &boolVal ) )
+        tr_sessionSetBlockListWebseeds( session, boolVal );
+    if( tr_bencDictFindBool( args_in, TR_PREFS_KEY_DROP_INTERRUPTED_WEBSEEDS, &boolVal ) )
+        tr_sessionSetDropInteruptedWebseeds( session, boolVal );
+    if( tr_bencDictFindInt( args_in, TR_PREFS_KEY_WEBSEED_MAX_CONNECT_FAILS, &i ) )
+        tr_sessionSetMaxWebseedConnectFails( session, i );
+    if( tr_bencDictFindInt( args_in, TR_PREFS_KEY_WEBSEED_TIMEOUT_VALUE, &i ) )
+        tr_sessionSetWebseedTimeout( session, i );
+    if( tr_bencDictFindInt( args_in, TR_PREFS_KEY_WEBSEEDERS_MAX, &i ) )
+        tr_sessionSetMaxWebseeds( session, i );
+    if( tr_bencDictFindInt( args_in, TR_PREFS_KEY_CHEAT_MODE_DEFAULT, &i ) )
+        tr_sessionSetCheatModeDefault( session, i );
+    if( tr_bencDictFindInt( args_in, TR_PREFS_KEY_STREAM_MODE_DEFAULT, &i ) )
+        tr_sessionSetStreamModeDefault( session, i );
+    if( tr_bencDictFindStr( args_in, TR_PREFS_KEY_CLIENT_VERSION_BEP10, &str ) )
+        tr_sessionSetClientVersionBep10( session, str );
+    if( tr_bencDictFindStr( args_in, TR_PREFS_KEY_PEER_ID_PREFIX, &str ) )
+        tr_sessionSetPeerIdPrefix( session, str );
+    if( tr_bencDictFindStr( args_in, TR_PREFS_KEY_USER_AGENT, &str ) )
+        tr_sessionSetUserAgent( session, str );
 
     notify( session, TR_RPC_SESSION_CHANGED, NULL );
 
@@ -1820,6 +1840,16 @@ sessionGet( tr_session               * s,
         default: str = "preferred"; break;
     }
     tr_bencDictAddStr( d, TR_PREFS_KEY_ENCRYPTION, str );
+    tr_bencDictAddInt ( d, TR_PREFS_KEY_CHEAT_MODE_DEFAULT, tr_sessionGetCheatModeDefault( s ) );
+    tr_bencDictAddInt ( d, TR_PREFS_KEY_STREAM_MODE_DEFAULT, tr_sessionGetStreamModeDefault( s ) );
+    tr_bencDictAddInt ( d, TR_PREFS_KEY_WEBSEED_MAX_CONNECT_FAILS, tr_sessionGetMaxWebseedConnectFails( s ) );
+    tr_bencDictAddInt ( d, TR_PREFS_KEY_WEBSEED_TIMEOUT_VALUE, tr_sessionGetWebseedTimeout( s ) );
+    tr_bencDictAddInt ( d, TR_PREFS_KEY_WEBSEEDERS_MAX, tr_sessionGetMaxWebseeds( s ) );
+    tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_WEBSEEDS, tr_sessionGetBlockListWebseeds( s ) );
+    tr_bencDictAddBool( d, TR_PREFS_KEY_DROP_INTERRUPTED_WEBSEEDS, tr_sessionGetDropInteruptedWebseeds( s ) );
+    tr_bencDictAddStr ( d, TR_PREFS_KEY_CLIENT_VERSION_BEP10, tr_sessionGetClientVersionBep10( s ) );
+    tr_bencDictAddStr ( d, TR_PREFS_KEY_PEER_ID_PREFIX, tr_sessionGetPeerIdPrefix( s ) );
+    tr_bencDictAddStr ( d, TR_PREFS_KEY_USER_AGENT, tr_sessionGetUserAgent( s ) );
 
     return NULL;
 }

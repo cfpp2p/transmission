@@ -828,7 +828,18 @@ sendLtepHandshake( tr_peermsgs * msgs )
     tr_bencDictAddInt( &val, "p", tr_sessionGetPublicPeerPort( getSession(msgs) ) );
     tr_bencDictAddInt( &val, "reqq", REQQ );
     tr_bencDictAddInt( &val, "upload_only", tr_torrentIsSeed( msgs->torrent ) );
-    tr_bencDictAddStr( &val, "v", TR_NAME " " USERAGENT_PREFIX );
+
+    if( strlen( tr_sessionGetClientVersionBep10( msgs->torrent->session ) ) )
+    {
+        tr_bencDictAddStr( &val, "v", tr_sessionGetClientVersionBep10( msgs->torrent->session ) );
+        dbgmsg( msgs, "handshake user agent session -- %s -- sent", tr_sessionGetClientVersionBep10( msgs->torrent->session ) );
+    }
+    else
+    {
+        tr_bencDictAddStr( &val, "v", TR_NAME " " USERAGENT_PREFIX );
+        dbgmsg( msgs, "handshake user agent generic -- %s -- sent", TR_NAME " " USERAGENT_PREFIX );
+    }
+
     if( allow_metadata_xfer || allow_pex ) {
         tr_benc * m  = tr_bencDictAddDict( &val, "m", 2 );
         if( allow_metadata_xfer )

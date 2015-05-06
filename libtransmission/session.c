@@ -82,6 +82,7 @@ getRandomPort( tr_session * s )
    characters, where x is the major version number, y is the
    minor version number, z is the maintenance number, and b
    designates beta (Azureus-style) */
+
 void
 tr_peerIdInit( uint8_t * buf )
 {
@@ -92,6 +93,60 @@ tr_peerIdInit( uint8_t * buf )
     const int    base = 36;
 
     memcpy( buf, PEERID_PREFIX, 8 );
+
+    tr_cryptoRandBuf( buf+8, 11 );
+    for( i=8; i<19; ++i ) {
+        val = buf[i] % base;
+        total += val;
+        buf[i] = pool[val];
+    }
+
+    val = total % base ? base - ( total % base ) : 0;
+    buf[19] = pool[val];
+    buf[20] = '\0';
+}
+
+void
+tr_peerIdInitTor( tr_torrent * tor )
+{
+    uint8_t    * buf = tor->peer_id;
+    int          i;
+    int          val;
+    int          total = 0;
+    const char * pool = "0123456789abcdefghijklmnopqrstuvwxyz";
+    const int    base = 36;
+
+    if( strlen( tr_sessionGetPeerIdPrefix( tor->session ) ) == 8 )
+        memcpy( buf, tr_sessionGetPeerIdPrefix( tor->session ), 8 );
+    else
+        memcpy( buf, PEERID_PREFIX, 8 );
+
+    tr_cryptoRandBuf( buf+8, 11 );
+    for( i=8; i<19; ++i ) {
+        val = buf[i] % base;
+        total += val;
+        buf[i] = pool[val];
+    }
+
+    val = total % base ? base - ( total % base ) : 0;
+    buf[19] = pool[val];
+    buf[20] = '\0';
+}
+
+void
+tr_peerIdInitSession( tr_session * session )
+{
+    uint8_t    * buf = session->peer_id;
+    int          i;
+    int          val;
+    int          total = 0;
+    const char * pool = "0123456789abcdefghijklmnopqrstuvwxyz";
+    const int    base = 36;
+
+    if( strlen( tr_sessionGetPeerIdPrefix( session ) ) == 8 )
+        memcpy( buf, tr_sessionGetPeerIdPrefix( session ), 8 );
+    else
+        memcpy( buf, PEERID_PREFIX, 8 );
 
     tr_cryptoRandBuf( buf+8, 11 );
     for( i=8; i<19; ++i ) {
@@ -304,7 +359,7 @@ tr_sessionGetDefaultSettings( tr_benc * d )
 {
     assert( tr_bencIsDict( d ) );
 
-    tr_bencDictReserve( d, 67 );
+    tr_bencDictReserve( d, 77 );
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_ENABLED,               false );
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_WEBSEEDS,              false );
     tr_bencDictAddBool( d, TR_PREFS_KEY_DROP_INTERRUPTED_WEBSEEDS,       true );
@@ -353,6 +408,8 @@ tr_sessionGetDefaultSettings( tr_benc * d )
     tr_bencDictAddBool( d, TR_PREFS_KEY_SCRAPE_PAUSED_TORRENTS,          true );
     tr_bencDictAddBool( d, TR_PREFS_KEY_PREFETCH_MAGNETS,                true );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_REVERIFY_TORRENTS,               0 );
+    tr_bencDictAddInt ( d, TR_PREFS_KEY_CHEAT_MODE_DEFAULT,              0 );
+    tr_bencDictAddInt ( d, TR_PREFS_KEY_STREAM_MODE_DEFAULT,             0 );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_SCRIPT_TORRENT_ADDED_FILENAME,   "" );
     tr_bencDictAddBool( d, TR_PREFS_KEY_SCRIPT_TORRENT_ADDED_ENABLED,    false );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_SCRIPT_TORRENT_DONE_FILENAME,    "" );
@@ -377,6 +434,9 @@ tr_sessionGetDefaultSettings( tr_benc * d )
     tr_bencDictAddStr ( d, TR_PREFS_KEY_BIND_ADDRESS_IPV6,               TR_DEFAULT_BIND_ADDRESS_IPV6 );
     tr_bencDictAddBool( d, TR_PREFS_KEY_START,                           true );
     tr_bencDictAddBool( d, TR_PREFS_KEY_TRASH_ORIGINAL,                  false );
+    tr_bencDictAddStr ( d, TR_PREFS_KEY_CLIENT_VERSION_BEP10,            "" );
+    tr_bencDictAddStr ( d, TR_PREFS_KEY_PEER_ID_PREFIX,                  "" );
+    tr_bencDictAddStr ( d, TR_PREFS_KEY_USER_AGENT,                      "" );
 }
 
 void
@@ -384,8 +444,10 @@ tr_sessionGetSettings( tr_session * s, struct tr_benc * d )
 {
     assert( tr_bencIsDict( d ) );
 
-    tr_bencDictReserve( d, 68 );
+    tr_bencDictReserve( d, 78 );
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_ENABLED,                tr_blocklistIsEnabled( s ) );
+    tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_WEBSEEDS,               s->blockListWebseeds );
+    tr_bencDictAddBool( d, TR_PREFS_KEY_DROP_INTERRUPTED_WEBSEEDS,        s->dropInterruptedWebseeds );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_BLOCKLIST_URL,                    tr_blocklistGetURL( s ) );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_MAX_CACHE_SIZE_MB,                tr_sessionGetCacheLimit_MB( s ) );
     tr_bencDictAddBool( d, TR_PREFS_KEY_DHT_ENABLED,                      s->isDHTEnabled );
@@ -414,7 +476,7 @@ tr_sessionGetSettings( tr_session * s, struct tr_benc * d )
     tr_bencDictAddBool( d, TR_PREFS_KEY_PEX_ENABLED,                      s->isPexEnabled );
     tr_bencDictAddBool( d, TR_PREFS_KEY_PORT_FORWARDING,                  tr_sessionIsPortForwardingEnabled( s ) );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_PREALLOCATION,                    s->preallocationMode );
-    tr_bencDictAddInt ( d, TR_PREFS_KEY_PREFETCH_ENABLED,                 s->isPrefetchEnabled );
+    tr_bencDictAddBool( d, TR_PREFS_KEY_PREFETCH_ENABLED,                 s->isPrefetchEnabled );
     tr_bencDictAddBool( d, TR_PREFS_KEY_QUEUE_STALLED_ENABLED,            tr_sessionGetQueueStalledEnabled( s ) );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_QUEUE_STALLED_MINUTES,            tr_sessionGetQueueStalledMinutes( s ) );
     tr_bencDictAddReal( d, TR_PREFS_KEY_RATIO,                            s->desiredRatio );
@@ -432,6 +494,8 @@ tr_sessionGetSettings( tr_session * s, struct tr_benc * d )
     tr_bencDictAddBool( d, TR_PREFS_KEY_SCRAPE_PAUSED_TORRENTS,           s->scrapePausedTorrents );
     tr_bencDictAddBool( d, TR_PREFS_KEY_PREFETCH_MAGNETS,                 s->prefetchMagnets );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_REVERIFY_TORRENTS,                s->reverifyTorrents );
+    tr_bencDictAddInt ( d, TR_PREFS_KEY_CHEAT_MODE_DEFAULT,               s->cheatModeDefault );
+    tr_bencDictAddInt ( d, TR_PREFS_KEY_STREAM_MODE_DEFAULT,              s->streamModeDefault );
     tr_bencDictAddBool( d, TR_PREFS_KEY_SCRIPT_TORRENT_ADDED_ENABLED,     tr_sessionIsTorrentAddedScriptEnabled( s ) );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_SCRIPT_TORRENT_ADDED_FILENAME,    tr_sessionGetTorrentAddedScript( s ) );
     tr_bencDictAddBool( d, TR_PREFS_KEY_SCRIPT_TORRENT_DONE_ENABLED,      tr_sessionIsTorrentDoneScriptEnabled( s ) );
@@ -449,10 +513,16 @@ tr_sessionGetSettings( tr_session * s, struct tr_benc * d )
     tr_bencDictAddBool( d, TR_PREFS_KEY_USPEED_ENABLED,                   tr_sessionIsSpeedLimited( s, TR_UP ) );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_UMASK,                            s->umask );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_UPLOAD_SLOTS_PER_TORRENT,         s->uploadSlotsPerTorrent );
+    tr_bencDictAddInt ( d, TR_PREFS_KEY_WEBSEED_MAX_CONNECT_FAILS,        s->maxWebseedConnectFails );
+    tr_bencDictAddInt ( d, TR_PREFS_KEY_WEBSEED_TIMEOUT_VALUE,            ( s->webseedTimeout / 2 ) );
+    tr_bencDictAddInt ( d, TR_PREFS_KEY_WEBSEEDERS_MAX,                   s->maxWebseeds );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_BIND_ADDRESS_IPV4,                tr_address_to_string( &s->public_ipv4->addr ) );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_BIND_ADDRESS_IPV6,                tr_address_to_string( &s->public_ipv6->addr ) );
     tr_bencDictAddBool( d, TR_PREFS_KEY_START,                            !tr_sessionGetPaused( s ) );
     tr_bencDictAddBool( d, TR_PREFS_KEY_TRASH_ORIGINAL,                   tr_sessionGetDeleteSource( s ) );
+    tr_bencDictAddStr ( d, TR_PREFS_KEY_CLIENT_VERSION_BEP10,             tr_sessionGetClientVersionBep10( s ) );
+    tr_bencDictAddStr ( d, TR_PREFS_KEY_PEER_ID_PREFIX,                   tr_sessionGetPeerIdPrefix( s ) );
+    tr_bencDictAddStr ( d, TR_PREFS_KEY_USER_AGENT,                       tr_sessionGetUserAgent( s ) );
 }
 
 bool
@@ -621,6 +691,8 @@ tr_sessionInit( const char  * tag,
     tr_runInEventThread( session, tr_sessionInitImpl, &data );
     while( !data.done )
         tr_wait_msec( 100 );
+
+    tr_peerIdInitSession( session );
 
     return session;
 }
@@ -808,16 +880,27 @@ sessionSetImpl( void * vdata )
         tr_sessionSetDeleteSource( session, boolVal );
     if( tr_bencDictFindInt( settings, TR_PREFS_KEY_REVERIFY_TORRENTS, &i ) )
         session->reverifyTorrents = ( i > 0 ) ? i : 0 ;
+    if( tr_bencDictFindInt( settings, TR_PREFS_KEY_CHEAT_MODE_DEFAULT, &i ) )
+        session->cheatModeDefault = ( ( i == 0 ) && ( i < 5 ) ) ? i : 0 ;
+    if( tr_bencDictFindInt( settings, TR_PREFS_KEY_STREAM_MODE_DEFAULT, &i ) )
+        session->streamModeDefault = ( ( i >= 0 ) && ( i < 5 ) ) ? i : 0 ;
     if( tr_bencDictFindInt( settings, TR_PREFS_KEY_WEBSEED_MAX_CONNECT_FAILS, &i ) )
         session->maxWebseedConnectFails = ( i > 0 ) ? i : 0 ;
     if( tr_bencDictFindInt( settings, TR_PREFS_KEY_WEBSEED_TIMEOUT_VALUE, &i ) )
-        session->webseedTimeout = ( i < 5 ) ? 10 : i * 2 ;
+        session->webseedTimeout = ( ( i < 5 ) || ( i > 8640000 ) ) ? 10 : i * 2 ;
+        // limit timeout to the ridiculously high value of 100 days
     if( tr_bencDictFindInt( settings, TR_PREFS_KEY_WEBSEEDERS_MAX, &i ) )
         session->maxWebseeds = ( i > 0 ) ? i : 0 ;
     if( tr_bencDictFindBool( settings, TR_PREFS_KEY_BLOCKLIST_WEBSEEDS, &boolVal ) )
         session->blockListWebseeds = boolVal;
     if( tr_bencDictFindBool( settings, TR_PREFS_KEY_DROP_INTERRUPTED_WEBSEEDS, &boolVal ) )
         session->dropInterruptedWebseeds = boolVal;
+    if( tr_bencDictFindStr( settings, TR_PREFS_KEY_CLIENT_VERSION_BEP10, &str ) )
+        tr_sessionSetClientVersionBep10( session, str );
+    if( tr_bencDictFindStr( settings, TR_PREFS_KEY_PEER_ID_PREFIX, &str ) )
+        tr_sessionSetPeerIdPrefix( session, str );
+    if( tr_bencDictFindStr( settings, TR_PREFS_KEY_USER_AGENT, &str ) )
+        tr_sessionSetUserAgent( session, str );
 
     /* torrent queues */
     if( tr_bencDictFindInt( settings, TR_PREFS_KEY_QUEUE_STALLED_MINUTES, &i ) )
@@ -1833,6 +1916,13 @@ sessionCloseImpl( void * vsession )
         tr_torrentFree( torrents[i] );
     tr_free( torrents );
 
+  /* tr_torrentFree calls closeTorrent in a seperate thread,
+   * so here we have to wait until all torrents are really closed. */
+  while (session->torrentCount)
+    {
+      tr_wait_msec (50);
+    }
+
     /* Close the announcer *after* closing the torrents
        so that all the &event=stopped messages will be
        queued to be sent by tr_announcerClose() */
@@ -1947,6 +2037,9 @@ tr_sessionClose( tr_session * session )
     tr_free( session->incompleteDir );
     tr_free( session->blocklist_url );
     tr_free( session->peer_congestion_algorithm );
+    tr_free( session->clientVersionBep10 );
+    tr_free( session->peerIdPrefix );
+    tr_free( session->userAgent );
     tr_free( session );
 }
 
@@ -2713,6 +2806,195 @@ tr_sessionSetTorrentAddedScript( tr_session * session, const char * scriptFilena
     {
         tr_free( session->torrentAddedScript );
         session->torrentAddedScript = tr_strdup( scriptFilename );
+    }
+}
+
+/****
+*****
+****/
+
+void
+tr_sessionSetBlockListWebseeds( tr_session * session, bool is_enabled )
+{
+    assert( tr_isSession( session ) );
+    assert( tr_isBool( is_enabled ) );
+
+    session->blockListWebseeds = is_enabled;
+}
+  
+bool
+tr_sessionGetBlockListWebseeds( const tr_session * session )
+{
+    assert( tr_isSession( session ) );
+
+    return session->blockListWebseeds;
+}
+
+void
+tr_sessionSetDropInteruptedWebseeds( tr_session * session, bool is_enabled )
+{
+    assert( tr_isSession( session ) );
+    assert( tr_isBool( is_enabled ) );
+
+    session->dropInterruptedWebseeds = is_enabled;
+}
+  
+bool
+tr_sessionGetDropInteruptedWebseeds( const tr_session * session )
+{
+    assert( tr_isSession( session ) );
+
+    return session->dropInterruptedWebseeds;
+}
+
+void
+tr_sessionSetMaxWebseedConnectFails( tr_session * session, int maxWebseedConnectFails )
+{
+    assert( tr_isSession( session ) );
+    if( maxWebseedConnectFails >= 0 )
+        session->maxWebseedConnectFails = maxWebseedConnectFails;
+   
+}
+
+int
+tr_sessionGetMaxWebseedConnectFails( const tr_session * session )
+{
+    assert( tr_isSession( session ) );
+
+    return session->maxWebseedConnectFails;
+}
+
+void
+tr_sessionSetWebseedTimeout( tr_session * session, int webseedTimeout )
+{
+    assert( tr_isSession( session ) );
+    if( ( webseedTimeout >= 5 ) && ( webseedTimeout <= 8640000 ) )
+        session->webseedTimeout = ( webseedTimeout * 2 );
+    else
+        session->webseedTimeout = 10;
+   
+}
+
+int
+tr_sessionGetWebseedTimeout( const tr_session * session )
+{
+    assert( tr_isSession( session ) );
+
+    return ( session->webseedTimeout / 2 );
+}
+
+void
+tr_sessionSetMaxWebseeds( tr_session * session, int maxWebseeds )
+{
+    assert( tr_isSession( session ) );
+    if( maxWebseeds >= 0 )
+        session->maxWebseeds = maxWebseeds;
+   
+}
+
+int
+tr_sessionGetMaxWebseeds( const tr_session * session )
+{
+    assert( tr_isSession( session ) );
+
+    return session->maxWebseeds;
+}
+
+void
+tr_sessionSetCheatModeDefault( tr_session * session, tr_cheatMode_t cheatModeDefault )
+{
+    assert( tr_isSession( session ) );
+    if( ( cheatModeDefault == TR_CHEAT_DEACT ) && ( cheatModeDefault < TR_CHEAT_COUNT ) )
+        session->cheatModeDefault = cheatModeDefault;
+    else
+        session->cheatModeDefault = TR_CHEAT_DEACT;
+   
+}
+
+tr_cheatMode_t
+tr_sessionGetCheatModeDefault( const tr_session * session )
+{
+    assert( tr_isSession( session ) );
+
+    return session->cheatModeDefault;
+}
+
+void
+tr_sessionSetStreamModeDefault( tr_session * session, tr_streamingMode_t streamModeDefault )
+{
+    assert( tr_isSession( session ) );
+    if( ( streamModeDefault >= TR_STREAMING_OFF ) && ( streamModeDefault < TR_STREAMING_COUNT ) )
+        session->streamModeDefault = streamModeDefault;
+    else
+        session->streamModeDefault = TR_STREAMING_OFF;
+   
+}
+
+tr_streamingMode_t
+tr_sessionGetStreamModeDefault( const tr_session * session )
+{
+    assert( tr_isSession( session ) );
+
+    return session->streamModeDefault;
+}
+
+const char *
+tr_sessionGetClientVersionBep10( const tr_session * session )
+{
+    assert( tr_isSession( session ) );
+
+    return session->clientVersionBep10;
+}
+
+void
+tr_sessionSetClientVersionBep10( tr_session * session, const char * clientVersionBep10 )
+{
+    assert( tr_isSession( session ) );
+
+    if( session->clientVersionBep10 != clientVersionBep10 )
+    {
+        tr_free( session->clientVersionBep10 );
+        session->clientVersionBep10 = tr_strdup( clientVersionBep10 );
+    }
+}
+
+const char *
+tr_sessionGetPeerIdPrefix( const tr_session * session )
+{
+    assert( tr_isSession( session ) );
+
+    return session->peerIdPrefix;
+}
+
+void
+tr_sessionSetPeerIdPrefix( tr_session * session, const char * peerIdPrefix )
+{
+    assert( tr_isSession( session ) );
+
+    if( session->peerIdPrefix != peerIdPrefix )
+    {
+        tr_free( session->peerIdPrefix );
+        session->peerIdPrefix = tr_strdup( peerIdPrefix );
+    }
+}
+
+const char *
+tr_sessionGetUserAgent( const tr_session * session )
+{
+    assert( tr_isSession( session ) );
+
+    return session->userAgent;
+}
+
+void
+tr_sessionSetUserAgent( tr_session * session, const char * userAgent )
+{
+    assert( tr_isSession( session ) );
+
+    if( session->userAgent != userAgent )
+    {
+        tr_free( session->userAgent );
+        session->userAgent = tr_strdup( userAgent );
     }
 }
 
