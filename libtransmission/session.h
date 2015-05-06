@@ -46,6 +46,8 @@ enum
 };
 
 void tr_peerIdInit( uint8_t * setme );
+void tr_peerIdInitTor( tr_torrent * tor );
+void tr_peerIdInitSession( tr_session * session );
 
 struct event_base;
 struct evdns_base;
@@ -123,6 +125,8 @@ struct tr_session
     bool                         blockListWebseeds;
 
     int                          reverifyTorrents;
+    tr_cheatMode_t               cheatModeDefault;
+    tr_streamingMode_t           streamModeDefault;
     int                          maxWebseeds;
     int                          maxWebseedConnectFails;
     int                          webseedTimeout;
@@ -199,6 +203,10 @@ struct tr_session
     char *                       incompleteDir;
 
     char *                       blocklist_url;
+
+    char *                       clientVersionBep10;
+    char *                       peerIdPrefix;
+    char *                       userAgent;
 
     struct tr_list *             blocklists;
     struct tr_peerMgr *          peerMgr;
