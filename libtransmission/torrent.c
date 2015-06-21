@@ -2082,23 +2082,36 @@ setExistingFilesVerified( tr_torrent * tor )
     tr_piece_index_t pi;
     const tr_info * info = tr_torrentInfo( tor );
     bool * missing = tr_new0( bool, info->pieceCount );
+    tr_cheatMode_t cheatMode = tr_torrentGetCheatMode( tor );
 
-    for( fi = 0; fi < info->fileCount; ++fi  )
+    if(cheatMode == TR_CHEAT_ALWSEED)
     {
-        const tr_file * file = &info->files[fi];
-        const bool have = !file->dnd
-            && tr_torrentFindFile2( tor, fi, NULL, NULL, NULL );
+        for( pi = 0; pi < info->pieceCount; ++pi )
+        {
+            tr_torrentSetHasPiece( tor, pi, true );
+            tr_torrentSetPieceChecked( tor, pi );
+        }
+    }
+    else
+    {
+        for( fi = 0; fi < info->fileCount; ++fi  )
+        {
+            const tr_file * file = &info->files[fi];
+            const bool have = !file->dnd
+                && tr_torrentFindFile2( tor, fi, NULL, NULL, NULL );
 
-        for( pi = file->firstPiece; pi <= file->lastPiece; ++pi )
-            if( !missing[pi] && !have )
-                missing[pi] = true;
+            for( pi = file->firstPiece; pi <= file->lastPiece; ++pi )
+                if( !missing[pi] && !have )
+                    missing[pi] = true;
+        }
+
+        for( pi = 0; pi < info->pieceCount; ++pi )
+        {
+            tr_torrentSetHasPiece( tor, pi, !missing[pi] );
+            tr_torrentSetPieceChecked( tor, pi );
+        }
     }
 
-    for( pi = 0; pi < info->pieceCount; ++pi )
-    {
-        tr_torrentSetHasPiece( tor, pi, !missing[pi] );
-        tr_torrentSetPieceChecked( tor, pi );
-    }
     tr_free( missing );
 }
 

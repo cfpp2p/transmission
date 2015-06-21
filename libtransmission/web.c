@@ -125,8 +125,15 @@ writeFunc( void * ptr, size_t size, size_t nmemb, void * vtask )
 	    tr_torrent * tor = tr_torrentFindFromId (task->session, task->torrentId);
         if (tor && tor->isRunning && !tor->isStopping && !tr_torrentIsSeed( tor ))
             {
-            unsigned int n=tr_bandwidthClamp(&(tor->bandwidth), TR_DOWN, nmemb );
-            unsigned int n2=tr_bandwidthClamp(&(task->session->bandwidth), TR_DOWN, nmemb );
+
+            bool isPieceData;
+            if( task->freebuf==NULL/*webseed*/)
+                isPieceData = true;
+            else
+                isPieceData = false;
+
+            unsigned int n=tr_bandwidthClamp(&(tor->bandwidth), TR_DOWN, nmemb, isPieceData );
+            unsigned int n2=tr_bandwidthClamp(&(task->session->bandwidth), TR_DOWN, nmemb, isPieceData );
 			if ( n2 < n ) n = n2;
             if(n<1&&task->freebuf==NULL/*only limit webseed*/) {
                 tr_list_append(&stopeasyhandle,task->curl_easy);

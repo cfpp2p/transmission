@@ -365,9 +365,9 @@ void      tr_peerIoBandwidthUsed( tr_peerIo           * io,
                                   int                   isPieceData );
 
 static inline bool
-tr_peerIoHasBandwidthLeft( const tr_peerIo * io, tr_direction dir )
+tr_peerIoHasBandwidthLeft( const tr_peerIo * io, tr_direction dir, bool isPieceData )
 {
-    return tr_bandwidthClamp( &io->bandwidth, dir, 1024 ) > 0;
+    return tr_bandwidthClamp( &io->bandwidth, dir, 1024, isPieceData ) > 0;
 }
 
 static inline unsigned int

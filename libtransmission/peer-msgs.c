@@ -1236,6 +1236,8 @@ peerMadeRequest( tr_peermsgs * msgs, const struct peer_request * req )
         dbgmsg( msgs, "rejecting request from choked peer" );
     else if( msgs->peer->pendingReqsToClient + 1 >= REQQ )
         dbgmsg( msgs, "rejecting request ... reqq is full" );
+    else if( !tr_torrentIsPieceTransferAllowed( msgs->torrent, TR_CLIENT_TO_PEER ) )
+        dbgmsg( msgs, "rejecting request for a piece because bandwidth-UP was set to zero by user." );
     else
         allow = true;
 
@@ -1895,7 +1897,8 @@ fillOutputBuffer( tr_peermsgs * msgs, time_t now )
         --msgs->prefetchCount;
 
         if( requestIsValid( msgs, &req )
-            && tr_cpPieceIsComplete( &msgs->torrent->completion, req.index ) )
+            && tr_cpPieceIsComplete( &msgs->torrent->completion, req.index )
+            && tr_torrentIsPieceTransferAllowed( msgs->torrent, TR_CLIENT_TO_PEER ) )
         {
             int err;
             const uint32_t msglen = 4 + 1 + 4 + 4 + req.length;
@@ -1949,7 +1952,7 @@ fillOutputBuffer( tr_peermsgs * msgs, time_t now )
             protocolSendReject( msgs, &req );
         }
 
-        if( msgs != NULL )
+        if( ( msgs != NULL ) && tr_torrentIsPieceTransferAllowed( msgs->torrent, TR_CLIENT_TO_PEER ) )
             prefetchPieces( msgs );
     }
 

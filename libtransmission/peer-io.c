@@ -150,7 +150,7 @@ didWriteWrapper( tr_peerIo * io, unsigned int bytes_transferred )
      while( bytes_transferred && tr_isPeerIo( io ) )
      {
         struct tr_datatype * next = io->outbuf_datatypes;
-
+        if( NULL == next ) break;
         const unsigned int payload = MIN( next->length, bytes_transferred );
         /* For uTP sockets, the overhead is computed in utp_on_overhead. */
         const unsigned int overhead =
@@ -261,7 +261,15 @@ event_read_cb( int fd, short event UNUSED, void * vio )
 
     curlen = evbuffer_get_length( io->inbuf );
     howmuch = curlen >= max ? 0 : max - curlen;
-    howmuch = tr_bandwidthClamp( &io->bandwidth, TR_DOWN, howmuch );
+
+    bool isPieceData;
+    const struct tr_datatype * d = io->outbuf_datatypes;
+    if( NULL == d )
+        isPieceData = false;
+    else
+        isPieceData = d->isPieceData;
+
+    howmuch = tr_bandwidthClamp( &io->bandwidth, TR_DOWN, howmuch, isPieceData );
 
     dbgmsg( io, "libevent says this peer is ready to read" );
 
@@ -340,7 +348,15 @@ event_write_cb( int fd, short event UNUSED, void * vio )
 
     /* Write as much as possible, since the socket is non-blocking, write() will
      * return if it can't write any more data without blocking */
-    howmuch = tr_bandwidthClamp( &io->bandwidth, dir, evbuffer_get_length( io->outbuf ) );
+
+    bool isPieceData;
+    const struct tr_datatype * d = io->outbuf_datatypes;
+    if( NULL == d )
+        isPieceData = false;
+    else
+        isPieceData = d->isPieceData;
+
+    howmuch = tr_bandwidthClamp( &io->bandwidth, dir, evbuffer_get_length( io->outbuf ), isPieceData );
 
     /* if we don't have any bandwidth left, stop writing */
     if( howmuch < 1 ) {
@@ -447,7 +463,14 @@ utp_get_rb_size(void *closure)
     tr_peerIo *io = closure;
     assert( tr_isPeerIo( io ) );
 
-    bytes = tr_bandwidthClamp( &io->bandwidth, TR_DOWN, UTP_READ_BUFFER_SIZE );
+    bool isPieceData;
+    const struct tr_datatype * d = io->outbuf_datatypes;
+    if( NULL == d )
+        isPieceData = false;
+    else
+        isPieceData = d->isPieceData;
+
+    bytes = tr_bandwidthClamp( &io->bandwidth, TR_DOWN, UTP_READ_BUFFER_SIZE, isPieceData );
 
     dbgmsg( io, "utp_get_rb_size is saying it's ready to read %zu bytes", bytes );
     return UTP_READ_BUFFER_SIZE - bytes;
@@ -1230,7 +1253,14 @@ tr_peerIoTryRead( tr_peerIo * io, size_t howmuch )
 {
     int res = 0;
 
-    if(( howmuch = tr_bandwidthClamp( &io->bandwidth, TR_DOWN, howmuch )))
+    bool isPieceData;
+    const struct tr_datatype * d = io->outbuf_datatypes;
+    if( NULL == d )
+        isPieceData = false;
+    else
+        isPieceData = d->isPieceData;
+
+    if(( howmuch = tr_bandwidthClamp( &io->bandwidth, TR_DOWN, howmuch, isPieceData )))
     {
         if( io->utp_socket != NULL ) /* utp peer connection */
         {
@@ -1279,7 +1309,14 @@ tr_peerIoTryWrite( tr_peerIo * io, size_t howmuch )
     if( howmuch > old_len )
         howmuch = old_len;
 
-    if(( howmuch = tr_bandwidthClamp( &io->bandwidth, TR_UP, howmuch )))
+    bool isPieceData;
+    const struct tr_datatype * d = io->outbuf_datatypes;
+    if( NULL == d )
+        isPieceData = false;
+    else
+        isPieceData = d->isPieceData;
+
+    if(( howmuch = tr_bandwidthClamp( &io->bandwidth, TR_UP, howmuch, isPieceData )))
     {
         if( io->utp_socket != NULL ) /* utp peer connection */
         {

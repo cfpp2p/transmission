@@ -174,8 +174,15 @@ allocateBandwidth( tr_bandwidth  * b,
     /* set the available bandwidth */
     if( b->band[dir].isLimited )
     {
-        const unsigned int nextPulseSpeed = b->band[dir].desiredSpeed_Bps;
-        b->band[dir].bytesLeft = ( nextPulseSpeed * period_msec ) / 1000u;
+        if( ( dir == TR_UP ) &&
+              ( ( tr_bandwidthGetDesiredSpeed_Bps( b, TR_UP ) < (double)1 )
+                 && ( tr_bandwidthGetDesiredSpeed_Bps( b, TR_UP ) > (double)-1 ) ) )
+            b->band[dir].bytesLeft = SIZE_MAX;
+        else
+        {
+            const unsigned int nextPulseSpeed = b->band[dir].desiredSpeed_Bps;
+            b->band[dir].bytesLeft = ( nextPulseSpeed * period_msec ) / 1000u;
+        }
     }
 
     /* add this bandwidth's peer, if any, to the peer pool */
@@ -276,7 +283,7 @@ tr_bandwidthAllocate( tr_bandwidth  * b,
      * This on-demand IO is enabled until (1) the peer runs out of bandwidth,
      * or (2) the next tr_bandwidthAllocate() call, when we start over again. */
     for( i=0; i<peerCount; ++i )
-        tr_peerIoSetEnabled( peers[i], dir, tr_peerIoHasBandwidthLeft( peers[i], dir ) );
+        tr_peerIoSetEnabled( peers[i], dir, tr_peerIoHasBandwidthLeft( peers[i], dir, false ) );
 
     for( i=0; i<peerCount; ++i )
         tr_peerIoUnref( peers[i] );
@@ -305,7 +312,8 @@ static unsigned int
 bandwidthClamp( const tr_bandwidth  * b,
                 uint64_t              now,
                 tr_direction          dir,
-                unsigned int          byteCount )
+                unsigned int          byteCount,
+                bool                  isPieceData )
 {
     assert( tr_isBandwidth( b ) );
     assert( tr_isDirection( dir ) );
@@ -314,31 +322,43 @@ bandwidthClamp( const tr_bandwidth  * b,
     {
         if( b->band[dir].isLimited )
         {
-            byteCount = MIN( byteCount, b->band[dir].bytesLeft );
-
-            /* if we're getting close to exceeding the speed limit,
-             * clamp down harder on the bytes available */
-            if( byteCount > 0 )
+            if( ( dir == TR_UP ) &&
+                   ( ( tr_bandwidthGetDesiredSpeed_Bps( b, TR_UP ) < (double)1 )
+                     && ( tr_bandwidthGetDesiredSpeed_Bps( b, TR_UP ) > (double)-1 ) ) )
             {
-                double current;
-                double desired;
-                double r;
+                if( isPieceData )
+                    return 0;
+                else
+                    return byteCount;
+            }
+            else
+            {
+                byteCount = MIN( byteCount, b->band[dir].bytesLeft );
 
-                if( now == 0 )
-                    now = tr_time_msec( );
+                /* if we're getting close to exceeding the speed limit,
+                 * clamp down harder on the bytes available */
+                if( byteCount > 0 )
+                {
+                    double current;
+                    double desired;
+                    double r;
 
-                current = tr_bandwidthGetRawSpeed_Bps( b, now, TR_DOWN );
-                desired = tr_bandwidthGetDesiredSpeed_Bps( b, TR_DOWN );
-                r = desired >= 1 ? current / desired : 0;
+                    if( now == 0 )
+                        now = tr_time_msec( );
 
-                     if( r > 1.0 ) byteCount = 0;
-                else if( r > 0.9 ) byteCount *= 0.8;
-                else if( r > 0.8 ) byteCount *= 0.9;
+                    current = tr_bandwidthGetRawSpeed_Bps( b, now, TR_DOWN );
+                    desired = tr_bandwidthGetDesiredSpeed_Bps( b, TR_DOWN );
+                    r = desired >= 1 ? current / desired : 0;
+
+                         if( r > 1.0 ) byteCount = 0;
+                    else if( r > 0.9 ) byteCount *= 0.8;
+                    else if( r > 0.8 ) byteCount *= 0.9;
+                }
             }
         }
 
         if( b->parent && b->band[dir].honorParentLimits && ( byteCount > 0 ) )
-            byteCount = bandwidthClamp( b->parent, now, dir, byteCount );
+            byteCount = bandwidthClamp( b->parent, now, dir, byteCount, isPieceData );
     }
 
     return byteCount;
@@ -346,9 +366,10 @@ bandwidthClamp( const tr_bandwidth  * b,
 unsigned int
 tr_bandwidthClamp( const tr_bandwidth  * b,
                    tr_direction          dir,
-                   unsigned int          byteCount )
+                   unsigned int          byteCount,
+                   bool                  isPieceData )
 {
-    return bandwidthClamp( b, 0, dir, byteCount );
+    return bandwidthClamp( b, 0, dir, byteCount, isPieceData );
 }
 
 
@@ -377,6 +398,7 @@ tr_bandwidthUsed( tr_bandwidth  * b,
                   bool         isPieceData,
                   uint64_t        now )
 {
+    if( NULL == b ) return;
     struct tr_band * band;
 
     assert( tr_isBandwidth( b ) );
@@ -384,7 +406,11 @@ tr_bandwidthUsed( tr_bandwidth  * b,
 
     band = &b->band[dir];
 
-    if( band->isLimited && isPieceData )
+    const bool zeroUpload = ( dir == TR_UP ) && band->isLimited &&
+                               ( ( tr_bandwidthGetDesiredSpeed_Bps( b, TR_UP ) < (double)1 )
+                                 && ( tr_bandwidthGetDesiredSpeed_Bps( b, TR_UP ) > (double)-1 ) );
+
+    if( band->isLimited && isPieceData && !zeroUpload )
         band->bytesLeft -= MIN( band->bytesLeft, byteCount );
 
 #ifdef DEBUG_DIRECTION
@@ -393,10 +419,13 @@ fprintf( stderr, "%p consumed %5zu bytes of %5s data... was %6zu, now %6zu left\
          b, byteCount, (isPieceData?"piece":"raw"), oldBytesLeft, band->bytesLeft );
 #endif
 
-    bytesUsed( now, &band->raw, byteCount );
+    if( !zeroUpload )
+    {
+        bytesUsed( now, &band->raw, byteCount );
 
-    if( isPieceData )
-        bytesUsed( now, &band->piece, byteCount );
+        if( isPieceData )
+            bytesUsed( now, &band->piece, byteCount );
+    }
 
     if( b->parent != NULL )
         tr_bandwidthUsed( b->parent, dir, byteCount, isPieceData, now );
