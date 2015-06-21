@@ -3124,6 +3124,20 @@ getRate( const tr_torrent * tor, struct peer_atom * atom, uint64_t now )
 }
 
 static inline bool
+isUploadZeroWanted( const tr_bandwidth * b )
+{
+    if( !tr_bandwidthIsLimited( b, TR_UP ) )
+    {
+        return false;
+    }
+    else
+    {
+        return ( ( tr_bandwidthGetDesiredSpeed_Bps( b, TR_UP ) < (double)1 )
+                   && ( tr_bandwidthGetDesiredSpeed_Bps( b, TR_UP ) > (double)-1 ) );
+    }
+}
+
+static inline bool
 isBandwidthMaxedOut( const tr_bandwidth * b,
                      const uint64_t now_msec, tr_direction dir )
 {
@@ -3144,8 +3158,9 @@ rechokeUploads( Torrent * t, const uint64_t now )
     tr_peer ** peers = (tr_peer**) tr_ptrArrayBase( &t->peers );
     struct ChokeData * choke = tr_new0( struct ChokeData, peerCount );
     const tr_session * session = t->manager->session;
-    const int chokeAll = !tr_torrentIsPieceTransferAllowed( t->tor, TR_CLIENT_TO_PEER );
+    const bool chokeAll = !tr_torrentIsPieceTransferAllowed( t->tor, TR_CLIENT_TO_PEER );
     const bool isMaxedOut = isBandwidthMaxedOut( &t->tor->bandwidth, now, TR_UP );
+    const bool UploadZeroWanted = isUploadZeroWanted( &t->tor->bandwidth );
 
     assert( torrentIsLocked( t ) );
 
@@ -3162,11 +3177,11 @@ rechokeUploads( Torrent * t, const uint64_t now )
         tr_peer * peer = peers[i];
         struct peer_atom * atom = peer->atom;
 
-        if( peerIsSeed( peer ) ) /* choke seeds and partial seeds */
+        if( peerIsSeed( peer ) && !UploadZeroWanted ) /* choke seeds and partial seeds */
         {
             tr_peerMsgsSetChoke( peer->msgs, true );
         }
-        else if( chokeAll ) /* choke everyone if we're not uploading */
+        else if( chokeAll && !UploadZeroWanted ) /* choke everyone if we're not uploading */
         {
             tr_peerMsgsSetChoke( peer->msgs, true );
         }
@@ -3201,13 +3216,14 @@ rechokeUploads( Torrent * t, const uint64_t now )
      */
     unchokedInterested = 0;
     for( i=0; i<size && unchokedInterested<session->uploadSlotsPerTorrent; ++i ) {
-        choke[i].isChoked = isMaxedOut ? choke[i].wasChoked : false;
+        choke[i].isChoked =
+        ( isMaxedOut && !UploadZeroWanted ) ? choke[i].wasChoked : false;
         if( choke[i].isInterested )
             ++unchokedInterested;
     }
 
     /* optimistic unchoke */
-    if( !t->optimistic && !isMaxedOut && (i<size) )
+    if( !t->optimistic && ( !isMaxedOut || UploadZeroWanted ) && (i<size) )
     {
         int n;
         struct ChokeData * c;

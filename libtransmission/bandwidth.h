@@ -198,7 +198,8 @@ void    tr_bandwidthAllocate          ( tr_bandwidth        * bandwidth,
  */
 unsigned int  tr_bandwidthClamp       ( const tr_bandwidth  * bandwidth,
                                         tr_direction          direction,
-                                        unsigned int          byteCount );
+                                        unsigned int          byteCount,
+                                        bool                  isPieceData );
 
 /******
 *******
