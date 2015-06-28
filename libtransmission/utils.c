@@ -983,6 +983,32 @@ tr_urlIsValidTracker( const char * url )
     return valid;
 }
 
+bool
+tr_privateTrackerOff( const char * url )
+{
+    if( ( url == NULL ) || ( strlen( url ) != 10 ) )
+    {
+        return false;
+    }
+    else
+    {
+        return !memcmp(url,"privateOFF",10);
+    }
+}
+
+bool
+tr_privateTrackerOn( const char * url )
+{
+    if( ( url == NULL ) || ( strlen( url ) != 9 ) )
+    {
+        return false;
+    }
+    else
+    {
+        return !memcmp(url,"privateON",10);
+    }
+}
+
 /** @brief return true if the URL is a http or https or ftp or sftp one that Transmission understands */
 bool
 tr_urlIsValid( const char * url, int url_len )
