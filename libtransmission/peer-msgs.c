@@ -827,7 +827,8 @@ sendLtepHandshake( tr_peermsgs * msgs )
         tr_bencDictAddInt( &val, "metadata_size", msgs->torrent->infoDictLength );
     tr_bencDictAddInt( &val, "p", tr_sessionGetPublicPeerPort( getSession(msgs) ) );
     tr_bencDictAddInt( &val, "reqq", REQQ );
-    tr_bencDictAddInt( &val, "upload_only", tr_torrentIsSeed( msgs->torrent ) );
+    tr_bencDictAddInt( &val, "upload_only", ( tr_torrentIsSeed( msgs->torrent )
+                                             || !tr_torrentIsPieceTransferAllowed( msgs->torrent, TR_PEER_TO_CLIENT ) ) );
 
     if( strlen( tr_sessionGetClientVersionBep10( msgs->torrent->session ) ) )
     {
@@ -1698,7 +1699,8 @@ updateDesiredRequestCount( tr_peermsgs * msgs )
     /* there are lots of reasons we might not want to request any blocks... */
     if( tr_torrentIsSeed( torrent ) || !tr_torrentHasMetadata( torrent )
                                     || msgs->peer->clientIsChoked
-                                    || !msgs->peer->clientIsInterested )
+                                    || !msgs->peer->clientIsInterested
+                                    || !tr_torrentIsPieceTransferAllowed( torrent, TR_PEER_TO_CLIENT ) )
     {
         msgs->desiredRequestCount = 0;
     }

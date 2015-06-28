@@ -174,10 +174,9 @@ allocateBandwidth( tr_bandwidth  * b,
     /* set the available bandwidth */
     if( b->band[dir].isLimited )
     {
-        if( ( dir == TR_UP ) &&
-              ( ( tr_bandwidthGetDesiredSpeed_Bps( b, TR_UP ) < (double)1 )
-                 && ( tr_bandwidthGetDesiredSpeed_Bps( b, TR_UP ) > (double)-1 ) ) )
-            b->band[dir].bytesLeft = SIZE_MAX;
+        if( ( ( tr_bandwidthGetDesiredSpeed_Bps( b, dir ) < (double)1 )
+           && ( tr_bandwidthGetDesiredSpeed_Bps( b, dir ) > (double)-1 ) ) )
+            b->band[dir].bytesLeft = INT_MAX;
         else
         {
             const unsigned int nextPulseSpeed = b->band[dir].desiredSpeed_Bps;
@@ -322,9 +321,8 @@ bandwidthClamp( const tr_bandwidth  * b,
     {
         if( b->band[dir].isLimited )
         {
-            if( ( dir == TR_UP ) &&
-                   ( ( tr_bandwidthGetDesiredSpeed_Bps( b, TR_UP ) < (double)1 )
-                     && ( tr_bandwidthGetDesiredSpeed_Bps( b, TR_UP ) > (double)-1 ) ) )
+            if( ( ( tr_bandwidthGetDesiredSpeed_Bps( b, dir ) < (double)1 )
+               && ( tr_bandwidthGetDesiredSpeed_Bps( b, dir ) > (double)-1 ) ) )
             {
                 if( isPieceData )
                     return 0;
@@ -406,11 +404,11 @@ tr_bandwidthUsed( tr_bandwidth  * b,
 
     band = &b->band[dir];
 
-    const bool zeroUpload = ( dir == TR_UP ) && band->isLimited &&
-                               ( ( tr_bandwidthGetDesiredSpeed_Bps( b, TR_UP ) < (double)1 )
-                                 && ( tr_bandwidthGetDesiredSpeed_Bps( b, TR_UP ) > (double)-1 ) );
+    const bool zeroUD = band->isLimited &&
+                    ( ( tr_bandwidthGetDesiredSpeed_Bps( b, dir ) < (double)1 )
+                      && ( tr_bandwidthGetDesiredSpeed_Bps( b, dir ) > (double)-1 ) );
 
-    if( band->isLimited && isPieceData && !zeroUpload )
+    if( band->isLimited && isPieceData && !zeroUD )
         band->bytesLeft -= MIN( band->bytesLeft, byteCount );
 
 #ifdef DEBUG_DIRECTION
@@ -419,7 +417,7 @@ fprintf( stderr, "%p consumed %5zu bytes of %5s data... was %6zu, now %6zu left\
          b, byteCount, (isPieceData?"piece":"raw"), oldBytesLeft, band->bytesLeft );
 #endif
 
-    if( !zeroUpload )
+    if( !zeroUD )
     {
         bytesUsed( now, &band->raw, byteCount );
 

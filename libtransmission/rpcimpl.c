@@ -975,12 +975,14 @@ addTrackerUrls( tr_torrent * tor, tr_benc * urls )
     int tier;
     tr_benc * val;
     tr_tracker_info * trackers;
-    bool changed = false;
+    bool addedURL;
+    bool changedPrivateFlag;
     const tr_info * inf = tr_torrentInfo( tor );
     const char * errmsg = NULL;
 
     /* make a working copy of the existing announce list */
     n = inf->trackerCount;
+    changedPrivateFlag = addedURL = false;
     trackers = tr_new0( tr_tracker_info, n + tr_bencListSize( urls ) );
     tier = copyTrackers( trackers, inf->trackers, n );
 
@@ -997,14 +999,28 @@ addTrackerUrls( tr_torrent * tor, tr_benc * urls )
             trackers[n].tier = ++tier; /* add a new tier */
             trackers[n].announce = tr_strdup( announce );
             ++n;
-            changed = true;
+            addedURL = true;
         }
+        else if( tr_privateTrackerOff( announce ) )
+        {
+            tor->info.isPrivate = false;
+            errmsg = "private flag set to false";
+            changedPrivateFlag = true;
+        }
+        else if( tr_privateTrackerOn( announce ) )
+        {
+            tor->info.isPrivate = true;
+            errmsg = "private flag set to true";
+            changedPrivateFlag = true;
+        }            
     }
 
-    if( !changed )
-        errmsg = "invalid argument";
-    else if( !tr_torrentSetAnnounceList( tor, trackers, n ) )
-        errmsg = "error setting announce list";
+    if( !addedURL && !changedPrivateFlag )
+        errmsg = "invalid argument - no trackers added";
+    else
+        if( addedURL )
+            if( !tr_torrentSetAnnounceList( tor, trackers, n ) )
+                errmsg = "error setting announce list";
 
     freeTrackers( trackers, n );
     return errmsg;
@@ -1048,7 +1064,7 @@ replaceTrackers( tr_torrent * tor, tr_benc * urls )
     }
 
     if( !changed )
-        errmsg = "invalid argument";
+        errmsg = "invalid argument - no trackers edited";
     else if( !tr_torrentSetAnnounceList( tor, trackers, n ) )
         errmsg = "error setting announce list";
 
@@ -1101,7 +1117,7 @@ removeTrackers( tr_torrent * tor, tr_benc * ids )
     }
 
     if( !changed )
-        errmsg = "invalid argument";
+        errmsg = "invalid argument - no trackers removed";
     else if( !tr_torrentSetAnnounceList( tor, trackers, n ) )
         errmsg = "error setting announce list";
 
