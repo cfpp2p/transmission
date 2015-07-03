@@ -277,6 +277,7 @@ struct tr_torrent
     uint8_t                    streamingMode;
     uint8_t                    cheatMode;
     float                      cheatRand;
+    float                      cheatRatio;
 
 
     uint16_t                   idleLimitMinutes;

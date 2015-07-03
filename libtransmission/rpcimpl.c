@@ -26,6 +26,7 @@
 #include "transmission.h"
 #include "bencode.h"
 #include "completion.h"
+#include "crypto.h"
 #include "fdlimit.h"
 #include "json.h"
 #include "rpcimpl.h"
@@ -976,13 +977,13 @@ addTrackerUrls( tr_torrent * tor, tr_benc * urls )
     tr_benc * val;
     tr_tracker_info * trackers;
     bool addedURL;
-    bool changedPrivateFlag;
+    bool changedFlag;
     const tr_info * inf = tr_torrentInfo( tor );
     const char * errmsg = NULL;
 
     /* make a working copy of the existing announce list */
     n = inf->trackerCount;
-    changedPrivateFlag = addedURL = false;
+    changedFlag = addedURL = false;
     trackers = tr_new0( tr_tracker_info, n + tr_bencListSize( urls ) );
     tier = copyTrackers( trackers, inf->trackers, n );
 
@@ -992,31 +993,55 @@ addTrackerUrls( tr_torrent * tor, tr_benc * urls )
     {
         const char * announce = NULL;
 
-        if(    tr_bencGetStr( val, &announce )
-            && tr_urlIsValidTracker( announce )
-            && !findAnnounceUrl( trackers, n, announce, NULL ) )
+        if( tr_bencGetStr( val, &announce ) )
         {
-            trackers[n].tier = ++tier; /* add a new tier */
-            trackers[n].announce = tr_strdup( announce );
-            ++n;
-            addedURL = true;
+            if( tr_urlIsValidTracker( announce )
+                && !findAnnounceUrl( trackers, n, announce, NULL ) )
+            {
+                trackers[n].tier = ++tier; /* add a new tier */
+                trackers[n].announce = tr_strdup( announce );
+                ++n;
+                addedURL = true;
+            }
+            else if( tr_privateTrackerOff( announce ) )
+            {
+                tor->info.isPrivate = false;
+                errmsg = "private flag set to false";
+                changedFlag = true;
+                tr_torrentSetDirty( tor );
+            }
+            else if( tr_privateTrackerOn( announce ) )
+            {
+                tor->info.isPrivate = true;
+                errmsg = "private flag set to true";
+                changedFlag = true;
+                tr_torrentSetDirty( tor );
+            }
+            else if( ( announce != NULL ) && ( strlen( announce ) < 10 ) )
+            {
+                float cheatR;
+                // limit to maximum ratio of 99
+                cheatR = strtof( announce, NULL );
+                if( ( errno == ERANGE ) || ( cheatR < (float)(-1.9) ) || ( cheatR > (float)(99) ) )
+                {
+                    errmsg = "too big or too small a number, not accepted!";
+                    changedFlag = true;
+                }
+                else if( cheatR != 0 )
+                {
+                    tor->cheatRatio = cheatR;
+                    // random float, range 0.0 to 0.1
+                    tor->cheatRand = ( (float)tr_cryptoRandInt(100000)/1000000 ) + tor->cheatRatio;
+                    errmsg = tr_strdup_printf( "%4.6f will be added to cheat ratio when it is active", cheatR );
+                    changedFlag = true;
+                    tr_torrentSetDirty( tor );
+                }
+            }
         }
-        else if( tr_privateTrackerOff( announce ) )
-        {
-            tor->info.isPrivate = false;
-            errmsg = "private flag set to false";
-            changedPrivateFlag = true;
-        }
-        else if( tr_privateTrackerOn( announce ) )
-        {
-            tor->info.isPrivate = true;
-            errmsg = "private flag set to true";
-            changedPrivateFlag = true;
-        }            
     }
 
-    if( !addedURL && !changedPrivateFlag )
-        errmsg = "invalid argument - no trackers added";
+    if( !addedURL && !changedFlag )
+        errmsg = "invalid argument or 0 entered";
     else
         if( addedURL )
             if( !tr_torrentSetAnnounceList( tor, trackers, n ) )
