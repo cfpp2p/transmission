@@ -7,7 +7,7 @@
  * This exemption does not extend to derived works not owned by
  * the Transmission project.
  *
- * $Id: resume.c 14309 2014-10-26 12:24:48Z jordan $
+ * $Id: resume.c 12921 2011-09-26 22:50:42Z jordan $
  */
 
 #include <unistd.h> /* unlink */
@@ -27,9 +27,11 @@
 
 #define KEY_ACTIVITY_DATE       "activity-date"
 #define KEY_ADDED_DATE          "added-date"
+#define KEY_CHEATRATIO          "cheat-ratio"
 #define KEY_CORRUPT             "corrupt"
 #define KEY_DONE_DATE           "done-date"
 #define KEY_DOWNLOAD_DIR        "destination"
+#define KEY_PRIVATEENABLED      "private-enabled"
 #define KEY_PIECE_TEMP_DIR      "piece-temp-dir"
 #define KEY_DND                 "dnd"
 #define KEY_DOWNLOADED          "downloaded"
@@ -680,7 +682,7 @@ tr_torrentSaveResume( tr_torrent * tor )
     if( !tr_isTorrent( tor ) )
         return;
 
-    tr_bencInitDict( &top, 50 ); /* arbitrary "big enough" number */
+    tr_bencInitDict( &top, 55 ); /* arbitrary "big enough" number */
     tr_bencDictAddInt( &top, KEY_TIME_SEEDING, tor->secondsSeeding );
     tr_bencDictAddInt( &top, KEY_TIME_DOWNLOADING, tor->secondsDownloading );
     tr_bencDictAddInt( &top, KEY_ACTIVITY_DATE, tor->activityDate );
@@ -698,6 +700,8 @@ tr_torrentSaveResume( tr_torrent * tor )
     tr_bencDictAddInt( &top, KEY_MAX_PEERS, tor->maxConnectedPeers );
     tr_bencDictAddInt( &top, KEY_BANDWIDTH_PRIORITY, tr_torrentGetPriority( tor ) );
     tr_bencDictAddBool( &top, KEY_PAUSED, !tor->isRunning && !tor->isQueued );
+    tr_bencDictAddReal( &top, KEY_CHEATRATIO, tor->cheatRatio );
+    tr_bencDictAddBool( &top, KEY_PRIVATEENABLED, tor->info.isPrivate );
     savePeers( &top, tor );
     if( tr_torrentHasMetadata( tor ) )
     {
@@ -816,6 +820,21 @@ loadFromFile( tr_torrent * tor, uint64_t fieldsToLoad )
     {
         tor->isRunning = !boolVal;
         fieldsLoaded |= TR_FR_RUN;
+    }
+
+    if( ( fieldsToLoad & TR_FR_PRIVATE_ENABLED )
+      && tr_bencDictFindBool( &top, KEY_PRIVATEENABLED, &boolVal ) )
+    {
+        tor->info.isPrivate = boolVal;
+        fieldsLoaded |= TR_FR_PRIVATE_ENABLED;
+    }
+
+    double cratio;
+    if( ( fieldsToLoad & TR_FR_CHEAT_RATIO )
+      && tr_bencDictFindReal( &top, KEY_CHEATRATIO, &cratio ) )
+    {
+        tor->cheatRatio = cratio;
+        fieldsLoaded |= TR_FR_CHEAT_RATIO;
     }
 
     if( ( fieldsToLoad & TR_FR_ADDED_DATE )

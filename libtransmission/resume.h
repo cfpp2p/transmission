@@ -41,7 +41,9 @@ enum
     TR_FR_TIME_DOWNLOADING    = ( 1 << 19 ),
     TR_FR_STREAMINGMODE       = ( 1 << 20 ),
     TR_FR_CHEATMODE           = ( 1 << 21 ),
-    TR_FR_PIECE_TEMP_DIR      = ( 1 << 22 )
+    TR_FR_PIECE_TEMP_DIR      = ( 1 << 22 ),
+    TR_FR_CHEAT_RATIO         = ( 1 << 23 ),
+    TR_FR_PRIVATE_ENABLED     = ( 1 << 24 )
 };
 
 /**

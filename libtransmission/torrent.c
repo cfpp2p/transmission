@@ -1116,8 +1116,15 @@ torrentInit( tr_torrent * tor, const tr_ctor * ctor )
     {
         tr_torrentSetCheatMode( tor, tor->session->cheatModeDefault );
     }
+
+    if( !( loaded & TR_FR_CHEAT_RATIO )
+        || ( tor->cheatRatio < (float)(-1.9) ) || ( tor->cheatRatio > (float)(99) ) )
+    {
+        tor->cheatRatio = 0;
+    }
+
     // random float, range 0.0 to 0.1
-    tor->cheatRand = (float)tr_cryptoRandInt(100000)/1000000;
+    tor->cheatRand = ( (float)tr_cryptoRandInt(100000)/1000000 ) + tor->cheatRatio;
 
     /* add the torrent to tr_session.torrentList */
     session->torrentCount++;
