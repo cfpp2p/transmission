@@ -7,7 +7,7 @@
  * This exemption does not extend to derived works not owned by
  * the Transmission project.
  *
- * $Id: resume.c 12921 2011-09-26 22:50:42Z jordan $
+ * $Id: resume.c 14208 2013-10-20 17:15:19Z jordan $
  */
 
 #include <unistd.h> /* unlink */
