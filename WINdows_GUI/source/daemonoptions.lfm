@@ -213,7 +213,7 @@ object DaemonOptionsForm: TDaemonOptionsForm
         Top = 96
         Width = 66
         MaxValue = 99999
-        MinValue = 1
+        MinValue = 0
         TabOrder = 5
         Value = 1
       end

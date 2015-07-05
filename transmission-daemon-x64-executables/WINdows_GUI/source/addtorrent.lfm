@@ -83,7 +83,7 @@ object AddTorrentForm: TAddTorrentForm
       Width = 62
       Anchors = [akTop, akRight]
       MaxValue = 989
-      MinValue = 1
+      MinValue = 0
       TabOrder = 3
       Value = 1
     end

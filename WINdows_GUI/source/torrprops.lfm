@@ -162,7 +162,7 @@ object TorrPropsForm: TTorrPropsForm
       Width = 66
       Anchors = [akTop, akRight]
       MaxValue = 999
-      MinValue = 1
+      MinValue = 0
       TabOrder = 4
       Value = 1
     end
