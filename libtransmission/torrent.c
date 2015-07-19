@@ -290,7 +290,10 @@ tr_torrentGetStreamingMode( const tr_torrent * tor )
 {
     assert( tr_isTorrent( tor ) );
 
-    return tor->streamingMode;
+    if( tor->info.webseedCount > 0 )
+        return TR_STREAMING_FORCED;
+    else
+        return tor->streamingMode;
 }
 
 void
