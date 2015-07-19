@@ -306,6 +306,15 @@ connection_succeeded( void * vdata )
         /* the server seems to be accepting more connections now */
         w->consecutive_failures = w->retry_tickcount = w->retry_challenge = 0;
 
+    if( ( data->piece_index >= tor->info.pieceCount )
+        || ( tr_pieceOffset( tor, data->piece_index, data->piece_offset, 0 ) >= tor->info.totalSize ) )
+    {
+        tr_tordbg( tor, "webseed paused - connection aborted - piece index:%d - piece offset:%d - total size: %"PRIu64" bytes",
+                   data->piece_index, data->piece_offset, tor->info.totalSize );
+        w->wait_factor = MAX_WAIT_FACTOR;
+        return;
+    }
+
     if( data->real_url && tor )
     {
         uint64_t file_offset;
@@ -795,6 +804,15 @@ task_request_next_chunk( struct tr_webseed_task * t )
         const tr_file * file;
         uint64_t file_offset;
         uint64_t this_pass;
+
+        if( ( t->piece_index >= tor->info.pieceCount )
+            || ( total_offset > tor->info.totalSize ) )
+        {
+            tr_tordbg( tor, "webseed paused - next chunk aborted - piece index:%d - piece offset:%d - total size: %"PRIu64" bytes",
+                       t->piece_index, t->piece_offset, tor->info.totalSize );
+            w->wait_factor = MAX_WAIT_FACTOR;
+            return;
+        }
 
         tr_ioFindFileLocation( tor, step_piece, step_piece_offset,
                                     &file_index, &file_offset );
