@@ -2752,6 +2752,14 @@ setFileDND( tr_torrent * tor, tr_file_index_t file_index, int8_t dnd )
     rwfpmovept = fpmovept;
     rwlpmovept = lpmovept;
 
+    // eliminate compiler warnings - may be used uninitialized in this function
+    fpoffset = 0;
+    fpoverlap = 0;
+    fpbuf = NULL;
+//  lpoffset = 0;
+    lpoverlap = 0;
+    lpbuf = NULL;
+
     if( fpmovept )
     {
         char * filename = tr_torrentFindPieceTemp( tor, fpindex );
@@ -3152,6 +3160,7 @@ tr_torrentGetFileMTime( const tr_torrent * tor, tr_file_index_t i )
 {
     time_t mtime = 0;
     tr_fd_index_type it;
+    it = TR_FD_INDEX_FILE;
     if( !tr_fdFileGetCachedMTime( tor->session, tor->uniqueId, i, it, &mtime ) )
         tr_torrentFindFile2( tor, i, NULL, NULL, &mtime );
     return mtime;
