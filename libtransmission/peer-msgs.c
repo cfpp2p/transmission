@@ -7,7 +7,7 @@
  * This exemption does not extend to derived works not owned by
  * the Transmission project.
  *
- * $Id: peer-msgs.c 12921 2011-09-26 22:50:42Z jordan $
+ * $Id: peer-msgs.c 14550 2015-07-21 23:27:48Z jordan $
  */
 
 #include <assert.h>
@@ -15,6 +15,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h> /* INT_MAX */
 
 #include <alloca.h>
 
@@ -1379,7 +1380,7 @@ readBtMessage( tr_peermsgs * msgs, struct evbuffer * inbuf, size_t inlen )
     if( inlen < msglen )
         return READ_LATER;
 
-    if( msglen == SIZE_MAX )
+    if( msglen == INT_MAX )
     {
         dbgmsg( msgs, "bad packet - BT message #%d with a length of %d", (int)id, (int)msglen );
         fireError( msgs, EMSGSIZE );
