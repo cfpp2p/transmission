@@ -357,9 +357,12 @@ format_tos(int value)
 void
 tr_sessionGetDefaultSettings( tr_benc * d )
 {
+
+    const tr_benc * knownGroups;
+
     assert( tr_bencIsDict( d ) );
 
-    tr_bencDictReserve( d, 77 );
+    tr_bencDictReserve( d, 81 );
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_ENABLED,               false );
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_WEBSEEDS,              false );
     tr_bencDictAddBool( d, TR_PREFS_KEY_DROP_INTERRUPTED_WEBSEEDS,       true );
@@ -437,14 +440,22 @@ tr_sessionGetDefaultSettings( tr_benc * d )
     tr_bencDictAddStr ( d, TR_PREFS_KEY_CLIENT_VERSION_BEP10,            "" );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_PEER_ID_PREFIX,                  "" );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_USER_AGENT,                      "" );
+
+  tr_bencDictAddStr  (d, TR_PREFS_KEY_DOWNLOAD_GROUP_DEFAULT,          tr_getDefaultDownloadGroupDefault ());
+  knownGroups = tr_getDefaultDownloadGroups ();
+  tr_bencListCopy (tr_bencDictAddList (d, TR_PREFS_KEY_DOWNLOAD_GROUPS, tr_bencListSize (knownGroups)), knownGroups);
+
 }
 
 void
 tr_sessionGetSettings( tr_session * s, struct tr_benc * d )
 {
+
+    const tr_benc * knownGroups;
+
     assert( tr_bencIsDict( d ) );
 
-    tr_bencDictReserve( d, 78 );
+    tr_bencDictReserve( d, 82 );
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_ENABLED,                tr_blocklistIsEnabled( s ) );
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_WEBSEEDS,               s->blockListWebseeds );
     tr_bencDictAddBool( d, TR_PREFS_KEY_DROP_INTERRUPTED_WEBSEEDS,        s->dropInterruptedWebseeds );
@@ -523,6 +534,11 @@ tr_sessionGetSettings( tr_session * s, struct tr_benc * d )
     tr_bencDictAddStr ( d, TR_PREFS_KEY_CLIENT_VERSION_BEP10,             tr_sessionGetClientVersionBep10( s ) );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_PEER_ID_PREFIX,                   tr_sessionGetPeerIdPrefix( s ) );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_USER_AGENT,                       tr_sessionGetUserAgent( s ) );
+
+  tr_bencDictAddStr  (d, TR_PREFS_KEY_DOWNLOAD_GROUP_DEFAULT,       tr_sessionGetDownloadGroupDefault (s));
+  knownGroups = tr_sessionGetDownloadGroups (s);
+  tr_bencListCopy (tr_bencDictAddList (d, TR_PREFS_KEY_DOWNLOAD_GROUPS, tr_bencListSize (knownGroups)), knownGroups);
+
 }
 
 bool
@@ -836,6 +852,7 @@ sessionSetImpl( void * vdata )
     tr_session * session = data->session;
     tr_benc * settings = data->clientSettings;
     struct tr_turtle_info * turtle = &session->turtle;
+    tr_benc * groups;
 
     assert( tr_isSession( session ) );
     assert( tr_bencIsDict( settings ) );
@@ -901,6 +918,14 @@ sessionSetImpl( void * vdata )
         tr_sessionSetPeerIdPrefix( session, str );
     if( tr_bencDictFindStr( settings, TR_PREFS_KEY_USER_AGENT, &str ) )
         tr_sessionSetUserAgent( session, str );
+
+  if (tr_bencDictFindList (settings, TR_PREFS_KEY_DOWNLOAD_GROUPS, &groups))
+  {
+    tr_sessionSetDownloadGroups(session, groups);
+  }
+  if (tr_bencDictFindStr (settings, TR_PREFS_KEY_DOWNLOAD_GROUP_DEFAULT, &str))
+    tr_sessionSetDownloadGroupDefault (session, str);
+ 
 
     /* torrent queues */
     if( tr_bencDictFindInt( settings, TR_PREFS_KEY_QUEUE_STALLED_MINUTES, &i ) )
@@ -1110,6 +1135,55 @@ tr_sessionSetPieceTempDir( tr_session * session, const char * path )
     else
         session->pieceDir = tr_strdup( path );
     tr_sessionUnlock( session );
+}
+
+/***
+****
+***/
+
+ void
+tr_sessionSetDownloadGroups (tr_session * session, const tr_benc * groups)
+{
+  assert (tr_isSession (session));
+
+  tr_bencInitList (&session->downloadGroups, tr_bencListSize (groups));
+  tr_bencListCopy (&session->downloadGroups, groups);
+}
+
+const struct tr_benc*
+tr_sessionGetDownloadGroups (const tr_session * session)
+{
+  static tr_benc groups;
+
+  assert (tr_isSession (session));
+
+  tr_bencInitList (&groups, tr_bencListSize (&session->downloadGroups));
+  tr_bencListCopy (&groups, &session->downloadGroups);
+
+  return &groups;
+}
+
+void
+tr_sessionSetDownloadGroupDefault (tr_session * session, const char * defaultGroup)
+{
+  assert (tr_isSession (session));
+
+  session->downloadGroupDefault = tr_strdup (defaultGroup);
+}
+
+const char*
+tr_sessionGetDownloadGroupDefault (const tr_session * session)
+{
+  const char * defaultGroup = NULL;
+
+  assert (tr_isSession (session));
+
+  if (session->downloadGroupDefault != NULL)
+  {
+    defaultGroup = session->downloadGroupDefault;
+  }
+
+  return defaultGroup;
 }
 
 /***
@@ -2019,6 +2093,7 @@ tr_sessionClose( tr_session * session )
 
     /* free the session memory */
     tr_bencFree( &session->removedTorrents );
+    tr_bencFree (&session->downloadGroups);
     tr_bandwidthDestruct( &session->bandwidth );
     tr_bitfieldDestruct( &session->turtle.minutes );
     tr_lockFree( session->lock );

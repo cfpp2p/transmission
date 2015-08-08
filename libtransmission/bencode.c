@@ -1479,7 +1479,7 @@ static const struct WalkFuncs jsonWalkFuncs = { jsonIntFunc,
 ****
 ***/
 
-static void
+void
 tr_bencListCopy( tr_benc * target, const tr_benc * src )
 {
     int i = 0;
@@ -1598,9 +1598,23 @@ tr_bencMergeDicts( tr_benc * target, const tr_benc * source )
             }
             else if( tr_bencIsList( val ) )
             {
-                if( tr_bencDictFind( target, key ) == NULL )
+              tr_benc * targetList = tr_bencDictFind (target, key);
+              if (targetList == NULL)
                 {
-                    tr_bencListCopy( tr_bencDictAddList( target, key, tr_bencListSize( val ) ), val );
+                  tr_bencListCopy (tr_bencDictAddList (target, key, tr_bencListSize (val)), val);
+                }
+              else
+                {
+                  // if we are processing TR_PREFS_KEY_download_groups list
+                  // overwrite target with source
+                  char * tmp;
+                  tmp = tr_strdup( TR_PREFS_KEY_DOWNLOAD_GROUPS );
+                  if (key == tmp && tr_bencListSize(val) > 0)
+                    {
+                      tr_bencInitList(targetList, tr_bencListSize(val));
+                      tr_bencListCopy (targetList, val);
+                    }
+                  tr_free( tmp );
                 }
             }
             else if( tr_bencIsDict( val ) )

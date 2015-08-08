@@ -229,6 +229,9 @@ struct tr_session
 
     tr_benc                    * metainfoLookup;
 
+    tr_benc                      downloadGroups;
+    char *                       downloadGroupDefault;
+
     struct event               * nowTimer;
     struct event               * saveTimer;
 

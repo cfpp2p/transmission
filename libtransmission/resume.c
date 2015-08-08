@@ -7,7 +7,7 @@
  * This exemption does not extend to derived works not owned by
  * the Transmission project.
  *
- * $Id: resume.c 14208 2013-10-20 17:15:19Z jordan $
+ * $Id: resume.c 12921 2011-09-26 22:50:42Z jordan $
  */
 
 #include <unistd.h> /* unlink */
@@ -31,6 +31,7 @@
 #define KEY_CORRUPT             "corrupt"
 #define KEY_DONE_DATE           "done-date"
 #define KEY_DOWNLOAD_DIR        "destination"
+#define KEY_GROUP               "group-destination"
 #define KEY_PRIVATEENABLED      "private-enabled"
 #define KEY_PIECE_TEMP_DIR      "piece-temp-dir"
 #define KEY_DND                 "dnd"
@@ -695,6 +696,7 @@ tr_torrentSaveResume( tr_torrent * tor )
         tr_bencDictAddStr( &top, KEY_INCOMPLETE_DIR, tor->incompleteDir );
     if( tor->pieceTempDir != NULL )
         tr_bencDictAddStr( &top, KEY_PIECE_TEMP_DIR, tor->pieceTempDir );
+    tr_bencDictAddStr (&top, KEY_GROUP, tor->downloadGroup);
     tr_bencDictAddInt( &top, KEY_DOWNLOADED, tor->downloadedPrev + tor->downloadedCur );
     tr_bencDictAddInt( &top, KEY_UPLOADED, tor->uploadedPrev + tor->uploadedCur );
     tr_bencDictAddInt( &top, KEY_MAX_PEERS, tor->maxConnectedPeers );
@@ -793,6 +795,19 @@ loadFromFile( tr_torrent * tor, uint64_t fieldsToLoad )
         tor->pieceTempDir = tr_strdup( str );
         fieldsLoaded |= TR_FR_PIECE_TEMP_DIR;
     }
+
+  if ((fieldsToLoad & (TR_FR_PROGRESS | TR_FR_GROUP))
+      && (tr_bencDictFindStr (&top, KEY_GROUP, &str))
+      && (str && *str))
+    {
+      if (tr_strcmp0 (str, tor->downloadGroup))
+        {
+          tr_free (tor->downloadGroup);
+          tor->downloadGroup = tr_strdup (str);
+        }
+        fieldsLoaded |= TR_FR_GROUP;
+    }
+
 
     if( ( fieldsToLoad & TR_FR_DOWNLOADED )
       && tr_bencDictFindInt( &top, KEY_DOWNLOADED, &i ) )

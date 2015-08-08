@@ -109,6 +109,8 @@ void      tr_bencInitBool( tr_benc *, int value );
 
 void      tr_bencInitReal( tr_benc *, double value );
 
+void      tr_bencListCopy (tr_benc * target, const tr_benc * src);
+
 /***
 ****  Serialization / Deserialization
 ***/
