@@ -241,6 +241,7 @@ var torrentFields = {
   "desiredAvailable": { readOnly: true, render: renderSize },
   "doneDate": { readOnly: true, render: renderDateTime },
   "downloadDir": { readOnly: true },
+  "downloadGroup": {},
   "downloadedEver": { readOnly: true, render: renderSize },
   "downloadLimit": {},
   "downloadLimited": {},
