@@ -162,6 +162,11 @@ struct tr_torrent
     /* Where the files will be when it's complete */
     char * downloadDir;
 
+    /* Complete files will be copied to this subdir when it's complete,
+       or not if it contains an empty string */
+    char * downloadGroup;
+
+
     /* Where the files are when the torrent is incomplete */
     char * incompleteDir;
 

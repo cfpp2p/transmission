@@ -632,6 +632,8 @@ addField( const tr_torrent * const tor,
         tr_bencDictAddStr( d, key, tr_torrentGetDownloadDir( tor ) );
     else if( tr_streq( key, keylen, "downloadedEver" ) )
         tr_bencDictAddInt( d, key, st->downloadedEver );
+    else if( tr_streq( key, keylen, "downloadGroup" ) )
+        tr_bencDictAddStr (d, key, tr_torrentGetDownloadGroup (tor) ? tr_torrentGetDownloadGroup (tor) : "");
     else if( tr_streq( key, keylen, "downloadLimit" ) )
         tr_bencDictAddInt( d, key, tr_torrentGetSpeedLimit_KBps( tor, TR_DOWN ) );
     else if( tr_streq( key, keylen, "downloadLimited" ) )
@@ -1167,6 +1169,7 @@ torrentSet( tr_session               * session,
     {
         int64_t      tmp;
         double       d;
+        const char * str = NULL;
         tr_benc *    files;
         tr_benc *    trackers;
         bool         boolVal;
@@ -1211,6 +1214,8 @@ torrentSet( tr_session               * session,
             tr_torrentSetRatioMode( tor, tmp );
         if( tr_bencDictFindInt( args_in, "queuePosition", &tmp ) )
             tr_torrentSetQueuePosition( tor, tmp );
+        if (tr_bencDictFindStr (args_in, "downloadGroup", &str))
+            tr_torrentSetDownloadGroup (tor, str);
         if( !errmsg && tr_bencDictFindList( args_in, "trackerAdd", &trackers ) )
             errmsg = addTrackerUrls( tor, trackers );
         if( !errmsg && tr_bencDictFindList( args_in, "trackerRemove", &trackers ) )
@@ -1548,6 +1553,9 @@ torrentAdd( tr_session               * session,
         if( tr_bencDictFindStr( args_in, TR_PREFS_KEY_DOWNLOAD_DIR, &str ) )
             tr_ctorSetDownloadDir( ctor, TR_FORCE, str );
 
+        if (tr_bencDictFindStr (args_in, "downloadGroup", &str))
+            tr_ctorSetDownloadGroup (ctor, TR_FORCE, str);
+
         if( tr_bencDictFindBool( args_in, "paused", &boolVal ) )
             tr_ctorSetPaused( ctor, TR_FORCE, boolVal );
 
@@ -1642,6 +1650,7 @@ sessionSet( tr_session               * session,
     double       d;
     bool         boolVal;
     const char * str;
+    tr_benc * list;
 
     assert( idle_data == NULL );
 
@@ -1675,6 +1684,13 @@ sessionSet( tr_session               * session,
         tr_sessionSetQueueStalledEnabled( session, boolVal );
     if( tr_bencDictFindInt( args_in, TR_PREFS_KEY_DOWNLOAD_QUEUE_SIZE, &i ) )
         tr_sessionSetQueueSize( session, TR_DOWN, i );
+
+  if (tr_bencDictFindStr (args_in, TR_PREFS_KEY_DOWNLOAD_GROUP_DEFAULT, &str))
+    tr_sessionSetDownloadGroupDefault (session, str);
+
+  if (tr_bencDictFindList (args_in, TR_PREFS_KEY_DOWNLOAD_GROUPS, &list))
+    tr_sessionSetDownloadGroups (session, list);
+
     if( tr_bencDictFindBool( args_in, TR_PREFS_KEY_DOWNLOAD_QUEUE_ENABLED, &boolVal ) )
         tr_sessionSetQueueEnabled ( session, TR_DOWN, boolVal );
     if( tr_bencDictFindStr( args_in, TR_PREFS_KEY_INCOMPLETE_DIR, &str ) )
@@ -1821,6 +1837,7 @@ sessionGet( tr_session               * s,
             struct tr_rpc_idle_data  * idle_data UNUSED )
 {
     const char * str;
+    const tr_benc * knownGroups;
     tr_benc * d = args_out;
 
     assert( idle_data == NULL );
@@ -1839,6 +1856,11 @@ sessionGet( tr_session               * s,
     tr_bencDictAddStr ( d, TR_PREFS_KEY_DOWNLOAD_DIR, tr_sessionGetDownloadDir( s ) );
     tr_bencDictAddBool( d, TR_PREFS_KEY_DOWNLOAD_QUEUE_ENABLED, tr_sessionGetQueueEnabled( s, TR_DOWN ) );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_DOWNLOAD_QUEUE_SIZE, tr_sessionGetQueueSize( s, TR_DOWN ) );
+
+  tr_bencDictAddStr  (d, TR_PREFS_KEY_DOWNLOAD_GROUP_DEFAULT, tr_sessionGetDownloadGroupDefault (s));
+  knownGroups = tr_sessionGetDownloadGroups (s);
+  tr_bencListCopy (tr_bencDictAddList (d, TR_PREFS_KEY_DOWNLOAD_GROUPS, tr_bencListSize (knownGroups)), knownGroups);
+
     tr_bencDictAddInt ( d, "download-dir-free-space",  tr_sessionGetDownloadDirFreeSpace( s ) );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_PIECE_TEMP_DIR, tr_sessionGetPieceTempDir( s ) );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_PEER_LIMIT_GLOBAL, tr_sessionGetPeerLimit( s ) );

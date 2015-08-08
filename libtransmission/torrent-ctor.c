@@ -23,10 +23,12 @@ struct optional_args
     bool            isSet_paused;
     bool            isSet_connected;
     bool            isSet_downloadDir;
+    bool            isSet_downloadGroup;
 
     bool            isPaused;
     uint16_t        peerLimit;
     char          * downloadDir;
+    char          * downloadGroup;
 };
 
 /** Opaque class used when instantiating torrents.
@@ -326,6 +328,23 @@ tr_ctorSetDownloadDir( tr_ctor *    ctor,
     }
 }
 
+ void
+tr_ctorSetDownloadGroup (tr_ctor     * ctor,
+                         tr_ctorMode   mode,
+                         const char  * group)
+{
+    struct optional_args * args = &ctor->optionalArgs[mode];
+
+    tr_free (args->downloadGroup);
+    args->downloadGroup = NULL;
+    args->isSet_downloadGroup = 0;
+    if (group && *group)
+    {
+        args->isSet_downloadGroup = 1;
+        args->downloadGroup = tr_strdup (group);
+    }
+}
+
 void
 tr_ctorSetIncompleteDir( tr_ctor * ctor, const char * directory )
 {
@@ -375,6 +394,22 @@ tr_ctorGetDownloadDir( const tr_ctor * ctor,
         err = 1;
     else if( setmeDownloadDir )
         *setmeDownloadDir = args->downloadDir;
+
+    return err;
+}
+
+int
+tr_ctorGetDownloadGroup (const tr_ctor  * ctor,
+                         tr_ctorMode      mode,
+                         const char    ** setmeGroup)
+{
+    int                          err = 0;
+    const struct optional_args * args = &ctor->optionalArgs[mode];
+
+    if (!args->isSet_downloadGroup)
+        err = 1;
+    else if (setmeGroup)
+        *setmeGroup = args->downloadGroup;
 
     return err;
 }
@@ -453,6 +488,7 @@ tr_ctorNew( const tr_session * session )
         tr_ctorSetPaused( ctor, TR_FALLBACK, tr_sessionGetPaused( session ) );
         tr_ctorSetPeerLimit( ctor, TR_FALLBACK, session->peerLimitPerTorrent );
         tr_ctorSetDownloadDir( ctor, TR_FALLBACK, session->downloadDir );
+        tr_ctorSetDownloadGroup (ctor, TR_FALLBACK, tr_sessionGetDownloadGroupDefault (session));
     }
     tr_ctorSetSave( ctor, true );
     return ctor;
@@ -464,6 +500,8 @@ tr_ctorFree( tr_ctor * ctor )
     clearMetainfo( ctor );
     tr_free( ctor->optionalArgs[1].downloadDir );
     tr_free( ctor->optionalArgs[0].downloadDir );
+    tr_free (ctor->optionalArgs[1].downloadGroup);
+    tr_free (ctor->optionalArgs[0].downloadGroup);
     tr_free( ctor->incompleteDir );
     tr_free( ctor->want );
     tr_free( ctor->notWant );

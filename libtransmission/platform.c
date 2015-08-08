@@ -537,6 +537,29 @@ tr_getDefaultPieceSubDir( void )
     return PIECE_SUBDIR;
 }
 
+const struct tr_benc*
+tr_getDefaultDownloadGroups (void)
+{
+  static tr_benc groups;
+
+  tr_bencInitList (&groups, 3);
+  tr_bencListAddStr (&groups, "Movies");
+  tr_bencListAddStr (&groups, "Music");
+  tr_bencListAddStr (&groups, "Software");
+
+  return &groups;
+}
+
+const char*
+tr_getDefaultDownloadGroupDefault (void)
+{
+  static char* defaultDownloadGroup = NULL;
+
+  defaultDownloadGroup = tr_strdup ("movies");
+
+  return defaultDownloadGroup;
+}
+
 /***
 ****
 ***/

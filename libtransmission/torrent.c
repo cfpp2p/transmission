@@ -931,6 +931,7 @@ torrentCallScript( const tr_torrent * tor, const char * script )
             tr_strdup_printf( "TR_APP_VERSION=%s", SHORT_VERSION_STRING ),
             tr_strdup_printf( "TR_TIME_LOCALTIME=%s", timeStr ),
             tr_strdup_printf( "TR_TORRENT_DIR=%s", tor->currentDir ),
+            tr_strdup_printf ("TR_TORRENT_GROUP=%s", tr_torrentGetDownloadGroup (tor)),
             tr_strdup_printf( "TR_TORRENT_ID=%d", tr_torrentId( tor ) ),
             tr_strdup_printf( "TR_TORRENT_HASH=%s", tor->info.hashString ),
             tr_strdup_printf( "TR_TORRENT_NAME=%s", tr_torrentName( tor ) ),
@@ -1004,6 +1005,7 @@ torrentInit( tr_torrent * tor, const tr_ctor * ctor )
     int doStart;
     uint64_t loaded;
     const char * dir;
+    const char * group;
     bool isNewTorrent;
     struct stat st;
     static int nextUniqueId = 1;
@@ -1039,6 +1041,13 @@ torrentInit( tr_torrent * tor, const tr_ctor * ctor )
     s = tr_metainfoGetBasename( &tor->info );
     tor->pieceTempDir = tr_buildPath( tr_sessionGetPieceTempDir( tor->session ), s, NULL );
     tr_free( s );
+
+  if (!tr_ctorGetDownloadGroup (ctor, TR_FORCE, &group) ||
+    !tr_ctorGetDownloadGroup (ctor, TR_FALLBACK, &group))
+  {
+      tor->downloadGroup = tr_strdup (group);
+  }
+
 
     tr_bandwidthConstruct( &tor->bandwidth, session, &session->bandwidth );
 
@@ -1286,6 +1295,29 @@ tr_torrentNew( const tr_ctor * ctor, int * setmeError )
 /**
 ***
 **/
+
+ void
+tr_torrentSetDownloadGroup (tr_torrent * tor, const char * group)
+{
+  assert (tr_isTorrent (tor));
+
+  if (!group || !tor->downloadGroup || strcmp (group, tor->downloadGroup))
+    {
+      tr_free (tor->downloadGroup);
+      tor->downloadGroup = tr_strdup (group);
+      tor->anyDate = tr_time ();
+      tr_torrentSetDirty (tor);
+    }
+}
+
+const char*
+tr_torrentGetDownloadGroup (const tr_torrent * tor)
+{
+  assert (tr_isTorrent (tor));
+
+  return tor->downloadGroup;
+}
+
 
 void
 tr_torrentSetDownloadDir( tr_torrent * tor, const char * path )
