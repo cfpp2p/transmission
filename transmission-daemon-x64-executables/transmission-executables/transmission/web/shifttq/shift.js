@@ -296,7 +296,7 @@ var filePriority = { "high": { label: "+" } , "normal": { label: " " }, "low": {
 var filePriorityKeys = Object.keys( filePriority );
 var nowordRegexp = /\\W/ig;
 var torrentRegexp = /(\b(https?|ftp|magnet):\/?\/?[\-A-Z0-9+&@#\/%?=~_|!:,.;]*[\-A-Z0-9+&@#\/%=~_|])/ig;
-var trackerRegexp = /(\b(https?|udp):\/\/[\-A-Z0-9+&@#\/%?=~_|!:,.;]*[\-A-Z0-9+&@#\/%=~_|])/ig;
+var trackerRegexp = /(\b(https?|udp):\/\/[\-A-Z0-9+&@#\/%?=~_|!:,.;]*[\-A-Z0-9+&@#\/%=~_|])|privateOFF|privateON|-?\d+(\.\d+)/ig;
 
 var dropCount = 0;
 
@@ -339,6 +339,7 @@ var torrentFields = {
   "desiredAvailable": { render: renderSize },
   "doneDate": { render: renderDateTime },
   "downloadDir": {},
+  "downloadGroup": { edit: true },
   "downloadedEver": { render: renderSize },
   "downloadLimit": { edit: true },
   "downloadLimited": { edit: true },
