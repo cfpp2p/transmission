@@ -644,6 +644,10 @@ Transmission.prototype =
 				window.open('http://www.transmissionbt.com/');
 				break;
 
+			case 'grouping':
+				window.open('./groups.html','_self');
+				break;
+
 			case 'normal':
 				window.open('./index.html','_self');
 				break;
@@ -654,6 +658,10 @@ Transmission.prototype =
 
 			case 'shift':
 				window.open('./shift.html','_self');
+				break;
+
+			case 'shifttq':
+				window.open('./shifttq/index.html','_self');
 				break;
 
 			case 'unlimited_download_rate':

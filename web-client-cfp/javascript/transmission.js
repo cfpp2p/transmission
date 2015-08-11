@@ -683,6 +683,10 @@ Transmission.prototype =
 				window.open('http://www.transmissionbt.com/');
 				break;
 
+			case 'grouping':
+				window.open('./groups.html','_self');
+				break;
+
 			case 'advanced':
 				window.open('./advanced.html','_self');
 				break;
