@@ -2,6 +2,9 @@ https://github.com/cfpp2p/transmission/commits/cygwin
 
     Commits on Aug 11, 2015
 
+    Fixed download groups settings not saving or loading -- settings.json
+    cfpp2p authored Aug 11, 2015
+
     fully integrated grouping functionality web client
     https://trac.transmissionbt.com/ticket/5385
     cfpp2p authored Aug 11, 2015
