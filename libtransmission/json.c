@@ -16,6 +16,8 @@
 #include <string.h>
 #include <errno.h> /* EILSEQ, EINVAL */
 
+#include <locale.h> /* setlocale () */
+
 #include <event2/util.h> /* evutil_strtoll() */
 
 #define JSONSL_STATE_USER_FIELDS /* no fields */
@@ -172,6 +174,7 @@ extract_string (jsonsl_t jsn, struct jsonsl_state_st * state, size_t * len)
               case 'n' : *out_it++ = '\n'; in_it+=2; unescaped = true; break;
               case 'r' : *out_it++ = '\r'; in_it+=2; unescaped = true; break;
               case 't' : *out_it++ = '\t'; in_it+=2; unescaped = true; break;
+              case '/' : *out_it++ = '/' ; in_it+=2; unescaped = true; break;
               case '"' : *out_it++ = '"' ; in_it+=2; unescaped = true; break;
               case '\\': *out_it++ = '\\'; in_it+=2; unescaped = true; break;
               case 'u':
@@ -278,6 +281,10 @@ tr_jsonParse (const char     * source,
   int error;
   jsonsl_t jsn;
   struct json_wrapper_data data;
+  char lc_numeric[128];
+
+  tr_strlcpy (lc_numeric, setlocale (LC_NUMERIC, NULL), sizeof (lc_numeric));
+  setlocale (LC_NUMERIC, "C");
 
   jsn = jsonsl_new (MAX_DEPTH);
   jsn->action_callback_PUSH = action_callback_PUSH;
@@ -308,5 +315,6 @@ tr_jsonParse (const char     * source,
   error = data.error;
   tr_ptrArrayDestruct( &data.stack, NULL );
   jsonsl_destroy (jsn);
+  setlocale (LC_NUMERIC, lc_numeric);
   return error;
 }
