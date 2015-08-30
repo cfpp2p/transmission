@@ -347,6 +347,14 @@ connection_blocklisted( void * vdata )
         return;
     }
 
+    if( ( data->piece_index >= tor->info.pieceCount )
+        || ( tr_pieceOffset( tor, data->piece_index, data->piece_offset, 0 ) >= tor->info.totalSize ) )
+    {
+        tr_tordbg( tor, "webseed paused - connection aborted in blocklist set - piece index:%d - piece offset:%d - total size: %"PRIu64" bytes",
+                   data->piece_index, data->piece_offset, tor->info.totalSize );
+        return;
+    }
+
     if( tor )
     {
         uint64_t file_offset;
@@ -806,7 +814,9 @@ task_request_next_chunk( struct tr_webseed_task * t )
         uint64_t this_pass;
 
         if( ( t->piece_index >= tor->info.pieceCount )
-            || ( total_offset > tor->info.totalSize ) )
+            || ( total_offset >= tor->info.totalSize )
+            || ( step_piece >= tor->info.pieceCount )
+            || ( tr_pieceOffset( tor, step_piece, step_piece_offset, 0 ) >= tor->info.totalSize ) )
         {
             tr_tordbg( tor, "webseed paused - next chunk aborted - piece index:%d - piece offset:%d - total size: %"PRIu64" bytes",
                        t->piece_index, t->piece_offset, tor->info.totalSize );
