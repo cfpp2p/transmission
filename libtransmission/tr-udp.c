@@ -116,7 +116,7 @@ rebind_ipv6(tr_session *ss, bool force)
     bool is_default;
     const struct tr_address * public_addr;
     struct sockaddr_in6 sin6;
-    const unsigned char *ipv6 = tr_globalIPv6();
+    const unsigned char *ipv6 = tr_globalIPv6( ss );
     int s = -1, rc;
     int one = 1;
 
@@ -297,7 +297,7 @@ tr_udpInit(tr_session *ss)
         tr_nerr("UDP", "Couldn't allocate IPv4 event");
 
  ipv6:
-    if(tr_globalIPv6())
+    if(tr_globalIPv6( ss ))
         rebind_ipv6(ss, true);
     if(ss->udp6_socket >= 0) {
         ss->udp6_event =

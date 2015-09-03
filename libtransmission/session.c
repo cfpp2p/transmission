@@ -362,9 +362,12 @@ tr_sessionGetDefaultSettings( tr_benc * d )
 
     assert( tr_bencIsDict( d ) );
 
-    tr_bencDictReserve( d, 81 );
+    tr_bencDictReserve( d, 84);
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_ENABLED,               false );
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_WEBSEEDS,              false );
+    tr_bencDictAddBool( d, TR_PREFS_KEY_IPV6_ENABLED,                    false );
+    tr_bencDictAddStr ( d, TR_PREFS_KEY_DIR_WATCH,                       "" );
+    tr_bencDictAddBool( d, TR_PREFS_KEY_DIR_WATCH_ENABLED,               false );
     tr_bencDictAddBool( d, TR_PREFS_KEY_DROP_INTERRUPTED_WEBSEEDS,       true );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_BLOCKLIST_URL,                   "http://www.example.com/blocklist" );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_MAX_CACHE_SIZE_MB,               DEFAULT_CACHE_SIZE_MB );
@@ -455,9 +458,10 @@ tr_sessionGetSettings( tr_session * s, struct tr_benc * d )
 
     assert( tr_bencIsDict( d ) );
 
-    tr_bencDictReserve( d, 82 );
+    tr_bencDictReserve( d, 83 );
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_ENABLED,                tr_blocklistIsEnabled( s ) );
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_WEBSEEDS,               s->blockListWebseeds );
+    tr_bencDictAddBool( d, TR_PREFS_KEY_IPV6_ENABLED,                     s->ipv6Enabled );
     tr_bencDictAddBool( d, TR_PREFS_KEY_DROP_INTERRUPTED_WEBSEEDS,        s->dropInterruptedWebseeds );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_BLOCKLIST_URL,                    tr_blocklistGetURL( s ) );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_MAX_CACHE_SIZE_MB,                tr_sessionGetCacheLimit_MB( s ) );
@@ -910,6 +914,8 @@ sessionSetImpl( void * vdata )
         session->maxWebseeds = ( i > 0 ) ? i : 0 ;
     if( tr_bencDictFindBool( settings, TR_PREFS_KEY_BLOCKLIST_WEBSEEDS, &boolVal ) )
         session->blockListWebseeds = boolVal;
+    if( tr_bencDictFindBool( settings, TR_PREFS_KEY_IPV6_ENABLED, &boolVal ) )
+        session->ipv6Enabled = boolVal;
     if( tr_bencDictFindBool( settings, TR_PREFS_KEY_DROP_INTERRUPTED_WEBSEEDS, &boolVal ) )
         session->dropInterruptedWebseeds = boolVal;
     if( tr_bencDictFindStr( settings, TR_PREFS_KEY_CLIENT_VERSION_BEP10, &str ) )
@@ -2887,6 +2893,24 @@ tr_sessionSetTorrentAddedScript( tr_session * session, const char * scriptFilena
 /****
 *****
 ****/
+
+void
+tr_sessionSetIpv6Enabled( tr_session * session, bool is_enabled )
+{
+    assert( tr_isSession( session ) );
+    assert( tr_isBool( is_enabled ) );
+
+    session->ipv6Enabled = is_enabled;
+}
+  
+bool
+tr_sessionGetIpv6Enabled( const tr_session * session )
+{
+    assert( tr_isSession( session ) );
+
+    return session->ipv6Enabled;
+}
+
 
 void
 tr_sessionSetBlockListWebseeds( tr_session * session, bool is_enabled )

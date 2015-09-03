@@ -177,6 +177,9 @@ const char* tr_getDefaultDownloadGroupDefault (void);
 #define TR_PREFS_KEY_BLOCKLIST_ENABLED                  "blocklist-enabled"
 #define TR_PREFS_KEY_BLOCKLIST_URL                      "blocklist-url"
 #define TR_PREFS_KEY_BLOCKLIST_WEBSEEDS                 "blocklist-webseeds"
+#define TR_PREFS_KEY_IPV6_ENABLED                       "ipv6-enabled"
+#define TR_PREFS_KEY_DIR_WATCH                          "watch-dir"
+#define TR_PREFS_KEY_DIR_WATCH_ENABLED                  "watch-dir-enabled"
 #define TR_PREFS_KEY_MAX_CACHE_SIZE_MB                  "cache-size-mb"
 #define TR_PREFS_KEY_CHEAT_MODE_DEFAULT                 "cheat-mode-default"
 #define TR_PREFS_KEY_CLIENT_VERSION_BEP10               "client-version-bep10"
@@ -947,6 +950,9 @@ bool tr_sessionGetDropInteruptedWebseeds( const tr_session * );
 
 void tr_sessionSetBlockListWebseeds( tr_session *, bool );
 bool tr_sessionGetBlockListWebseeds( const tr_session * );
+
+void tr_sessionSetIpv6Enabled( tr_session *, bool );
+bool tr_sessionGetIpv6Enabled( const tr_session * );
 
 const char * tr_sessionGetClientVersionBep10( const tr_session * );
 

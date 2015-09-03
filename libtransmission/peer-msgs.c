@@ -797,7 +797,7 @@ sendLtepHandshake( tr_peermsgs * msgs )
     bool allow_metadata_xfer;
     struct evbuffer * payload;
     struct evbuffer * out = msgs->outMessages;
-    const unsigned char * ipv6 = tr_globalIPv6();
+    const unsigned char * ipv6 = tr_globalIPv6( msgs->torrent->session );
 
     if( msgs->clientSentLtepHandshake )
         return;
@@ -2397,7 +2397,7 @@ tr_peerMsgsNew( struct tr_torrent    * torrent,
     {
         /* Only send PORT over IPv6 when the IPv6 DHT is running (BEP-32). */
         const struct tr_address *addr = tr_peerIoGetAddress( peer->io, NULL );
-        if( addr->type == TR_AF_INET || tr_globalIPv6() ) {
+        if( addr->type == TR_AF_INET || tr_globalIPv6( torrent->session ) ) {
             protocolSendPort( m, tr_dhtPort( torrent->session ) );
         }
     }
