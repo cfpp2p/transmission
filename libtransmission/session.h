@@ -103,6 +103,7 @@ struct tr_turtle_info
 /** @brief handle to an active libtransmission session */
 struct tr_session
 {
+    bool                         ipv6Enabled;
     bool                         isPortRandom;
     bool                         isPexEnabled;
     bool                         isDHTEnabled;

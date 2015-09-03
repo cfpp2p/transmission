@@ -108,7 +108,7 @@ announce_url_new( const tr_session * session, const tr_announce_request * req )
        announce twice. At any rate, we're already computing our IPv6
        address (for the LTEP handshake), so this comes for free. */
 
-    ipv6 = tr_globalIPv6( );
+    ipv6 = tr_globalIPv6( session );
     if( ipv6 ) {
         char ipv6_readable[INET6_ADDRSTRLEN];
         evutil_inet_ntop( AF_INET6, ipv6, ipv6_readable, INET6_ADDRSTRLEN );

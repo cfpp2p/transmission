@@ -1757,6 +1757,8 @@ sessionSet( tr_session               * session,
         else
             tr_sessionSetEncryption( session, TR_ENCRYPTION_PREFERRED );
     }
+    if( tr_bencDictFindBool( args_in, TR_PREFS_KEY_IPV6_ENABLED, &boolVal ) )
+        tr_sessionSetIpv6Enabled( session, boolVal );
     if( tr_bencDictFindBool( args_in, TR_PREFS_KEY_BLOCKLIST_WEBSEEDS, &boolVal ) )
         tr_sessionSetBlockListWebseeds( session, boolVal );
     if( tr_bencDictFindBool( args_in, TR_PREFS_KEY_DROP_INTERRUPTED_WEBSEEDS, &boolVal ) )
@@ -1911,6 +1913,7 @@ sessionGet( tr_session               * s,
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_WEBSEEDS, tr_sessionGetBlockListWebseeds( s ) );
     tr_bencDictAddBool( d, TR_PREFS_KEY_DROP_INTERRUPTED_WEBSEEDS, tr_sessionGetDropInteruptedWebseeds( s ) );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_CLIENT_VERSION_BEP10, tr_sessionGetClientVersionBep10( s ) );
+    tr_bencDictAddBool( d, TR_PREFS_KEY_IPV6_ENABLED, tr_sessionGetIpv6Enabled( s ) );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_PEER_ID_PREFIX, tr_sessionGetPeerIdPrefix( s ) );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_USER_AGENT, tr_sessionGetUserAgent( s ) );
 

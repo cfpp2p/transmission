@@ -580,25 +580,27 @@ tr_globalAddress( int af, void *addr, int *addr_len )
 /* Return our global IPv6 address, with caching. */
 
 const unsigned char *
-tr_globalIPv6( void )
+tr_globalIPv6( const tr_session * session )
+//  enabled ipv6 CFP 09-02-2015 */
 {
- /*    static unsigned char ipv6[16];
-    static time_t last_time = 0;
-    static int have_ipv6 = 0;
-    const time_t now = tr_time( );
+    if( tr_sessionGetIpv6Enabled( session ) ) {
+        static unsigned char ipv6[16];
+        static time_t last_time = 0;
+        static int have_ipv6 = 0;
+        const time_t now = tr_time( );
 
-    * Re-check every half hour *
-    if( last_time < now - 1800 )
-    {
-        int addrlen = 16;
-        const int rc = tr_globalAddress( AF_INET6, ipv6, &addrlen );
-        have_ipv6 = ( rc >= 0 ) && ( addrlen == 16 );
-        last_time = now;
+//     Re-check every half hour
+        if( last_time < now - 1800 )
+        {
+            int addrlen = 16;
+            const int rc = tr_globalAddress( AF_INET6, ipv6, &addrlen );
+            have_ipv6 = ( rc >= 0 ) && ( addrlen == 16 );
+            last_time = now;
+        }
+
+       return have_ipv6 ? ipv6 : NULL;
     }
-
-    return have_ipv6 ? ipv6 : NULL;
- Disabled ipv6 SRS 06-01-2012 */
-    return NULL;
+    else return NULL;
 }
 
 /***
@@ -667,4 +669,4 @@ tr_address_is_valid_for_peers( const tr_address * addr, tr_port port )
         && ( !isIPv6LinkLocalAddress( addr ) )
         && ( !isIPv4MappedAddress( addr ) )
         && ( !isMartianAddr( addr ) );
-} 
+}

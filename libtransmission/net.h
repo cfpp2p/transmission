@@ -153,7 +153,7 @@ bool tr_net_hasIPv6( tr_port );
  */
 char* tr_net_strerror( char * buf, size_t buflen, int err );
 
-const unsigned char *tr_globalIPv6( void );
+const unsigned char *tr_globalIPv6( const tr_session * session );
 
 #if defined( WIN32) && !defined(QT_DLL)
 /* The QT exclusion is because something clashes whith the next include */
