@@ -97,7 +97,8 @@ bool tr_address_from_sockaddr_storage( tr_address                     * setme,
 int tr_address_compare( const tr_address * a,
                         const tr_address * b );
 
-bool tr_address_is_valid_for_peers( const tr_address  * addr,
+bool tr_address_is_valid_for_peers( const tr_session * session,
+                                    const tr_address  * addr,
                                     tr_port             port );
 
 static inline bool

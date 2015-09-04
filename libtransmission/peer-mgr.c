@@ -2168,7 +2168,7 @@ tr_peerMgrAddPex( tr_torrent * tor, uint8_t from,
 
         if( !tr_sessionIsAddressBlocked( t->manager->session, &pex->addr ) )
         {
-            if( tr_address_is_valid_for_peers( &pex->addr, pex->port ) )
+            if( tr_address_is_valid_for_peers( t->manager->session, &pex->addr, pex->port ) )
                 ensureAtomExists( t, &pex->addr, pex->port, pex->flags, seedProbability, from );
         }
         else {

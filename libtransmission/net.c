@@ -247,7 +247,7 @@ tr_netOpenPeerSocket( tr_session        * session,
             return -EINVAL;
         }
 
-        if( !tr_address_is_valid_for_peers( addr, port ) ) {
+        if( !tr_address_is_valid_for_peers( session, addr, port ) ) {
         tr_dbg( "Invalid Peer Address from peerIoReconnect %s:%d", tr_address_to_string( addr ), port );
             return -EINVAL;
         }
@@ -598,6 +598,8 @@ tr_globalIPv6( const tr_session * session )
             last_time = now;
         }
 
+        tr_deepLog( __FILE__, __LINE__, NULL, "Global IPv6 %d ", have_ipv6 );
+
        return have_ipv6 ? ipv6 : NULL;
     }
     else return NULL;
@@ -661,12 +663,23 @@ isMartianAddr( const struct tr_address * a )
 }
 
 bool
-tr_address_is_valid_for_peers( const tr_address * addr, tr_port port )
+tr_address_is_valid_for_peers( const tr_session * session, const tr_address * addr, tr_port port )
 {
-    return ( addr->type != TR_AF_INET6 )
-        && ( port != 0 )
-        && ( tr_address_is_valid( addr ) )
-        && ( !isIPv6LinkLocalAddress( addr ) )
-        && ( !isIPv4MappedAddress( addr ) )
-        && ( !isMartianAddr( addr ) );
+    if( tr_sessionGetIpv6Enabled( session ) ) {
+
+        tr_deepLog( __FILE__, __LINE__, NULL, "Maybe PEER connection IPv6 %d ", 1 );
+
+        return (port != 0)
+            && (tr_address_is_valid (addr))
+            && (!isIPv6LinkLocalAddress (addr))
+            && (!isIPv4MappedAddress (addr))
+            && (!isMartianAddr (addr));
+    }
+
+    else return ( addr->type != TR_AF_INET6 )
+            && ( port != 0 )
+            && ( tr_address_is_valid( addr ) )
+            && ( !isIPv6LinkLocalAddress( addr ) )
+            && ( !isIPv4MappedAddress( addr ) )
+            && ( !isMartianAddr( addr ) );
 }
