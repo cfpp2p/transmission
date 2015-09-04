@@ -710,7 +710,7 @@ tr_peerIoNewOutgoing( tr_session        * session,
     tr_dbg( "Blocklisted IP dropped in NewOutgoing %s:%d", tr_address_to_string( addr ), port );
     return NULL;
     }
-    if( !tr_address_is_valid_for_peers( addr, port ) ) {
+    if( !tr_address_is_valid_for_peers( session, addr, port ) ) {
     tr_dbg( "Invalid Peer Address dropped in NewOutgoing %s:%d", tr_address_to_string( addr ), port );
     return NULL;
     }
