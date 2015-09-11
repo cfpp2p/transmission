@@ -361,9 +361,11 @@ tr_dhtUninit(tr_session *ss)
 
     /* Since we only save known good nodes, avoid erasing older data if we
        don't know enough nodes. */
-    if(tr_dhtStatus(ss, AF_INET, NULL) < TR_DHT_FIREWALLED)
-        tr_ninf( "DHT", "Not saving nodes, DHT not ready" );
-    else {
+    if(((!(tr_sessionGetDhtDatIpv6Forced( ss ) && tr_sessionGetIpv6Enabled( ss )))
+            && (tr_dhtStatus(ss, AF_INET, NULL) >= TR_DHT_FIREWALLED))
+        || ((tr_sessionGetDhtDatIpv6Forced( ss ) && tr_sessionGetIpv6Enabled( ss ))
+            && (tr_dhtStatus(ss, AF_INET6, NULL) >= TR_DHT_FIREWALLED)))
+    {
         tr_benc benc;
         struct sockaddr_in sins[300];
         struct sockaddr_in6 sins6[300];
@@ -397,6 +399,7 @@ tr_dhtUninit(tr_session *ss)
         tr_bencFree( &benc );
         tr_free( dat_file );
     }
+    else tr_ninf( "DHT", "Not saving nodes, DHT not ready" );
 
     dht_uninit();
     tr_ndbg("DHT", "Done uninitializing DHT");
