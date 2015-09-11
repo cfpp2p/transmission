@@ -104,6 +104,8 @@ struct tr_turtle_info
 struct tr_session
 {
     bool                         ipv6Enabled;
+    bool                         dhtDatIpv6Forced;
+    bool                         ipv6Listen;
     bool                         isPortRandom;
     bool                         isPexEnabled;
     bool                         isDHTEnabled;

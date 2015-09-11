@@ -251,21 +251,26 @@ open_incoming_peer_port( tr_session * session )
     /* bind an ipv4 port to listen for incoming peers... */
     b = session->public_ipv4;
     b->socket = tr_netBindTCP( &b->addr, session->private_peer_port, false );
+    tr_dbg( "trying to opening ipv4 listening port" );
     if( b->socket >= 0 ) {
         b->ev = event_new( session->event_base, b->socket, EV_READ | EV_PERSIST, accept_incoming_peer, session );
         event_add( b->ev, NULL );
+        tr_dbg( "opened ipv4 listening port" );
     }
 
     /* and do the exact same thing for ipv6, if it's supported... */
- /*    if( tr_net_hasIPv6( session->private_peer_port ) ) {
-        b = session->public_ipv6;
-        b->socket = tr_netBindTCP( &b->addr, session->private_peer_port, false );
-        if( b->socket >= 0 ) {
-            b->ev = event_new( session->event_base, b->socket, EV_READ | EV_PERSIST, accept_incoming_peer, session );
-            event_add( b->ev, NULL );
+    if( tr_sessionGetIpv6Enabled( session ) && tr_sessionGetIpv6Listen( session ) ) {
+        tr_dbg( "trying to opening ipv6 listening port" );
+        if( tr_net_hasIPv6( session->private_peer_port ) ) {
+            b = session->public_ipv6;
+            b->socket = tr_netBindTCP( &b->addr, session->private_peer_port, false );
+            if( b->socket >= 0 ) {
+                b->ev = event_new( session->event_base, b->socket, EV_READ | EV_PERSIST, accept_incoming_peer, session );
+                event_add( b->ev, NULL );
+                tr_dbg( "opened ipv6 listening port" );
+            }
         }
     }
- Disabled ipv6 SRS 06-01-2012 */
 }
 
 const tr_address*
@@ -362,10 +367,12 @@ tr_sessionGetDefaultSettings( tr_benc * d )
 
     assert( tr_bencIsDict( d ) );
 
-    tr_bencDictReserve( d, 84);
+    tr_bencDictReserve( d, 86);
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_ENABLED,               false );
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_WEBSEEDS,              false );
     tr_bencDictAddBool( d, TR_PREFS_KEY_IPV6_ENABLED,                    false );
+    tr_bencDictAddBool( d, TR_PREFS_KEY_DHT_DAT_IPV6_FORCED,             false );
+    tr_bencDictAddBool( d, TR_PREFS_KEY_IPV6_LISTEN,                    false );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_DIR_WATCH,                       "" );
     tr_bencDictAddBool( d, TR_PREFS_KEY_DIR_WATCH_ENABLED,               false );
     tr_bencDictAddBool( d, TR_PREFS_KEY_DROP_INTERRUPTED_WEBSEEDS,       true );
@@ -458,10 +465,12 @@ tr_sessionGetSettings( tr_session * s, struct tr_benc * d )
 
     assert( tr_bencIsDict( d ) );
 
-    tr_bencDictReserve( d, 83 );
+    tr_bencDictReserve( d, 85 );
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_ENABLED,                tr_blocklistIsEnabled( s ) );
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_WEBSEEDS,               s->blockListWebseeds );
     tr_bencDictAddBool( d, TR_PREFS_KEY_IPV6_ENABLED,                     s->ipv6Enabled );
+    tr_bencDictAddBool( d, TR_PREFS_KEY_DHT_DAT_IPV6_FORCED,              s->dhtDatIpv6Forced );
+    tr_bencDictAddBool( d, TR_PREFS_KEY_IPV6_LISTEN,                      s->ipv6Listen );
     tr_bencDictAddBool( d, TR_PREFS_KEY_DROP_INTERRUPTED_WEBSEEDS,        s->dropInterruptedWebseeds );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_BLOCKLIST_URL,                    tr_blocklistGetURL( s ) );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_MAX_CACHE_SIZE_MB,                tr_sessionGetCacheLimit_MB( s ) );
@@ -916,6 +925,10 @@ sessionSetImpl( void * vdata )
         session->blockListWebseeds = boolVal;
     if( tr_bencDictFindBool( settings, TR_PREFS_KEY_IPV6_ENABLED, &boolVal ) )
         session->ipv6Enabled = boolVal;
+    if( tr_bencDictFindBool( settings, TR_PREFS_KEY_DHT_DAT_IPV6_FORCED, &boolVal ) )
+        session->dhtDatIpv6Forced = boolVal;
+    if( tr_bencDictFindBool( settings, TR_PREFS_KEY_IPV6_LISTEN, &boolVal ) )
+        session->ipv6Listen = boolVal;
     if( tr_bencDictFindBool( settings, TR_PREFS_KEY_DROP_INTERRUPTED_WEBSEEDS, &boolVal ) )
         session->dropInterruptedWebseeds = boolVal;
     if( tr_bencDictFindStr( settings, TR_PREFS_KEY_CLIENT_VERSION_BEP10, &str ) )
@@ -2911,6 +2924,39 @@ tr_sessionGetIpv6Enabled( const tr_session * session )
     return session->ipv6Enabled;
 }
 
+void
+tr_sessionSetIpv6Listen( tr_session * session, bool is_enabled )
+{
+    assert( tr_isSession( session ) );
+    assert( tr_isBool( is_enabled ) );
+
+    session->ipv6Listen = is_enabled;
+}
+  
+bool
+tr_sessionGetIpv6Listen( const tr_session * session )
+{
+    assert( tr_isSession( session ) );
+
+    return session->ipv6Listen;
+}
+
+void
+tr_sessionSetDhtDatIpv6Forced( tr_session * session, bool is_enabled )
+{
+    assert( tr_isSession( session ) );
+    assert( tr_isBool( is_enabled ) );
+
+    session->dhtDatIpv6Forced = is_enabled;
+}
+  
+bool
+tr_sessionGetDhtDatIpv6Forced( const tr_session * session )
+{
+    assert( tr_isSession( session ) );
+
+    return session->dhtDatIpv6Forced;
+}
 
 void
 tr_sessionSetBlockListWebseeds( tr_session * session, bool is_enabled )
