@@ -50,3 +50,10 @@
 /utils/transmission-show
 Makefile
 Makefile.in
+*.trs
+*.log
+TAGS
+config.pri
+*~
+*.pb
+*.db
