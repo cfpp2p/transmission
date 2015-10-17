@@ -190,6 +190,7 @@ static const struct tr_key_struct my_static[] =
   { "main-window-x", 13 },
   { "main-window-y", 13 },
   { "manualAnnounceTime", 18 },
+  { "master", 6 },
   { "max-peers", 9 },
   { "maxConnectedPeers", 17 },
   { "memory-bytes", 12 },
