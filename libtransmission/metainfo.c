@@ -578,6 +578,7 @@ tr_metainfoFree (tr_info * inf)
   tr_free (inf->torrent);
   tr_free (inf->originalName);
   tr_free (inf->name);
+  tr_free (inf->master);
 
   for (i=0; i<inf->trackerCount; i++)
     {
