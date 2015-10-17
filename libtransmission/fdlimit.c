@@ -428,7 +428,7 @@ fileset_construct( struct tr_fileset * set, int n )
 {
     struct tr_cached_file * o;
     const struct tr_cached_file TR_CACHED_FILE_INIT
-        = { 0, -1, 0, 0, 0, TR_FD_INDEX_FILE };
+        = { 0, -1, 0, 0, TR_FD_INDEX_FILE, 0 };
 
     set->begin = tr_new( struct tr_cached_file, n );
     set->end = set->begin + n;
