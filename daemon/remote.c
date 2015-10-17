@@ -2210,7 +2210,7 @@ processArgs (const char * rpcurl, int argc, const char ** argv)
 		    break;
                 case 902: addFiles (args, TR_KEY_priority_low, optarg);
 		    break;
-                case 994: tr_variantListAddStr (tr_variantDictAddList (args, TR_KEY_master, 1), optarg);
+                case 994: tr_variantDictAddStr (args, TR_KEY_master, optarg);
                     break;
                 case 700: tr_variantDictAddInt (args, TR_KEY_bandwidthPriority,  1);
 		    break;

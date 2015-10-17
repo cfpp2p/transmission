@@ -1002,6 +1002,18 @@ void        tr_ctorSetFilesWanted (tr_ctor                * ctor,
                                    tr_file_index_t          fileCount,
                                    bool                     wanted);
 
+/** @brief Set the master for the torrent being added with this ctor.
+    @see tr_ctorSetMaster () */
+void  tr_ctorSetMaster (tr_ctor      * ctor,
+			tr_ctorMode    mode,
+			const char   * master);
+
+/** @brief Get the master for the torrent being added with this ctor.
+    @see tr_ctorSetMaster () */
+int
+tr_ctorGetMaster (const tr_ctor      * ctor,
+		  tr_ctorMode    mode,
+		  const char   ** setmeMaster);
 
 /** @brief Get this peer constructor's peer limit */
 int         tr_ctorGetPeerLimit (const tr_ctor * ctor,
@@ -1812,6 +1824,8 @@ struct tr_info
     char             * torrent;
 
     char            ** webseeds;
+
+    char             * master;
 
     char             * comment;
     char             * creator;

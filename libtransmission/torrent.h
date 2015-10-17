@@ -16,6 +16,7 @@
 
 #include "bandwidth.h" /* tr_bandwidth */
 #include "completion.h" /* tr_completion */
+#include "net.h" /* tr_address_from_string() */
 #include "session.h" /* tr_sessionLock (), tr_sessionUnlock () */
 #include "utils.h" /* TR_GNUC_PRINTF */
 
@@ -159,6 +160,9 @@ struct tr_torrent
     unsigned char peer_id[PEER_ID_LEN+1];
 
     time_t peer_id_creation_time;
+
+    bool hasMaster;
+    tr_address master;
 
     /* Where the files will be when it's complete */
     char * downloadDir;

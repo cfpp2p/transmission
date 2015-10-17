@@ -760,6 +760,11 @@ torrentInitFromInfo (tr_torrent * tor)
   uint64_t t;
   tr_info * info = &tor->info;
 
+  if(info->master){ //!@todo when is this set?
+      bool status = tr_address_from_string(&tor->master, info->master);
+      tr_logAddNamedDbg("master", "set to %s: %d", info->master, status);
+  }
+
   tor->blockSize = tr_getBlockSize (info->pieceSize);
 
   if (info->pieceSize)
@@ -853,6 +858,7 @@ torrentInit (tr_torrent * tor, const tr_ctor * ctor)
   bool doStart;
   uint64_t loaded;
   const char * dir;
+  const char * master;
   bool isNewTorrent;
   struct stat st;
   tr_session * session = tr_ctorGetSession (ctor);
@@ -879,6 +885,17 @@ torrentInit (tr_torrent * tor, const tr_ctor * ctor)
     dir = tr_sessionGetIncompleteDir (session);
   if (tr_sessionIsIncompleteDirEnabled (session))
     tor->incompleteDir = tr_strdup (dir);
+
+  if (!tr_ctorGetMaster (ctor, TR_FORCE, &master) ||
+      !tr_ctorGetMaster (ctor, TR_FALLBACK, &master))
+  {
+      bool status = tr_address_from_string(&tor->master, master);
+      if(status)
+          tor->hasMaster = true;
+      else
+          tor->hasMaster = false;
+      tr_logAddNamedDbg("master", "set to %s: %d", master, status);
+  }
 
   tr_bandwidthConstruct (&tor->bandwidth, session, &session->bandwidth);
 
