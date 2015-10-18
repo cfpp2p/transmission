@@ -621,6 +621,8 @@ tr_sessionInit (const char  * tag,
   data.messageQueuingEnabled = messageQueuingEnabled;
   data.clientSettings = clientSettings;
   tr_runInEventThread (session, tr_sessionInitImpl, &data);
+
+  //!@todo replace with proper synchronization
   while (!data.done)
     tr_wait_msec (50);
 
@@ -956,6 +958,8 @@ tr_sessionSet (tr_session * session, tr_variant * settings)
 
   /* run the rest in the libtransmission thread */
   tr_runInEventThread (session, sessionSetImpl, &data);
+
+  //!@todo this should be replaced with proper synchronization
   while (!data.done)
     tr_wait_msec (100);
 }
