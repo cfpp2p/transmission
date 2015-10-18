@@ -458,7 +458,7 @@ tr_ctorGetMaster (const tr_ctor      * ctor,
 		  tr_ctorMode    mode,
                   const char ** setmeMaster)
 {
-    struct optional_args * args;
+    const struct optional_args * args;
 
     assert (ctor != NULL);
     assert ((mode == TR_FALLBACK) || (mode == TR_FORCE));

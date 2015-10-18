@@ -329,6 +329,7 @@ static const struct tr_key_struct my_static[] =
   { "size-bytes", 10 },
   { "size-units", 10 },
   { "sizeWhenDone", 12 },
+  { "slaves", 6 },
   { "sort-mode", 9 },
   { "sort-reversed", 13 },
   { "speed", 5 },

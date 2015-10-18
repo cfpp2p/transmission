@@ -131,6 +131,7 @@ static const struct tr_option options[] =
     { 953, "global-seedratio", "All torrents, unless overridden by a per-torrent setting, should seed until a specific ratio", "gsr", 1, "ratio" },
     { 954, "no-global-seedratio", "All torrents, unless overridden by a per-torrent setting, should seed regardless of ratio", "GSR", 0, NULL },
     { 'x', "pid-file", "Enable PID file", "x", 1, "<pid-file>" },
+    { 994, "master", "Enable master mode", "mm", 0, NULL},
     { 0, NULL, NULL, NULL, 0, NULL }
 };
 
@@ -481,6 +482,8 @@ main (int argc, char ** argv)
             case 830: tr_variantDictAddBool (&settings, TR_KEY_utp_enabled, true);
                       break;
             case 831: tr_variantDictAddBool (&settings, TR_KEY_utp_enabled, false);
+                      break;
+            case 994: tr_variantDictAddBool (&settings, TR_KEY_master, true);
                       break;
             default:  showUsage ();
                       break;
