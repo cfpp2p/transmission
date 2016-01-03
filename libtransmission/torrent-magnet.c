@@ -195,9 +195,10 @@ tr_torrentGetMetadataPiece( tr_torrent * tor, int piece, int * len )
 }
 
 void
-tr_torrentSetMetadataPiece( tr_torrent  * tor, int piece, const void  * data, int len )
+tr_torrentSetMetadataPiece( tr_torrent  * tor, int piece, const void  * data, int len, int64_t totalSize )
 {
     int i;
+    int64_t metadataSize;
     struct tr_incomplete_metadata * m;
     const int offset = piece * METADATA_PIECE_SIZE;
 
@@ -212,6 +213,11 @@ tr_torrentSetMetadataPiece( tr_torrent  * tor, int piece, const void  * data, in
 
     /* does this data pass the smell test? */
     if( offset + len > m->metadata_size )
+        return;
+
+    metadataSize = (int64_t)m->metadata_size;
+    dbgmsg( tor, "metadata size %d    total size %d", m->metadata_size, (int)totalSize );
+    if( metadataSize > totalSize )
         return;
 
     /* do we need this piece? */
