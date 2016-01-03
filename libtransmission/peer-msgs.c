@@ -7,7 +7,7 @@
  * This exemption does not extend to derived works not owned by
  * the Transmission project.
  *
- * $Id: peer-msgs.c 14550 2015-07-21 23:27:48Z jordan $
+ * $Id: peer-msgs.c 14636 2016-01-02 17:14:24Z jordan $
  */
 
 #include <assert.h>
@@ -1000,7 +1000,7 @@ parseUtMetadata( tr_peermsgs * msgs, int msglen, struct evbuffer * inbuf )
         && ( piece * METADATA_PIECE_SIZE + (msg_end - benc_end) <= total_size ) )
     {
         const int pieceLen = msg_end - benc_end;
-        tr_torrentSetMetadataPiece( msgs->torrent, piece, benc_end, pieceLen );
+        tr_torrentSetMetadataPiece( msgs->torrent, piece, benc_end, pieceLen, total_size );
     }
 
     if( msg_type == METADATA_MSG_TYPE_REQUEST )
