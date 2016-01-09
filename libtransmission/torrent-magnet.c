@@ -7,7 +7,7 @@
  * This exemption does not extend to derived works not owned by
  * the Transmission project.
  *
- * $Id: torrent-magnet.c 13397 2012-07-23 15:28:27Z jordan $
+ * $Id: torrent-magnet.c 14664 2016-01-08 22:57:17Z jordan $
  */
 
 #include <assert.h>
@@ -58,6 +58,7 @@ struct tr_incomplete_metadata
     /** sorted from least to most recently requested */
     struct metadata_node * piecesNeeded;
     int piecesNeededCount;
+    bool incomplete_metadata_failed;
 };
 
 static void
@@ -81,11 +82,15 @@ tr_torrentSetMetadataSizeHint( tr_torrent * tor, int size )
             dbgmsg( tor, "metadata is %d bytes in %d pieces", size, n );
 
             m = tr_new( struct tr_incomplete_metadata, 1 );
+            if( m == NULL ) return;
+            m->incomplete_metadata_failed = false;
             m->pieceCount = n;
             m->metadata = tr_new( uint8_t, size );
+            if( m->metadata == NULL ) m->incomplete_metadata_failed = true;
             m->metadata_size = size;
             m->piecesNeededCount = n;
             m->piecesNeeded = tr_new( struct metadata_node, n );
+            if( m->piecesNeeded == NULL ) m->incomplete_metadata_failed = true;
 
             for( i=0; i<n; ++i ) {
                 m->piecesNeeded[i].piece = i;
@@ -217,7 +222,7 @@ tr_torrentSetMetadataPiece( tr_torrent  * tor, int piece, const void  * data, in
 
     metadataSize = (int64_t)m->metadata_size;
     dbgmsg( tor, "metadata size %d    total size %d", m->metadata_size, (int)totalSize );
-    if( metadataSize > totalSize )
+    if( ( metadataSize > totalSize ) || ( m->incomplete_metadata_failed ) )
         return;
 
     /* do we need this piece? */
