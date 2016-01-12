@@ -250,6 +250,7 @@ const char* tr_getDefaultDownloadGroupDefault (void);
 #define TR_PREFS_KEY_WEBSEEDERS_MAX                     "webseeders-maximum"
 #define TR_PREFS_KEY_WEBSEED_MAX_CONNECT_FAILS          "webseed-max-connect-fails"
 #define TR_PREFS_KEY_WEBSEED_TIMEOUT_VALUE              "webseed-timeout-seconds"
+#define TR_PREFS_KEY_MAGNET_BAD_PIECE_MAX               "magnet-bad-piece-max"
 
 
 /**
@@ -937,6 +938,9 @@ void tr_sessionSetTorrentAddedScript( tr_session *, const char * scriptFilename 
 /**
 ***
 **/
+
+void tr_sessionSetMaxMagnetBadPiece( tr_session *, int maxMagnetBadPiece );
+int  tr_sessionGetMaxMagnetBadPiece( const tr_session * );
 
 void tr_sessionSetMaxWebseeds( tr_session *, int maxWebseeds );
 int  tr_sessionGetMaxWebseeds( const tr_session * );

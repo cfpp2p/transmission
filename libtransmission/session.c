@@ -367,12 +367,12 @@ tr_sessionGetDefaultSettings( tr_benc * d )
 
     assert( tr_bencIsDict( d ) );
 
-    tr_bencDictReserve( d, 86);
+    tr_bencDictReserve( d, 87);
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_ENABLED,               false );
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_WEBSEEDS,              false );
     tr_bencDictAddBool( d, TR_PREFS_KEY_IPV6_ENABLED,                    false );
     tr_bencDictAddBool( d, TR_PREFS_KEY_DHT_DAT_IPV6_FORCED,             false );
-    tr_bencDictAddBool( d, TR_PREFS_KEY_IPV6_LISTEN,                    false );
+    tr_bencDictAddBool( d, TR_PREFS_KEY_IPV6_LISTEN,                     false );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_DIR_WATCH,                       "" );
     tr_bencDictAddBool( d, TR_PREFS_KEY_DIR_WATCH_ENABLED,               false );
     tr_bencDictAddBool( d, TR_PREFS_KEY_DROP_INTERRUPTED_WEBSEEDS,       true );
@@ -450,6 +450,7 @@ tr_sessionGetDefaultSettings( tr_benc * d )
     tr_bencDictAddStr ( d, TR_PREFS_KEY_CLIENT_VERSION_BEP10,            "" );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_PEER_ID_PREFIX,                  "" );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_USER_AGENT,                      "" );
+    tr_bencDictAddInt ( d, TR_PREFS_KEY_MAGNET_BAD_PIECE_MAX,            25 );
 
   tr_bencDictAddStr  (d, TR_PREFS_KEY_DOWNLOAD_GROUP_DEFAULT,          tr_getDefaultDownloadGroupDefault ());
   knownGroups = tr_getDefaultDownloadGroups ();
@@ -465,7 +466,7 @@ tr_sessionGetSettings( tr_session * s, struct tr_benc * d )
 
     assert( tr_bencIsDict( d ) );
 
-    tr_bencDictReserve( d, 85 );
+    tr_bencDictReserve( d, 86 );
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_ENABLED,                tr_blocklistIsEnabled( s ) );
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_WEBSEEDS,               s->blockListWebseeds );
     tr_bencDictAddBool( d, TR_PREFS_KEY_IPV6_ENABLED,                     s->ipv6Enabled );
@@ -547,6 +548,7 @@ tr_sessionGetSettings( tr_session * s, struct tr_benc * d )
     tr_bencDictAddStr ( d, TR_PREFS_KEY_CLIENT_VERSION_BEP10,             tr_sessionGetClientVersionBep10( s ) );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_PEER_ID_PREFIX,                   tr_sessionGetPeerIdPrefix( s ) );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_USER_AGENT,                       tr_sessionGetUserAgent( s ) );
+    tr_bencDictAddInt ( d, TR_PREFS_KEY_MAGNET_BAD_PIECE_MAX,             s->maxMagnetBadPiece );
 
   tr_bencDictAddStr  (d, TR_PREFS_KEY_DOWNLOAD_GROUP_DEFAULT,       tr_sessionGetDownloadGroupDefault (s));
   knownGroups = tr_sessionGetDownloadGroups (s);
@@ -923,6 +925,8 @@ sessionSetImpl( void * vdata )
         session->maxWebseeds = ( i > 0 ) ? i : 0 ;
     if( tr_bencDictFindBool( settings, TR_PREFS_KEY_BLOCKLIST_WEBSEEDS, &boolVal ) )
         session->blockListWebseeds = boolVal;
+    if( tr_bencDictFindInt( settings, TR_PREFS_KEY_MAGNET_BAD_PIECE_MAX, &i ) )
+        session->maxMagnetBadPiece = ( i >= 0 ) ? i : 0 ;
     if( tr_bencDictFindBool( settings, TR_PREFS_KEY_IPV6_ENABLED, &boolVal ) )
         session->ipv6Enabled = boolVal;
     if( tr_bencDictFindBool( settings, TR_PREFS_KEY_DHT_DAT_IPV6_FORCED, &boolVal ) )
@@ -2956,6 +2960,23 @@ tr_sessionGetDhtDatIpv6Forced( const tr_session * session )
     assert( tr_isSession( session ) );
 
     return session->dhtDatIpv6Forced;
+}
+
+void
+tr_sessionSetMaxMagnetBadPiece( tr_session * session, int maxMagnetBadPiece )
+{
+    assert( tr_isSession( session ) );
+    if( maxMagnetBadPiece >= 0 )
+        session->maxMagnetBadPiece = maxMagnetBadPiece;
+   
+}
+
+int
+tr_sessionGetMaxMagnetBadPiece( const tr_session * session )
+{
+    assert( tr_isSession( session ) );
+
+    return session->maxMagnetBadPiece;
 }
 
 void
