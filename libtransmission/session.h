@@ -130,6 +130,7 @@ struct tr_session
     int                          reverifyTorrents;
     tr_cheatMode_t               cheatModeDefault;
     tr_streamingMode_t           streamModeDefault;
+    int                          maxMagnetBadPiece;
     int                          maxWebseeds;
     int                          maxWebseedConnectFails;
     int                          webseedTimeout;
