@@ -1,5 +1,11 @@
 https://github.com/cfpp2p/transmission/commits/cygwin
 
+Commits on Jan 14, 2016
+
+    Fix magnet stall when first connection corrupt.
+    Reproducible with µTorrent 3.4.0 (Beta).
+    cfpp2p committed Jan 14, 2016 
+
 Commits on Jan 12, 2016
 
     Improved magnet acquisition speed.
