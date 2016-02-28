@@ -223,7 +223,7 @@ Transmission.prototype =
 					var tl = $(event.target);
 					tl.contextmenu("enableEntry", "pause_selected", s.activeSel > 0);
 					tl.contextmenu("enableEntry", "resume_selected", s.pausedSel > 0);
-					tl.contextmenu("enableEntry", "resume_now_selected", s.pausedSel > 0);
+					tl.contextmenu("enableEntry", "resume_now_selected", s.pausedSel > 0 || s.queuedSel > 0);
 					tl.contextmenu("enableEntry", "rename", s.sel == 1);
 				});
 			}, this)
@@ -1462,7 +1462,8 @@ Transmission.prototype =
 			paused: 0,
 			sel: 0,
 			activeSel: 0,
-			pausedSel: 0
+			pausedSel: 0,
+			queuedSel: 0
 		};
 
 		clearTimeout(this.buttonRefreshTimer);
@@ -1471,12 +1472,14 @@ Transmission.prototype =
 		for (var i=0, row; row=this._rows[i]; ++i) {
 			var isStopped = row.getTorrent().isStopped();
 			var isSelected = row.isSelected();
+			var isQueued = row.getTorrent().isQueued();
 			++stats.total;
 			if (!isStopped) ++stats.active;
 			if (isStopped) ++stats.paused;
 			if (isSelected) ++stats.sel;
 			if (isSelected && !isStopped) ++stats.activeSel;
 			if (isSelected && isStopped) ++stats.pausedSel;
+			if (isSelected && isQueued) ++stats.queuedSel;
 		}
 
 		callback(stats);
