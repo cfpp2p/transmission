@@ -1077,8 +1077,8 @@ Transmission.prototype =
 					}
 				};
 				remote.sendRequest (o, function(response) {
-					if (response.result != 'success')
-						alert ('Error adding "' + url + '": ' + response.result);
+//					if (response.result != 'success')
+					alert(response.result + '\r\nadding torrent by URL\r\n"' + url + '"');
 				});
 			}
 		}

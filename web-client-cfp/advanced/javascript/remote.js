@@ -249,7 +249,8 @@ TransmissionRemote.prototype =
 				filename: url
 			}
 		};
-		this.sendRequest(o, function() {
+		this.sendRequest(o, function(response) {
+			alert(response.result + '\r\nadding torrent by URL\r\n"' + url + '"');
 			remote._controller.refreshTorrents();
 		});
 	},
