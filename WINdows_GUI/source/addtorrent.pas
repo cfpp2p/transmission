@@ -80,7 +80,7 @@ const
 
 implementation
 
-uses lclintf, lcltype, main, variants;
+uses lclintf, lcltype, main, variants, Utils;
 
 { TAddTorrentForm }
 
@@ -88,14 +88,21 @@ procedure TAddTorrentForm.FormShow(Sender: TObject);
 var
   i: integer;
 begin
+  AppBusy;
+  lvFiles.BeginUpdate;
   btSelectAllClick(nil);
   lvFiles.Sort;
   if lvFiles.Items.Count > 0 then
     lvFiles.Row:=0;
-  for i:=0 to lvFiles.Items.Count - 1 do
+  for i:=0 to lvFiles.Items.Count - 1 do begin
     if VarIsEmpty(lvFiles.Items[idxAtFileID, i]) then
-      CollapseFolder(i);
+      lvFiles.Items[idxAtCollapsed, i]:=1;
+    if integer(lvFiles.Items[idxAtLevel, i]) > 0 then
+      lvFiles.RowHeights[i + lvFiles.FixedRows]:=0;
+  end;
   TreeChanged;
+  lvFiles.EndUpdate;
+  AppNormal;
 end;
 
 procedure TAddTorrentForm.lvFilesCellAttributes(Sender: TVarGrid; ACol, ARow, ADataCol: integer; AState: TGridDrawState; var CellAttribs: TCellAttributes);
@@ -188,7 +195,8 @@ procedure TAddTorrentForm.CollapseFolder(ARow: integer);
 var
   i, lev: integer;
 begin
-  lvFiles.Items.BeginUpdate;
+  AppBusy;
+  lvFiles.BeginUpdate;
   lev:=lvFiles.Items[idxAtLevel, ARow];
   lvFiles.Items[idxAtCollapsed, ARow]:=1;
   for i:=ARow + 1 to lvFiles.Items.Count - 1 do
@@ -197,14 +205,16 @@ begin
     else
       break;
   TreeChanged;
-  lvFiles.Items.EndUpdate;
+  lvFiles.EndUpdate;
+  AppNormal;
 end;
 
 procedure TAddTorrentForm.ExpandFolder(ARow: integer);
 var
   i, j, lev: integer;
 begin
-  lvFiles.Items.BeginUpdate;
+  AppBusy;
+  lvFiles.BeginUpdate;
   lev:=lvFiles.Items[idxAtLevel, ARow] + 1;
   lvFiles.Items[idxAtCollapsed, ARow]:=0;
   for i:=ARow + 1 to lvFiles.Items.Count - 1 do begin
@@ -219,7 +229,8 @@ begin
         break;
   end;
   TreeChanged;
-  lvFiles.Items.EndUpdate;
+  lvFiles.EndUpdate;
+  AppNormal;
 end;
 
 procedure TAddTorrentForm.TreeChanged;

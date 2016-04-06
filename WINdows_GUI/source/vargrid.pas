@@ -114,6 +114,8 @@ type
     procedure SelectAll;
     procedure Sort; reintroduce;
     function ColToDataCol(ACol: integer): integer;
+    procedure BeginUpdate; reintroduce;
+    procedure EndUpdate(aRefresh: boolean = true); reintroduce;
 
     property Items: TVarList read FItems;
     property RowSelected[RowIndex: integer]: boolean read GetRowSelected write SetRowSelected;
@@ -1002,6 +1004,18 @@ begin
     Result:=FColumnsMap[ACol]
   else
     Result:=-1;
+end;
+
+procedure TVarGrid.BeginUpdate;
+begin
+  inherited BeginUpdate;
+  Items.BeginUpdate;
+end;
+
+procedure TVarGrid.EndUpdate(aRefresh: boolean);
+begin
+  inherited EndUpdate(aRefresh);
+  Items.EndUpdate;
 end;
 
 end.
