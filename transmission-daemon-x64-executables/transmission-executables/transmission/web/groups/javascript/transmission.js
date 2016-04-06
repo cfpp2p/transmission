@@ -223,7 +223,7 @@ Transmission.prototype =
 					var tl = $(event.target);
 					tl.contextmenu("enableEntry", "pause_selected", s.activeSel > 0);
 					tl.contextmenu("enableEntry", "resume_selected", s.pausedSel > 0);
-					tl.contextmenu("enableEntry", "resume_now_selected", s.pausedSel > 0);
+					tl.contextmenu("enableEntry", "resume_now_selected", s.pausedSel > 0 || s.queuedSel > 0);
 					tl.contextmenu("enableEntry", "rename", s.sel == 1);
 				});
 			}, this)
@@ -1012,8 +1012,61 @@ Transmission.prototype =
 
 			var url = $('#torrent_upload_url').val();
 			if (url != '') {
-				if (url.match(/^[0-9a-f]{40}$/i))
-					url = 'magnet:?xt=urn:btih:'+url;
+                if (url.match(/^[0-9a-f]{40}$/i)) {
+                    url = 'magnet:?xt=urn:btih:' + url;
+                }
+                else {
+                    var hash = ' ';
+                    var hashValid = false;
+                    if (/^t magnet:\?/i.test(url)) {
+                        const magnetData = /xt=urn:btih:([a-z0-9]+)/i;
+                        const magnetHash = magnetData.exec(url);
+                        if (magnetHash) {
+                           hash = magnetHash[1];
+                           hash = hash.toUpperCase();
+                        }
+                    }
+                    else if (/^t /i.test(url)) {
+                        const hashData = /t ([a-z0-9]+)/i;
+                        const hashHash = hashData.exec(url);
+                        if (hashHash) {
+                           hash = hashHash[1];
+                           hash = hash.toUpperCase();
+                        }
+                    }
+                    if (hash.length === 32 && /\b[A-Z2-7]{32}\b/.test(hash)) {
+
+                         /*
+                         Nibbler - Multi-Base Encoder
+                         version 2010-04-07 mini
+                         Copyright (c) 2010 Thomas Peri
+                         http://www.tumuski.com/
+                         MIT License
+                         */
+                        var Nibbler=function(A){var B,C,D,E,F,G,H,I,J,K,L,M,N;B=function(){var x,y,z;C=A.pad||'';D=A.dataBits;E=A.codeBits;F=A.keyString;G=A.arrayData;y=Math.max(D,E);z=0;H=[];for(x=0;x<y;x+=1){H.push(z);z+=z+1;}J=z;I=D/K(D,E);};K=function(u,v){var w;while(v!==0){w=v;v=u%v;u=w;}return u;};L=function(f,g,h,j){var k,l,m,o,p,q,r,s;s=function(e){if(!j){r.push(F.charAt(e));}else if(G){r.push(e);}else{r.push(String.fromCharCode(e));}};p=0;q=0;r=[];l=f.length;for(k=0;k<l;k+=1){q+=g;if(j){m=f.charAt(k);o=F.indexOf(m);if(m===C){break;}else if(o<0){throw'the character "'+m+'" is not a member of '+F;}}else{if(G){o=f[k];}else{o=f.charCodeAt(k);}if((o|J)!==J){throw o+" is outside the range 0-"+J;}}p=(p<<g)|o;while(q>=h){q-=h;s(p>>q);p&=H[q];}}if(!j&&q>0){s(p<<(h-q));l=r.length%I;for(k=0;k<l;k+=1){r.push(C);}}return(G&&j)?r:r.join('');};M=function(d){return L(d,D,E,false);};N=function(c){return L(c,E,D,true);};this.encode=M;this.decode=N;B();};
+
+                        const base32 = new Nibbler({
+                            dataBits: 8,
+                            codeBits: 5,
+                            keyString: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567',
+                            pad: '='
+                        });
+                        const base16 = new Nibbler({
+                            dataBits: 8,
+                            codeBits: 4,
+                            keyString: '0123456789ABCDEF'
+                        });
+
+                        hash = base16.encode(base32.decode(hash));
+                        hashValid = true;
+                    }
+                    else if (hash.length === 40 && (/\b[A-F0-9]{40}\b/.test(hash))) {
+                        hashValid = true;
+                    }
+
+                    if (hashValid)
+                        url = 'https://torcache.net/torrent/' + hash + '.torrent';
+                };
 				var o = {
 					'method': 'torrent-add',
 					arguments: {
@@ -1024,8 +1077,8 @@ Transmission.prototype =
 					}
 				};
 				remote.sendRequest (o, function(response) {
-					if (response.result != 'success')
-						alert ('Error adding "' + url + '": ' + response.result);
+//					if (response.result != 'success')
+					alert(response.result + '\r\nadding torrent by URL\r\n"' + url + '"');
 				});
 			}
 		}
@@ -1462,7 +1515,8 @@ Transmission.prototype =
 			paused: 0,
 			sel: 0,
 			activeSel: 0,
-			pausedSel: 0
+			pausedSel: 0,
+			queuedSel: 0
 		};
 
 		clearTimeout(this.buttonRefreshTimer);
@@ -1471,12 +1525,14 @@ Transmission.prototype =
 		for (var i=0, row; row=this._rows[i]; ++i) {
 			var isStopped = row.getTorrent().isStopped();
 			var isSelected = row.isSelected();
+			var isQueued = row.getTorrent().isQueued();
 			++stats.total;
 			if (!isStopped) ++stats.active;
 			if (isStopped) ++stats.paused;
 			if (isSelected) ++stats.sel;
 			if (isSelected && !isStopped) ++stats.activeSel;
 			if (isSelected && isStopped) ++stats.pausedSel;
+			if (isSelected && isQueued) ++stats.queuedSel;
 		}
 
 		callback(stats);
