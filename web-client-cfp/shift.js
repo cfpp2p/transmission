@@ -159,7 +159,7 @@ var globals = {
   removed: [],
   torrentHash: {},
   columnHash: {},
-  rpcUrl: "/transmission/rpc",
+  rpcUrl: "../rpc",
   requestHeaders: [ HEADER_TRANSMISSION, "" ],
 
   shift: {
