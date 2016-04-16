@@ -1763,25 +1763,30 @@ begin
         edPeerLimit.Value:=t.Objects[0].Integers['maxConnectedPeers'];
         files:=t.Objects[0].Arrays['files'];
         path:=GetFilesCommonPath(files);
-        lvFiles.Items.RowCnt:=files.Count;
-        for i:=0 to files.Count - 1 do begin
-          res:=files.Objects[i];
-          s:=UTF8Encode(res.Strings['name']);
-          if (path <> '') and (Copy(s, 1, Length(path)) = path) then
-            s:=Copy(s, Length(path) + 1, MaxInt);
-          ss:=ExtractFileName(s);
-          if ss <> s then
-            HasFolders:=True;
-          lvFiles.Items[idxAtName, i]:=UTF8Decode(ss);
-          lvFiles.Items[idxAtSize, i]:=res.Floats['length'];
-          lvFiles.Items[idxAtFullPath, i]:=UTF8Decode(s);
-          lvFiles.Items[idxAtFileID, i]:=i;
-          lvFiles.Items[idxAtLevel, i]:=_GetLevel(s);
+          lvFiles.Items.BeginUpdate;
+          try
+            lvFiles.Items.RowCnt:=files.Count;
+            for i:=0 to files.Count - 1 do begin
+              res:=files.Objects[i];
+              s:=UTF8Encode(res.Strings['name']);
+              if (path <> '') and (Copy(s, 1, Length(path)) = path) then
+                s:=Copy(s, Length(path) + 1, MaxInt);
+              ss:=ExtractFileName(s);
+              if ss <> s then
+                HasFolders:=True;
+              lvFiles.Items[idxAtName, i]:=UTF8Decode(ss);
+              lvFiles.Items[idxAtSize, i]:=res.Floats['length'];
+              lvFiles.Items[idxAtFullPath, i]:=UTF8Decode(s);
+              lvFiles.Items[idxAtFileID, i]:=i;
+              lvFiles.Items[idxAtLevel, i]:=_GetLevel(s);
+            end;
+            lvFiles.Items.Sort(idxAtFullPath);
+            i:=0;
+            _AddFolders(lvFiles.Items, '', i, lvFiles.Items.Count);
+            lvFiles.Items.Sort(idxAtFullPath);
+          finally
+            lvFiles.Items.EndUpdate;
         end;
-        lvFiles.Items.Sort(idxAtFullPath);
-        i:=0;
-        _AddFolders(lvFiles.Items, '', i, lvFiles.Items.Count);
-        lvFiles.Items.Sort(idxAtFullPath);
       finally
         args.Free;
       end;
@@ -3630,7 +3635,8 @@ begin
     RpcObj.Http.ProxyUser:='';
     RpcObj.Http.ProxyPass:='';
   end;
-  RpcObj.Url:=Format('%s://%s:%d/transmission/rpc', [RpcObj.Url, FIni.ReadString(Sec, 'Host', ''), FIni.ReadInteger(Sec, 'Port', 9091)]);
+  RpcObj.RpcPath:=Ini.ReadString(Sec, 'RpcPath', '');
+  RpcObj.Url:=Format('%s://%s:%d', [RpcObj.Url, FIni.ReadString(Sec, 'Host', ''), FIni.ReadInteger(Sec, 'Port', 9091)]);
   SetRefreshInterval;
   RpcObj.InfoStatus:=sConnectingToDaemon;
   CheckStatus;

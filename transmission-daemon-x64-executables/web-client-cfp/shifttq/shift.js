@@ -260,7 +260,7 @@ var globals = {
   torrents: [],
   removed: [],
   torrentHash: {},
-  rpcUrl: "/transmission/rpc",
+  rpcUrl: "../../rpc",
   requestHeaders: [ HEADER_TRANSMISSION, "" ],
 
   shift: {

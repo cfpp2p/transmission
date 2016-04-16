@@ -29,6 +29,9 @@ uses
 resourcestring
   sTransmissionAt = 'Transmission%s at %s:%s';
 
+const
+  DefaultRpcPath = '/transmission/rpc';
+
 type
   TAdvInfoType = (aiNone, aiGeneral, aiFiles, aiPeers, aiTrackers);
   TRefreshTypes = (rtTorrents, rtDetails, rtSession);
@@ -86,6 +89,7 @@ type
     FRPCVersion: integer;
     XTorrentSession: string;
     FMainThreadId: TThreadID;
+    FRpcPath: string;
 
     function GetConnected: boolean;
     function GetConnecting: boolean;
@@ -129,6 +133,7 @@ type
     property Connecting: boolean read GetConnecting;
     property TorrentFields: string read GetTorrentFields write SetTorrentFields;
     property RPCVersion: integer read FRPCVersion;
+    property RpcPath: string read FRpcPath write FRpcPath;
   end;
 
 implementation
@@ -306,7 +311,9 @@ begin
         Synchronize(@DoFillSessionInfo);
     finally
       args.Free;
-    end;
+    end
+    else
+      ASSERT(FRpc.Status <> '');
   finally
     req.Free;
   end;
@@ -551,12 +558,17 @@ var
   res: TJSONObject;
   jp: TJSONParser;
   s: string;
-  i, j, OldTimeOut: integer;
+  i, j, OldTimeOut, RetryCnt: integer;
   locked, r: boolean;
 begin
+  if FRpcPath = '' then
+    FRpcPath:=DefaultRpcPath;
   Status:='';
   Result:=nil;
-  for i:=1 to 2 do begin
+  RetryCnt:=2;
+  i:=0;
+  repeat
+    Inc(i);
     HttpLock.Enter;
     locked:=True;
     try
@@ -565,13 +577,14 @@ begin
       Http.Document.Clear;
       s:=req.AsJSON;
       Http.Document.Write(PChar(s)^, Length(s));
+      s:='';
       Http.Headers.Clear;
       if XTorrentSession <> '' then
         Http.Headers.Add(XTorrentSession);
       if ATimeOut >= 0 then
         Http.Timeout:=ATimeOut;
       try
-        r:=Http.HTTPMethod('POST', Url);
+        r:=Http.HTTPMethod('POST', Url + FRpcPath);
       finally
         Http.Timeout:=OldTimeOut;
       end;
@@ -589,8 +602,29 @@ begin
               XTorrentSession:=Http.Headers[j];
               break;
             end;
-          if XTorrentSession <> '' then
+          if XTorrentSession <> '' then begin
+            if i = RetryCnt then begin
+              if FMainThreadId <> GetCurrentThreadId then
+                ReconnectAllowed:=True;
+              Status:='Session ID error.';
+            end;
             continue;
+          end;
+        end;
+
+        if Http.ResultCode = 301 then begin
+          s:=Trim(Http.Headers.Values['Location']);
+          if (s <> '') and (i = 1) then begin
+            j:=Length(s);
+            if Copy(s, j - 4, MaxInt) = '/web/' then
+              SetLength(s, j - 4)
+            else
+              if Copy(s, j - 3, MaxInt) = '/web' then
+                SetLength(s, j - 3);
+            FRpcPath:=s + 'rpc';
+            Inc(RetryCnt);
+            continue;
+          end;
         end;
 
         if Http.ResultCode <> 200 then begin
@@ -645,47 +679,49 @@ begin
         try
           try
             obj:=jp.Parse;
-          except
-            on E: Exception do
-              begin
-                Status:=e.Message;
-                break;
-              end;
+            Http.Document.Clear;
+          finally
+            jp.Free;
           end;
-          try
-            if obj is TJSONObject then begin
-              res:=obj as TJSONObject;
-              s:=res.Strings['result'];
-              if AnsiCompareText(s, 'success') <> 0 then
-                Status:=s
-              else begin
-                if ReturnArguments then begin
-                  res:=res.Objects['arguments'];
-                  if res = nil then
-                    Status:='Arguments object not found.'
-                  else begin
-                    FreeAndNil(jp);
-                    jp:=TJSONParser.Create(res.AsJSON);
-                    Result:=TJSONObject(jp.Parse);
-                    FreeAndNil(obj);
-                  end;
-                end
-                else
-                  Result:=res;
-                if Result <> nil then
-                  obj:=nil;
-              end;
-              break;
-            end
-            else begin
-              Status:='Invalid server response.';
+        except
+          on E: Exception do
+            begin
+              Status:=e.Message;
               break;
             end;
-          finally
-            obj.Free;
+        end;
+        try
+          if obj is TJSONObject then begin
+            res:=obj as TJSONObject;
+            s:=res.Strings['result'];
+            if AnsiCompareText(s, 'success') <> 0 then begin
+              if Trim(s) = '' then
+                s:='Unknown error.';
+              Status:=s;
+            end
+            else begin
+              if ReturnArguments then begin
+                Result:=res.Objects['arguments'];
+                if Result = nil then
+                  Status:='Arguments object not found.'
+                else begin
+                  res.Extract(Result);
+                  FreeAndNil(obj);
+                end;
+              end
+              else
+                Result:=res;
+              if Result <> nil then
+                obj:=nil;
+            end;
+            break;
+          end
+          else begin
+            Status:='Invalid server response.';
+            break;
           end;
         finally
-          jp.Free;
+          obj.Free;
         end;
       end;
     finally
@@ -693,7 +729,7 @@ begin
       if locked then
         HttpLock.Leave;
     end;
-  end;
+  until i >= RetryCnt;
 end;
 
 function TRpc.RequestInfo(TorrentId: integer; const Fields: array of const; const ExtraFields: array of string): TJSONObject;
@@ -808,6 +844,7 @@ begin
   Http:=THTTPSend.Create;
   Http.Protocol:='1.1';
   Http.Timeout:=30000;
+  Http.Headers.NameValueSeparator:=':';
 end;
 
 procedure TRpc.Lock;
@@ -850,6 +887,7 @@ begin
   end;
   Status:='';
   RequestStartTime:=0;
+  FRpcPath:='';
 end;
 
 end.
