@@ -261,7 +261,7 @@ createEasy( tr_session * s, struct tr_web * web, struct tr_web_task * task )
 
     curl_easy_setopt( e, CURLOPT_ENCODING, "gzip;q=1.0, deflate, identity" );
     curl_easy_setopt( e, CURLOPT_FOLLOWLOCATION, 1L );
-    curl_easy_setopt( e, CURLOPT_MAXREDIRS, -1L );
+    curl_easy_setopt( e, CURLOPT_MAXREDIRS, (long)s->maxRedirect );
     curl_easy_setopt( e, CURLOPT_NOSIGNAL, 1L );
     curl_easy_setopt( e, CURLOPT_PRIVATE, task );
 #ifdef USE_LIBCURL_SOCKOPT
@@ -535,6 +535,7 @@ tr_webThreadFunc( void * vsession )
                 const char * server_ip;
                 struct tr_address addr;
                 CURL * e = msg->easy_handle;
+                CURLcode res = msg->data.result;
                 curl_easy_getinfo( e, CURLINFO_PRIVATE, (void*)&task );
                 curl_easy_getinfo( e, CURLINFO_RESPONSE_CODE, &task->code );
 
@@ -569,7 +570,7 @@ tr_webThreadFunc( void * vsession )
 
 
 /*fprintf( stderr, "removing a completed task.. taskCount is now %d (response code: %d, response len: %d)\n", taskCount, (int)task->code, (int)evbuffer_get_length(task->response) );*/
-                if( progress_callback_func( task, 0, 0, 0, (double)999 ) )
+                if( ( progress_callback_func( task, 0, 0, 0, (double)999 ) ) || ( res == CURLE_TOO_MANY_REDIRECTS ) )
                     task->code = 999L;
                 tr_runInEventThread( task->session, task_finish_func, task );
                 --taskCount;
@@ -671,6 +672,7 @@ tr_webGetResponseStr( long code )
         case 503: return "Service Unavailable";
         case 504: return "Gateway Timeout";
         case 505: return "HTTP Version Not Supported";
+        case 999: return "Too many redirects";
         default:  return "Unknown Error";
     }
 }

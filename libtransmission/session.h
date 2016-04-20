@@ -135,6 +135,8 @@ struct tr_session
     int                          maxWebseedConnectFails;
     int                          webseedTimeout;
 
+    int                          maxRedirect;
+
     tr_benc                      removedTorrents;
 
     bool                         stalledEnabled;

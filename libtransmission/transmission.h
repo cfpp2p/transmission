@@ -251,6 +251,7 @@ const char* tr_getDefaultDownloadGroupDefault (void);
 #define TR_PREFS_KEY_WEBSEED_MAX_CONNECT_FAILS          "webseed-max-connect-fails"
 #define TR_PREFS_KEY_WEBSEED_TIMEOUT_VALUE              "webseed-timeout-seconds"
 #define TR_PREFS_KEY_MAGNET_BAD_PIECE_MAX               "magnet-bad-piece-max"
+#define TR_PREFS_KEY_REDIRECT_MAXIMUM                   "redirect-maximum"
 
 
 /**
@@ -977,6 +978,9 @@ void tr_sessionSetPeerIdPrefix( tr_session *, const char * peerIdPrefix );
 const char * tr_sessionGetUserAgent( const tr_session * );
 
 void tr_sessionSetUserAgent( tr_session *, const char * userAgent );
+
+void tr_sessionSetMaxRedirect( tr_session *, int maxRedirect );
+int  tr_sessionGetMaxRedirect( const tr_session * );
 
 /**
 ***

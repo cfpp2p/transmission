@@ -367,7 +367,7 @@ tr_sessionGetDefaultSettings( tr_benc * d )
 
     assert( tr_bencIsDict( d ) );
 
-    tr_bencDictReserve( d, 87);
+    tr_bencDictReserve( d, 88);
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_ENABLED,               false );
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_WEBSEEDS,              false );
     tr_bencDictAddBool( d, TR_PREFS_KEY_IPV6_ENABLED,                    false );
@@ -451,6 +451,7 @@ tr_sessionGetDefaultSettings( tr_benc * d )
     tr_bencDictAddStr ( d, TR_PREFS_KEY_PEER_ID_PREFIX,                  "" );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_USER_AGENT,                      "" );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_MAGNET_BAD_PIECE_MAX,            25 );
+    tr_bencDictAddInt ( d, TR_PREFS_KEY_REDIRECT_MAXIMUM,                16 );
 
   tr_bencDictAddStr  (d, TR_PREFS_KEY_DOWNLOAD_GROUP_DEFAULT,          tr_getDefaultDownloadGroupDefault ());
   knownGroups = tr_getDefaultDownloadGroups ();
@@ -466,7 +467,7 @@ tr_sessionGetSettings( tr_session * s, struct tr_benc * d )
 
     assert( tr_bencIsDict( d ) );
 
-    tr_bencDictReserve( d, 86 );
+    tr_bencDictReserve( d, 87 );
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_ENABLED,                tr_blocklistIsEnabled( s ) );
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_WEBSEEDS,               s->blockListWebseeds );
     tr_bencDictAddBool( d, TR_PREFS_KEY_IPV6_ENABLED,                     s->ipv6Enabled );
@@ -549,6 +550,7 @@ tr_sessionGetSettings( tr_session * s, struct tr_benc * d )
     tr_bencDictAddStr ( d, TR_PREFS_KEY_PEER_ID_PREFIX,                   tr_sessionGetPeerIdPrefix( s ) );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_USER_AGENT,                       tr_sessionGetUserAgent( s ) );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_MAGNET_BAD_PIECE_MAX,             s->maxMagnetBadPiece );
+    tr_bencDictAddInt ( d, TR_PREFS_KEY_REDIRECT_MAXIMUM,                 s->maxRedirect );
 
   tr_bencDictAddStr  (d, TR_PREFS_KEY_DOWNLOAD_GROUP_DEFAULT,       tr_sessionGetDownloadGroupDefault (s));
   knownGroups = tr_sessionGetDownloadGroups (s);
@@ -941,6 +943,8 @@ sessionSetImpl( void * vdata )
         tr_sessionSetPeerIdPrefix( session, str );
     if( tr_bencDictFindStr( settings, TR_PREFS_KEY_USER_AGENT, &str ) )
         tr_sessionSetUserAgent( session, str );
+    if( tr_bencDictFindInt( settings, TR_PREFS_KEY_REDIRECT_MAXIMUM, &i ) )
+        session->maxRedirect = ( i >= 0 ) ? i : -1 ;
 
   if (tr_bencDictFindList (settings, TR_PREFS_KEY_DOWNLOAD_GROUPS, &groups))
   {
@@ -3162,6 +3166,23 @@ tr_sessionSetUserAgent( tr_session * session, const char * userAgent )
         tr_free( session->userAgent );
         session->userAgent = tr_strdup( userAgent );
     }
+}
+
+void
+tr_sessionSetMaxRedirect( tr_session * session, int maxRedirect )
+{
+    assert( tr_isSession( session ) );
+    if( maxRedirect >= -1 )
+        session->maxRedirect = maxRedirect;
+   
+}
+
+int
+tr_sessionGetMaxRedirect( const tr_session * session )
+{
+    assert( tr_isSession( session ) );
+
+    return session->maxRedirect;
 }
 
 /****
