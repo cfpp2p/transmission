@@ -1785,6 +1785,8 @@ sessionSet( tr_session               * session,
         tr_sessionSetUserAgent( session, str );
     if( tr_bencDictFindInt( args_in, TR_PREFS_KEY_MAGNET_BAD_PIECE_MAX, &i ) )
         tr_sessionSetMaxMagnetBadPiece( session, i );
+    if( tr_bencDictFindInt( args_in, TR_PREFS_KEY_REDIRECT_MAXIMUM, &i ) )
+        tr_sessionSetMaxRedirect( session, i );
 
     notify( session, TR_RPC_SESSION_CHANGED, NULL );
 
@@ -1925,6 +1927,7 @@ sessionGet( tr_session               * s,
     tr_bencDictAddStr ( d, TR_PREFS_KEY_PEER_ID_PREFIX, tr_sessionGetPeerIdPrefix( s ) );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_USER_AGENT, tr_sessionGetUserAgent( s ) );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_MAGNET_BAD_PIECE_MAX, tr_sessionGetMaxMagnetBadPiece( s ) );
+    tr_bencDictAddInt ( d, TR_PREFS_KEY_REDIRECT_MAXIMUM, tr_sessionGetMaxRedirect( s ) );
 
     return NULL;
 }
