@@ -853,6 +853,7 @@ tr_sessionInitImpl( void * vdata )
     if( session->isLPDEnabled )
         tr_lpdInit( session, &session->public_ipv4->addr );
 
+    /* use original accounting method when maxConcurrentAnnounces less than zero */
     if( session->maxConcurrentAnnounces >= 0 )
         session->announcer->slotsAvailable = session->maxConcurrentAnnounces;
 
