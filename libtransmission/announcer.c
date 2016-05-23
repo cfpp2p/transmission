@@ -1542,6 +1542,7 @@ multiscrape( tr_announcer * announcer, tr_ptrArray * tiers )
 
     /* send the requests we just built */
     for( i=0; i<request_count; ++i ) {
+        /* use original accounting method when maxConcurrentAnnounces less than zero */
         if( announcer->session->maxConcurrentAnnounces >= 0 )
             --announcer->slotsAvailable;
         scrape_request_delegate( announcer, &requests[i], on_scrape_done, announcer->session );
