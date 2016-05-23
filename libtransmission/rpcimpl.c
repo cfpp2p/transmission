@@ -1787,6 +1787,10 @@ sessionSet( tr_session               * session,
         tr_sessionSetMaxMagnetBadPiece( session, i );
     if( tr_bencDictFindInt( args_in, TR_PREFS_KEY_REDIRECT_MAXIMUM, &i ) )
         tr_sessionSetMaxRedirect( session, i );
+    if( tr_bencDictFindInt( args_in, TR_PREFS_KEY_MULTISCRAPE_MAXIMUM, &i ) )
+        tr_sessionSetMaxMultiscrape( session, i );
+    if( tr_bencDictFindInt( args_in, TR_PREFS_KEY_CONCURRENT_ANNOUNCE_MAXIMUM, &i ) )
+        tr_sessionSetMaxConcurrentAnnounces( session, i );
 
     notify( session, TR_RPC_SESSION_CHANGED, NULL );
 
@@ -1928,6 +1932,8 @@ sessionGet( tr_session               * s,
     tr_bencDictAddStr ( d, TR_PREFS_KEY_USER_AGENT, tr_sessionGetUserAgent( s ) );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_MAGNET_BAD_PIECE_MAX, tr_sessionGetMaxMagnetBadPiece( s ) );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_REDIRECT_MAXIMUM, tr_sessionGetMaxRedirect( s ) );
+    tr_bencDictAddInt ( d, TR_PREFS_KEY_MULTISCRAPE_MAXIMUM, tr_sessionGetMaxMultiscrape( s ) );
+    tr_bencDictAddInt ( d, TR_PREFS_KEY_CONCURRENT_ANNOUNCE_MAXIMUM, tr_sessionGetMaxConcurrentAnnounces( s ) );
 
     return NULL;
 }

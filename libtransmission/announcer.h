@@ -17,9 +17,26 @@
 #ifndef _TR_ANNOUNCER_H_
 #define _TR_ANNOUNCER_H_
 
-#include "transmission.h"
+#include <event2/event.h> /* evtimer */
 
-struct tr_announcer;
+#include "transmission.h"
+#include "ptrarray.h"
+
+/**
+ * "global" (per-tr_session) fields
+ */
+typedef struct tr_announcer
+{
+    tr_ptrArray stops; /* tr_announce_request */
+
+    tr_session * session;
+    struct event * upkeepTimer;
+    int slotsAvailable;
+    int key;
+    time_t tauUpkeepAt;
+}
+tr_announcer;
+
 struct tr_torrent_tiers;
 
 /**
@@ -76,11 +93,11 @@ struct tr_torrent_tiers * tr_announcerAddTorrent( tr_torrent          * torrent,
                                                   tr_tracker_callback * cb,
                                                   void                * cbdata );
 
-bool tr_announcerHasBacklog( const struct tr_announcer * );
+bool tr_announcerHasBacklog( const tr_announcer * );
 
-void tr_announcerResetTorrent( struct tr_announcer*, tr_torrent* );
+void tr_announcerResetTorrent( tr_announcer*, tr_torrent* );
 
-void tr_announcerRemoveTorrent( struct tr_announcer * ,
+void tr_announcerRemoveTorrent( tr_announcer * ,
                                 tr_torrent          * );
 
 void tr_announcerChangeMyPort( tr_torrent * );

@@ -367,7 +367,7 @@ tr_sessionGetDefaultSettings( tr_benc * d )
 
     assert( tr_bencIsDict( d ) );
 
-    tr_bencDictReserve( d, 88);
+    tr_bencDictReserve( d, 90);
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_ENABLED,               false );
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_WEBSEEDS,              false );
     tr_bencDictAddBool( d, TR_PREFS_KEY_IPV6_ENABLED,                    false );
@@ -452,6 +452,8 @@ tr_sessionGetDefaultSettings( tr_benc * d )
     tr_bencDictAddStr ( d, TR_PREFS_KEY_USER_AGENT,                      "" );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_MAGNET_BAD_PIECE_MAX,            25 );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_REDIRECT_MAXIMUM,                16 );
+    tr_bencDictAddInt ( d, TR_PREFS_KEY_MULTISCRAPE_MAXIMUM,             64 );
+    tr_bencDictAddInt ( d, TR_PREFS_KEY_CONCURRENT_ANNOUNCE_MAXIMUM,     48 );
 
   tr_bencDictAddStr  (d, TR_PREFS_KEY_DOWNLOAD_GROUP_DEFAULT,          tr_getDefaultDownloadGroupDefault ());
   knownGroups = tr_getDefaultDownloadGroups ();
@@ -467,7 +469,7 @@ tr_sessionGetSettings( tr_session * s, struct tr_benc * d )
 
     assert( tr_bencIsDict( d ) );
 
-    tr_bencDictReserve( d, 87 );
+    tr_bencDictReserve( d, 89 );
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_ENABLED,                tr_blocklistIsEnabled( s ) );
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_WEBSEEDS,               s->blockListWebseeds );
     tr_bencDictAddBool( d, TR_PREFS_KEY_IPV6_ENABLED,                     s->ipv6Enabled );
@@ -551,6 +553,8 @@ tr_sessionGetSettings( tr_session * s, struct tr_benc * d )
     tr_bencDictAddStr ( d, TR_PREFS_KEY_USER_AGENT,                       tr_sessionGetUserAgent( s ) );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_MAGNET_BAD_PIECE_MAX,             s->maxMagnetBadPiece );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_REDIRECT_MAXIMUM,                 s->maxRedirect );
+    tr_bencDictAddInt ( d, TR_PREFS_KEY_MULTISCRAPE_MAXIMUM,              s->maxMultiscrape );
+    tr_bencDictAddInt ( d, TR_PREFS_KEY_CONCURRENT_ANNOUNCE_MAXIMUM,      s->maxConcurrentAnnounces );
 
   tr_bencDictAddStr  (d, TR_PREFS_KEY_DOWNLOAD_GROUP_DEFAULT,       tr_sessionGetDownloadGroupDefault (s));
   knownGroups = tr_sessionGetDownloadGroups (s);
@@ -849,6 +853,9 @@ tr_sessionInitImpl( void * vdata )
     if( session->isLPDEnabled )
         tr_lpdInit( session, &session->public_ipv4->addr );
 
+    if( session->maxConcurrentAnnounces >= 0 )
+        session->announcer->slotsAvailable = session->maxConcurrentAnnounces;
+
     /* cleanup */
     tr_bencFree( &settings );
     data->done = true;
@@ -945,6 +952,10 @@ sessionSetImpl( void * vdata )
         tr_sessionSetUserAgent( session, str );
     if( tr_bencDictFindInt( settings, TR_PREFS_KEY_REDIRECT_MAXIMUM, &i ) )
         session->maxRedirect = ( i >= 0 ) ? i : -1 ;
+    if( tr_bencDictFindInt( settings, TR_PREFS_KEY_MULTISCRAPE_MAXIMUM, &i ) )
+        session->maxMultiscrape = ( ( i >= 0 ) && ( i < 65 ) ) ? i : 64 ;
+    if( tr_bencDictFindInt( settings, TR_PREFS_KEY_CONCURRENT_ANNOUNCE_MAXIMUM, &i ) )
+        session->maxConcurrentAnnounces = ( i >= 0 ) ? i : -1 ;
 
   if (tr_bencDictFindList (settings, TR_PREFS_KEY_DOWNLOAD_GROUPS, &groups))
   {
@@ -3183,6 +3194,40 @@ tr_sessionGetMaxRedirect( const tr_session * session )
     assert( tr_isSession( session ) );
 
     return session->maxRedirect;
+}
+
+void
+tr_sessionSetMaxMultiscrape( tr_session * session, int maxMultiscrape )
+{
+    assert( tr_isSession( session ) );
+    if( ( maxMultiscrape >= 0 ) && ( maxMultiscrape < 65 ) )
+        session->maxMultiscrape = maxMultiscrape;
+   
+}
+
+int
+tr_sessionGetMaxMultiscrape( const tr_session * session )
+{
+    assert( tr_isSession( session ) );
+
+    return session->maxMultiscrape;
+}
+
+void
+tr_sessionSetMaxConcurrentAnnounces( tr_session * session, int maxConcurrentAnnounces )
+{
+    assert( tr_isSession( session ) );
+    if( maxConcurrentAnnounces >= -1 )
+        session->maxConcurrentAnnounces = maxConcurrentAnnounces;
+   
+}
+
+int
+tr_sessionGetMaxConcurrentAnnounces( const tr_session * session )
+{
+    assert( tr_isSession( session ) );
+
+    return session->maxConcurrentAnnounces;
 }
 
 /****

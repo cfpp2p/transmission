@@ -132,23 +132,8 @@ compareStops( const void * va, const void * vb )
 ****
 ***/
 
-/**
- * "global" (per-tr_session) fields
- */
-typedef struct tr_announcer
-{
-    tr_ptrArray stops; /* tr_announce_request */
-
-    tr_session * session;
-    struct event * upkeepTimer;
-    int slotsAvailable;
-    int key;
-    time_t tauUpkeepAt;
-}
-tr_announcer;
-
 bool
-tr_announcerHasBacklog( const struct tr_announcer * announcer )
+tr_announcerHasBacklog( const tr_announcer * announcer )
 {
     return announcer->slotsAvailable < 1;
 }
@@ -1531,7 +1516,7 @@ multiscrape( tr_announcer * announcer, tr_ptrArray * tiers )
         {
             tr_scrape_request * req = &requests[j];
 
-            if( req->info_hash_count >= TR_MULTISCRAPE_MAX )
+            if( req->info_hash_count >= announcer->session->maxMultiscrape )
                 continue;
             if( tr_strcmp0( req->url, url ) )
                 continue;
@@ -1556,8 +1541,11 @@ multiscrape( tr_announcer * announcer, tr_ptrArray * tiers )
     }
 
     /* send the requests we just built */
-    for( i=0; i<request_count; ++i )
+    for( i=0; i<request_count; ++i ) {
+        if( announcer->session->maxConcurrentAnnounces >= 0 )
+            --announcer->slotsAvailable;
         scrape_request_delegate( announcer, &requests[i], on_scrape_done, announcer->session );
+    }
 
     /* cleanup */
     tr_free( requests );

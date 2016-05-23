@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: transmission.h 14485 2015-05-01 14:29:33Z livings124 $
+ * $Id: transmission.h 14734 2016-05-22 14:05:11Z livings124 $
  *
  * Copyright (c) Transmission authors and contributors
  *
@@ -252,6 +252,8 @@ const char* tr_getDefaultDownloadGroupDefault (void);
 #define TR_PREFS_KEY_WEBSEED_TIMEOUT_VALUE              "webseed-timeout-seconds"
 #define TR_PREFS_KEY_MAGNET_BAD_PIECE_MAX               "magnet-bad-piece-max"
 #define TR_PREFS_KEY_REDIRECT_MAXIMUM                   "redirect-maximum"
+#define TR_PREFS_KEY_MULTISCRAPE_MAXIMUM                "multiscrape-maximum"
+#define TR_PREFS_KEY_CONCURRENT_ANNOUNCE_MAXIMUM        "concurrent-announces-maximum"
 
 
 /**
@@ -981,6 +983,12 @@ void tr_sessionSetUserAgent( tr_session *, const char * userAgent );
 
 void tr_sessionSetMaxRedirect( tr_session *, int maxRedirect );
 int  tr_sessionGetMaxRedirect( const tr_session * );
+
+void tr_sessionSetMaxMultiscrape( tr_session *, int maxMultiscrape );
+int  tr_sessionGetMaxMultiscrape( const tr_session * );
+
+void tr_sessionSetMaxConcurrentAnnounces( tr_session *, int maxConcurrentAnnounces );
+int  tr_sessionGetMaxConcurrentAnnounces( const tr_session * );
 
 /**
 ***
