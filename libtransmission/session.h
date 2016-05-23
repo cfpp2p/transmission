@@ -27,6 +27,7 @@
  #endif
 #endif
 
+#include "announcer.h"
 #include "bandwidth.h"
 #include "bencode.h"
 #include "bitfield.h"
@@ -53,7 +54,6 @@ struct event_base;
 struct evdns_base;
 
 struct tr_address;
-struct tr_announcer;
 struct tr_announcer_udp;
 struct tr_bindsockets;
 struct tr_cache;
@@ -136,6 +136,8 @@ struct tr_session
     int                          webseedTimeout;
 
     int                          maxRedirect;
+    int                          maxMultiscrape;
+    int                          maxConcurrentAnnounces;
 
     tr_benc                      removedTorrents;
 
