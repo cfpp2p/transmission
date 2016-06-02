@@ -254,6 +254,7 @@ const char* tr_getDefaultDownloadGroupDefault (void);
 #define TR_PREFS_KEY_REDIRECT_MAXIMUM                   "redirect-maximum"
 #define TR_PREFS_KEY_MULTISCRAPE_MAXIMUM                "multiscrape-maximum"
 #define TR_PREFS_KEY_CONCURRENT_ANNOUNCE_MAXIMUM        "concurrent-announces-maximum"
+#define TR_PREFS_KEY_CLEAN_JSON_UTF                     "clean-json-utf-enabled"
 
 
 /**
@@ -989,6 +990,9 @@ int  tr_sessionGetMaxMultiscrape( const tr_session * );
 
 void tr_sessionSetMaxConcurrentAnnounces( tr_session *, int maxConcurrentAnnounces );
 int  tr_sessionGetMaxConcurrentAnnounces( const tr_session * );
+
+void tr_sessionSetCleanJsonUtf( tr_session *, bool );
+bool tr_sessionGetCleanJsonUtf( const tr_session * );
 
 /**
 ***

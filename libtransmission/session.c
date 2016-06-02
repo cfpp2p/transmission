@@ -367,7 +367,7 @@ tr_sessionGetDefaultSettings( tr_benc * d )
 
     assert( tr_bencIsDict( d ) );
 
-    tr_bencDictReserve( d, 90);
+    tr_bencDictReserve( d, 91);
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_ENABLED,               false );
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_WEBSEEDS,              false );
     tr_bencDictAddBool( d, TR_PREFS_KEY_IPV6_ENABLED,                    false );
@@ -454,6 +454,7 @@ tr_sessionGetDefaultSettings( tr_benc * d )
     tr_bencDictAddInt ( d, TR_PREFS_KEY_REDIRECT_MAXIMUM,                16 );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_MULTISCRAPE_MAXIMUM,             64 );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_CONCURRENT_ANNOUNCE_MAXIMUM,     48 );
+    tr_bencDictAddBool( d, TR_PREFS_KEY_CLEAN_JSON_UTF,                  false );
 
   tr_bencDictAddStr  (d, TR_PREFS_KEY_DOWNLOAD_GROUP_DEFAULT,          tr_getDefaultDownloadGroupDefault ());
   knownGroups = tr_getDefaultDownloadGroups ();
@@ -469,7 +470,7 @@ tr_sessionGetSettings( tr_session * s, struct tr_benc * d )
 
     assert( tr_bencIsDict( d ) );
 
-    tr_bencDictReserve( d, 89 );
+    tr_bencDictReserve( d, 90 );
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_ENABLED,                tr_blocklistIsEnabled( s ) );
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_WEBSEEDS,               s->blockListWebseeds );
     tr_bencDictAddBool( d, TR_PREFS_KEY_IPV6_ENABLED,                     s->ipv6Enabled );
@@ -555,6 +556,7 @@ tr_sessionGetSettings( tr_session * s, struct tr_benc * d )
     tr_bencDictAddInt ( d, TR_PREFS_KEY_REDIRECT_MAXIMUM,                 s->maxRedirect );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_MULTISCRAPE_MAXIMUM,              s->maxMultiscrape );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_CONCURRENT_ANNOUNCE_MAXIMUM,      s->maxConcurrentAnnounces );
+    tr_bencDictAddBool( d, TR_PREFS_KEY_CLEAN_JSON_UTF,                   tr_sessionGetCleanJsonUtf( s ) );
 
   tr_bencDictAddStr  (d, TR_PREFS_KEY_DOWNLOAD_GROUP_DEFAULT,       tr_sessionGetDownloadGroupDefault (s));
   knownGroups = tr_sessionGetDownloadGroups (s);
@@ -957,6 +959,8 @@ sessionSetImpl( void * vdata )
         session->maxMultiscrape = ( ( i >= 0 ) && ( i < 65 ) ) ? i : 64 ;
     if( tr_bencDictFindInt( settings, TR_PREFS_KEY_CONCURRENT_ANNOUNCE_MAXIMUM, &i ) )
         session->maxConcurrentAnnounces = ( i >= 0 ) ? i : -1 ;
+    if( tr_bencDictFindBool( settings, TR_PREFS_KEY_CLEAN_JSON_UTF, &boolVal ) )
+        session->cleanUTFenabled = boolVal;
 
   if (tr_bencDictFindList (settings, TR_PREFS_KEY_DOWNLOAD_GROUPS, &groups))
   {
@@ -3338,6 +3342,23 @@ tr_sessionGetQueueStalledEnabled( const tr_session * session )
     assert( tr_isSession( session ) );
 
     return session->stalledEnabled;
+}
+
+void
+tr_sessionSetCleanJsonUtf( tr_session * session, bool is_enabled )
+{
+    assert( tr_isSession( session ) );
+    assert( tr_isBool( is_enabled ) );
+
+    session->cleanUTFenabled = is_enabled;
+}
+  
+bool
+tr_sessionGetCleanJsonUtf( const tr_session * session )
+{
+    assert( tr_isSession( session ) );
+
+    return session->cleanUTFenabled;
 }
 
 int
