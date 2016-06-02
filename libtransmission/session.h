@@ -126,6 +126,7 @@ struct tr_session
     bool                         prefetchMagnets;
     bool                         dropInterruptedWebseeds;
     bool                         blockListWebseeds;
+    bool                         cleanUTFenabled;
 
     int                          reverifyTorrents;
     tr_cheatMode_t               cheatModeDefault;

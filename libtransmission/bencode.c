@@ -1392,20 +1392,16 @@ jsonStringFunc( const tr_benc * val, void * vdata )
 
     for( ; it!=end; ++it )
     {
-        switch( *it )
-        {
-            case '\b': *outwalk++ = '\\'; *outwalk++ = 'b'; break;
-            case '\f': *outwalk++ = '\\'; *outwalk++ = 'f'; break;
-            case '\n': *outwalk++ = '\\'; *outwalk++ = 'n'; break;
-            case '\r': *outwalk++ = '\\'; *outwalk++ = 'r'; break;
-            case '\t': *outwalk++ = '\\'; *outwalk++ = 't'; break;
-            case '"' : *outwalk++ = '\\'; *outwalk++ = '"'; break;
-            case '\\': *outwalk++ = '\\'; *outwalk++ = '\\'; break;
+        if( *it < 0x20 )
+            switch( *it )
+            {
+                case '\b': *outwalk++ = '\\'; *outwalk++ = 'b'; break;
+                case '\f': *outwalk++ = '\\'; *outwalk++ = 'f'; break;
+                case '\n': *outwalk++ = '\\'; *outwalk++ = 'n'; break;
+                case '\r': *outwalk++ = '\\'; *outwalk++ = 'r'; break;
+                case '\t': *outwalk++ = '\\'; *outwalk++ = 't'; break;
 
-            default:
-                if( isascii( *it ) )
-                    *outwalk++ = *it;
-                else {
+                default: {
                     const UTF8 * tmp = it;
                     UTF32        buf[1] = { 0 };
                     UTF32 *      u32 = buf;
@@ -1415,6 +1411,28 @@ jsonStringFunc( const tr_benc * val, void * vdata )
                         it = tmp - 1;
                     }
                 }
+            }
+        else if( *it < 0x80 )
+            switch( *it )
+            {
+                case '"' : *outwalk++ = '\\'; *outwalk++ = '"'; break;
+                case '\\': *outwalk++ = '\\'; *outwalk++ = '\\'; break;
+
+                default:
+                    *outwalk++ = *it;
+            }
+        else
+        {
+            const UTF8 * tmp = it;
+            UTF32        buf[1] = { 0 };
+            UTF32 *      u32 = buf;
+            ConversionResult result = ConvertUTF8toUTF32( &tmp, end, &u32, buf + 1, 0 );
+            if((( result==conversionOK ) || (result==targetExhausted)) && (tmp!=it)) {
+                outwalk += tr_snprintf( outwalk, outend-outwalk, "\\u%04x", (unsigned int)buf[0] );
+                it = tmp - 1;
+            }
+            else
+                *outwalk++ = *it;
         }
     }
 

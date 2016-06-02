@@ -1791,6 +1791,8 @@ sessionSet( tr_session               * session,
         tr_sessionSetMaxMultiscrape( session, i );
     if( tr_bencDictFindInt( args_in, TR_PREFS_KEY_CONCURRENT_ANNOUNCE_MAXIMUM, &i ) )
         tr_sessionSetMaxConcurrentAnnounces( session, i );
+    if( tr_bencDictFindBool( args_in, TR_PREFS_KEY_CLEAN_JSON_UTF, &boolVal ) )
+        tr_sessionSetCleanJsonUtf( session, boolVal );
 
     notify( session, TR_RPC_SESSION_CHANGED, NULL );
 
@@ -1934,6 +1936,7 @@ sessionGet( tr_session               * s,
     tr_bencDictAddInt ( d, TR_PREFS_KEY_REDIRECT_MAXIMUM, tr_sessionGetMaxRedirect( s ) );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_MULTISCRAPE_MAXIMUM, tr_sessionGetMaxMultiscrape( s ) );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_CONCURRENT_ANNOUNCE_MAXIMUM, tr_sessionGetMaxConcurrentAnnounces( s ) );
+    tr_bencDictAddBool( d, TR_PREFS_KEY_CLEAN_JSON_UTF, tr_sessionGetCleanJsonUtf( s ) );
 
     return NULL;
 }

@@ -170,7 +170,7 @@ path_is_harmful( const char * path )
 }
 
 static bool
-getfile( char ** setme, const char * root, tr_benc * path, struct evbuffer * buf )
+getfile( char ** setme, const char * root, tr_benc * path, struct evbuffer * buf, const bool cleanFiles )
 {
     bool success = false;
 
@@ -191,7 +191,11 @@ getfile( char ** setme, const char * root, tr_benc * path, struct evbuffer * buf
             }
         }
 
-        *setme = tr_utf8clean( (char*)evbuffer_pullup( buf, -1 ), evbuffer_get_length( buf ) );
+        if( cleanFiles )
+            *setme = tr_utf8clean( (char*)evbuffer_pullup( buf, -1 ), evbuffer_get_length( buf ) );
+        else
+            *setme = tr_strndup( (char*)evbuffer_pullup( buf, -1 ), evbuffer_get_length( buf ) );
+
         /* fprintf( stderr, "[%s]\n", *setme ); */
         success = true;
     }
@@ -207,7 +211,7 @@ getfile( char ** setme, const char * root, tr_benc * path, struct evbuffer * buf
 }
 
 static const char*
-parseFiles( tr_info * inf, tr_benc * files, const tr_benc * length )
+parseFiles( tr_info * inf, tr_benc * files, const tr_benc * length, const bool cleanFiles )
 {
     int64_t len;
 
@@ -239,7 +243,7 @@ parseFiles( tr_info * inf, tr_benc * files, const tr_benc * length )
                     return "path";
                 }
 
-            if( !getfile( &inf->files[i].name, inf->name, path, buf ) ) {
+            if( !getfile( &inf->files[i].name, inf->name, path, buf, cleanFiles ) ) {
                 evbuffer_free( buf );
                 return "path";
             }
@@ -535,7 +539,10 @@ tr_metainfoParseImpl( const tr_session  * session,
         if( !str || !*str )
             return "name";
         tr_free( inf->name );
-        inf->name = tr_utf8clean( str, -1 );
+        if( session && session->cleanUTFenabled )
+            inf->name = tr_utf8clean( str, -1 );
+        else
+            inf->name = tr_strdup( str );
     }
 
     /* comment */
@@ -543,14 +550,20 @@ tr_metainfoParseImpl( const tr_session  * session,
         if( !tr_bencDictFindStr( meta, "comment", &str ) )
             str = "";
     tr_free( inf->comment );
-    inf->comment = tr_utf8clean( str, -1 );
+    if( session && session->cleanUTFenabled )
+        inf->comment = tr_utf8clean( str, -1 );
+    else
+        inf->comment = tr_strdup( str );
 
     /* created by */
     if( !tr_bencDictFindStr( meta, "created by.utf-8", &str ) )
         if( !tr_bencDictFindStr( meta, "created by", &str ) )
             str = "";
     tr_free( inf->creator );
-    inf->creator = tr_utf8clean( str, -1 );
+    if( session && session->cleanUTFenabled )
+        inf->creator = tr_utf8clean( str, -1 );
+    else
+        inf->creator = tr_strdup( str );
 
     /* creation date */
     if( !tr_bencDictFindInt( meta, "creation date", &i ) )
@@ -586,7 +599,7 @@ tr_metainfoParseImpl( const tr_session  * session,
     /* files */
     if( !isMagnet ) {
         if( ( str = parseFiles( inf, tr_bencDictFind( infoDict, "files" ),
-                                     tr_bencDictFind( infoDict, "length" ) ) ) )
+                                     tr_bencDictFind( infoDict, "length" ), session->cleanUTFenabled ) ) )
             return str;
         if( !inf->fileCount || !inf->totalSize )
             return "files";
