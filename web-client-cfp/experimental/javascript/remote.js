@@ -62,7 +62,7 @@ TransmissionRemote.prototype =
 		dialog.confirm('Connection Failed',
 			'Could not connect to the server. You may need to reload the page to reconnect.',
 			'Details',
-			'alert(remote._error);',
+			'alert(\'\\r\\nAjax had an error!\\r\\n\' + transmission.remote._error);',
 			null,
 			'Dismiss');
 		remote._controller.togglePeriodicSessionRefresh(false);
