@@ -805,7 +805,8 @@ sendLtepHandshake( tr_peermsgs * msgs )
     msgs->clientSentLtepHandshake = 1;
 
     /* decide if we want to advertise metadata xfer support (BEP 9) */
-    if( tr_torrentIsPrivate( msgs->torrent ) )
+    if( tr_torrentIsPrivate( msgs->torrent )
+        || ( tr_torrentHasMetadata( msgs->torrent ) && msgs->torrent->session->maxMagnetBadPiece == 1 ) )
         allow_metadata_xfer = 0;
     else
         allow_metadata_xfer = 1;
@@ -1003,8 +1004,10 @@ parseUtMetadata( tr_peermsgs * msgs, int msglen, struct evbuffer * inbuf )
     if( msg_type == METADATA_MSG_TYPE_REQUEST )
     {
         if( ( piece >= 0 )
+            && ( piece < ( ( msgs->torrent->infoDictLength + ( METADATA_PIECE_SIZE - 1 ) ) / METADATA_PIECE_SIZE ) )
             && tr_torrentHasMetadata( msgs->torrent )
             && !tr_torrentIsPrivate( msgs->torrent )
+            && ( msgs->torrent->session->maxMagnetBadPiece != 1 )
             && ( msgs->peerAskedForMetadataCount < METADATA_REQQ ) )
         {
             msgs->peerAskedForMetadata[msgs->peerAskedForMetadataCount++] = piece;
