@@ -1895,7 +1895,10 @@ fillOutputBuffer( tr_peermsgs * msgs, time_t now )
     if( ( tr_peerIoGetWriteBufferSpace( msgs->peer->io, now ) >= msgs->torrent->blockSize )
         && popNextRequest( msgs, &req ) )
     {
-        --msgs->prefetchCount;
+        if( msgs->prefetchCount > 0 )
+            --msgs->prefetchCount;
+        else
+            tr_torrentSetLocalError( msgs->torrent, _( "prefetch counter corrupt! prefetchCount value is %d . Upload failed." ), msgs->prefetchCount );
 
         if( requestIsValid( msgs, &req )
             && tr_cpPieceIsComplete( &msgs->torrent->completion, req.index )
