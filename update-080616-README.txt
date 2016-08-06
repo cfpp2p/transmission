@@ -1,4 +1,4 @@
-April 20, 2016
+August 6, 2016
 
 This update is for current transmission-daemon-cygwin cfpp2p
 
@@ -21,6 +21,15 @@ _____________________________________________________________________
 transmission-daemon.exe
 
 Replace the original "transmission-daemon.exe" with this update.
+
+`prefetchCount` can become less than zero.
+https://trac.transmissionbt.com/ticket/6164
+cfpp2p committed Aug 1, 2016
+
+Prevent invalid requests for magnet metadata pieces.
+Fixes https://trac.transmissionbt.com/ticket/6160
+Also, add setting for zero upload of magnet links.
+cfpp2p committed Jul 27, 2016
 
 From: cfpp2p <cfpp2p>
 Date: Wed, 1 Jun 2016 19:56:30 -0500
@@ -63,6 +72,13 @@ web client
 Replace the original "web" client with this update.
 
 changes:
+
+*****
+Enable Itorrents and Torrage
+http://itorrents.org/
+http://torrasave.download/
+remove torcache
+cfpp2p committed Aug 6, 2016
 
 *****
 From: cfpp2p <cfpp2p>
