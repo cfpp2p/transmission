@@ -1065,7 +1065,7 @@ Transmission.prototype =
                     }
 
                     if (hashValid)
-                        url = 'https://torcache.net/torrent/' + hash + '.torrent';
+                        url = 'http://itorrents.org/torrent/' + hash + '.torrent';
                 };
 				var o = {
 					'method': 'torrent-add',
@@ -1076,9 +1076,25 @@ Transmission.prototype =
 						'filename': url
 					}
 				};
-				remote.sendRequest (o, function(response) {
-//					if (response.result != 'success')
-					alert(response.result + '\r\nadding torrent by URL\r\n"' + url + '"');
+				remote.sendRequest(o, function(response) {
+					if ((response.result != 'success') && (response.result != 'duplicate torrent') && hashValid) {
+						url = 'http://torrasave.download/torrent/' + hash + '.torrent';
+						o = {
+							'method': 'torrent-add',
+							arguments: {
+								'paused': paused,
+								'download-dir': destination,
+								'downloadGroup': group,
+								'filename': url
+							}
+						};
+						remote.sendRequest(o, function(response) {
+							alert(response.result + '\r\nadding torrent by URL\r\n"' + url + '"');
+							remote._controller.refreshTorrents();
+						});
+					} else {
+						alert(response.result + '\r\nadding torrent by URL\r\n"' + url + '"');
+					}
 				});
 			}
 		}
