@@ -324,8 +324,9 @@ tr_torrentSetMetadataPiece( tr_torrent  * tor, int piece, const void  * data, in
 
                     if( success && !tr_getBlockSize( info.pieceSize ) )
                     {
-                        tr_torrentSetLocalError( tor, "%s", _( "Magnet torrent's metadata is not usable" ) );
+                        tr_torrentSetLocalError( tor, "%s", _( "Magnet metadata unusable -- bad BlockSize from pieceSize" ) );
                         success = false;
+                        tr_metainfoFree( &info );
                     }
 
                     if( success )
