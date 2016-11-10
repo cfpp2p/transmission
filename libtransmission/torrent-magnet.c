@@ -312,15 +312,11 @@ tr_torrentSetMetadataPiece( tr_torrent  * tor, int piece, const void  * data, in
                     tr_info info;
                     int infoDictLength;
 
-                    /* remove any old .torrent and .resume files */
-                    remove( path );
-                    tr_torrentRemoveResume( tor );
-
-                    dbgmsg( tor, "Saving completed metadata to \"%s\"", path );
                     tr_bencMergeDicts( tr_bencDictAddDict( &newMetainfo, "info", 0 ), &infoDict );
 
                     memset( &info, 0, sizeof( tr_info ) );
                     success = tr_metainfoParse( tor->session, &newMetainfo, &info, &hasInfo, &infoDictLength );
+                    dbgmsg( tor, "Parsed completed metadata info -length- %d", infoDictLength );
 
                     if( success && !tr_getBlockSize( info.pieceSize ) )
                     {
@@ -331,6 +327,11 @@ tr_torrentSetMetadataPiece( tr_torrent  * tor, int piece, const void  * data, in
 
                     if( success )
                     {
+                        /* remove any old .torrent and .resume files */
+                        remove( path );
+                        tr_torrentRemoveResume( tor );
+
+                        dbgmsg( tor, "Saving completed metadata to \"%s\"", path );
                         /* keep the new info */
                         tor->info = info;
                         tor->infoDictLength = infoDictLength;
