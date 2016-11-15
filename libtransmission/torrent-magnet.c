@@ -287,6 +287,7 @@ tr_torrentSetMetadataPiece( tr_torrent  * tor, int piece, const void  * data, in
     if( m->piecesNeededCount == 0 )
     {
         bool success = false;
+        bool validBlockSize = false;
         bool checksumPassed = false;
         bool metainfoParsed = false;
         uint8_t sha1[SHA_DIGEST_LENGTH];
@@ -320,12 +321,15 @@ tr_torrentSetMetadataPiece( tr_torrent  * tor, int piece, const void  * data, in
 
                     if( success && !tr_getBlockSize( info.pieceSize ) )
                     {
-                        tr_torrentSetLocalError( tor, "%s", _( "Magnet metadata unusable -- bad BlockSize from pieceSize" ) );
-                        success = false;
+                        validBlockSize = false;
                         tr_metainfoFree( &info );
                     }
+                    else
+                    {
+                        validBlockSize = success;
+                    }
 
-                    if( success )
+                    if( validBlockSize )
                     {
                         /* remove any old .torrent and .resume files */
                         remove( path );
@@ -351,7 +355,7 @@ tr_torrentSetMetadataPiece( tr_torrent  * tor, int piece, const void  * data, in
             }
         }
 
-        if( success )
+        if( validBlockSize )
         {
             incompleteMetadataFree( tor->incompleteMetadata );
             tor->incompleteMetadata = NULL;
@@ -362,7 +366,19 @@ tr_torrentSetMetadataPiece( tr_torrent  * tor, int piece, const void  * data, in
         }
         else /* drat. */
         {
-            if( ++m->bad_piece_count > tor->session->maxMagnetBadPiece )
+            if( !validBlockSize && success )
+            {
+                incompleteMetadataFree( tor->incompleteMetadata );
+                tor->incompleteMetadata = NULL;
+                tr_torrentSetLocalError( tor, "%s", _( "Magnet metadata unusable -- bad BlockSize from pieceSize" ) );
+            }
+            else if( checksumPassed )
+            {
+                incompleteMetadataFree( tor->incompleteMetadata );
+                tor->incompleteMetadata = NULL;
+                tr_torrentSetLocalError( tor, "%s", _( "Magnet metadata unusable -- parse fail with checksum pass" ) );
+            }
+            else if( ++m->bad_piece_count > tor->session->maxMagnetBadPiece )
             {
                 incompleteMetadataFree( tor->incompleteMetadata );
                 tor->incompleteMetadata = NULL;
