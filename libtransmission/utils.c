@@ -1005,7 +1005,7 @@ tr_privateTrackerOn( const char * url )
     }
     else
     {
-        return !memcmp(url,"privateON",10);
+        return !memcmp(url,"privateON",9);
     }
 }
 

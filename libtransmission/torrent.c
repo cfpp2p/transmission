@@ -752,7 +752,7 @@ tr_getBlockSize( uint32_t pieceSize )
 // try for the LARGEST block size we can find
 // not just any one thats greater than 8192 as per previous revision
 // this way we are more efficient and less overhead
-    while( (b > 8193) && (pieceSize % b) )
+    while( (b > 0) && (pieceSize % b) )
         b--;
 
     if( pieceSize % b ) /* not cleanly divisible */
@@ -867,6 +867,16 @@ localErrFilesDisappearedUE( tr_torrent * tor )
     }
 
     return disappeared;
+}
+
+static bool
+blockSizeVerySmall( tr_torrent * tor )
+{
+    const bool small = ( tor->blockSize < 8193 );
+
+    tr_torinf( tor, "block size of (%d)", tor->blockSize );
+
+    return small;
 }
 
 static bool fileExists( const char * filename, time_t * optional_mtime );
@@ -1840,6 +1850,7 @@ freeTorrent( tr_torrent * tor )
     tr_free( tor->downloadDir );
     tr_free( tor->pieceTempDir );
     tr_free( tor->incompleteDir );
+    tr_free( tor->downloadGroup );
 
     if( tor == session->torrentList )
         session->torrentList = tor->next;
@@ -1967,6 +1978,12 @@ torrentStart( tr_torrent * tor, bool bypass_queue )
     if( path_is_bad( tor->pieceTempDir ) )
     {
         tr_torrentSetLocalError( tor, "Illegal pieceTemp directory: (%s) Change default setting then remove/re-add torrent", tor->pieceTempDir );
+        return;
+    }
+
+    if( blockSizeVerySmall( tor ) && !bypass_queue && tr_torrentHasMetadata( tor ) )
+    {
+        tr_torrentSetLocalError( tor, "WARNING!: small block size (%d), use Start/Resume Now to start", tor->blockSize );
         return;
     }
 

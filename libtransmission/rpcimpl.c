@@ -29,6 +29,7 @@
 #include "crypto.h"
 #include "fdlimit.h"
 #include "json.h"
+#include "peer-mgr.h"
 #include "rpcimpl.h"
 #include "session.h"
 #include "torrent.h"
@@ -970,6 +971,42 @@ freeTrackers( tr_tracker_info * trackers, int n )
     tr_free( trackers );
 }
 
+static bool
+addPeer (tr_torrent * tor,
+         const char * str)
+{
+  if( ( str == NULL ) || ( strlen( str ) < 10 ) )
+    return false;
+
+  if( memcmp(str,"add peer ",9) )
+    return false;
+
+  bool valid = false;
+  const char * delim = strchr (str, ':');
+
+  if (delim && tor->isRunning && !tor->isStopping)
+    {
+      struct tr_pex pex;
+      char * host;
+      int port = atoi (delim + 1);
+
+      memset( &pex, 0, sizeof( tr_pex ) );
+	
+      if (port >= 0 && port <= USHRT_MAX)
+        {
+          host = tr_strndup (str + 9, delim - str - 9);
+          if (tr_address_from_string (&pex.addr, host))
+            {
+              pex.port = htons (port);
+              tr_peerMgrAddPex (tor, TR_PEER_FROM_PEX , &pex, -1);
+              valid = true;
+            }
+          tr_free (host);
+        }
+    }
+  return valid;
+}
+
 static const char*
 addTrackerUrls( tr_torrent * tor, tr_benc * urls )
 {
@@ -997,7 +1034,12 @@ addTrackerUrls( tr_torrent * tor, tr_benc * urls )
 
         if( tr_bencGetStr( val, &announce ) )
         {
-            if( tr_urlIsValidTracker( announce )
+            if( addPeer( tor, announce ) )
+            {
+                errmsg = tr_strdup_printf( "%s -- peer added", announce );
+                changedFlag = true;
+            }
+            else if( tr_urlIsValidTracker( announce )
                 && !findAnnounceUrl( trackers, n, announce, NULL ) )
             {
                 trackers[n].tier = ++tier; /* add a new tier */
@@ -1043,7 +1085,7 @@ addTrackerUrls( tr_torrent * tor, tr_benc * urls )
     }
 
     if( !addedURL && !changedFlag )
-        errmsg = "invalid argument or 0 entered";
+        errmsg = "invalid argument, 0 entered, or torrent not running";
     else
         if( addedURL )
             if( !tr_torrentSetAnnounceList( tor, trackers, n ) )
