@@ -119,7 +119,9 @@ typedef enum
 {
     TR_FMT_BENC,
     TR_FMT_JSON,
-    TR_FMT_JSON_LEAN /* saves bandwidth by omitting all whitespace. */
+    TR_FMT_JSON_LEAN, /* saves bandwidth by omitting all whitespace. */
+    TR_FMT_BENC_TORRENT,
+    TR_FMT_INFO_DICT
 }
 tr_fmt_mode;
 

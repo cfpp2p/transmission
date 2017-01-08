@@ -48,6 +48,14 @@
 ***
 **/
 
+typedef enum
+{
+    TR_SORT_NONE,
+    TR_SORT_FULL,
+    TR_SORT_TORRENT
+}
+tr_sort_method;
+
 static bool
 isContainer( const tr_benc * val )
 {
@@ -1048,13 +1056,22 @@ static void
 bencWalk( const tr_benc          * top,
           const struct WalkFuncs * walkFuncs,
           void                   * user_data,
-          bool                     sort_dicts )
+          tr_sort_method           sort_method )
 {
     int stackSize = 0;
     int stackAlloc = 64;
     struct SaveNode * stack = tr_new( struct SaveNode, stackAlloc );
 
-    nodeInit( &stack[stackSize++], top, sort_dicts );
+    // tr_dbg( "recursive bencode walk sort method %d", sort_method );
+
+    if( sort_method == TR_SORT_NONE )
+        nodeInit( &stack[stackSize++], top, false );
+    else
+    {
+        if( sort_method == TR_SORT_TORRENT )
+            sort_method = TR_SORT_NONE;
+        nodeInit( &stack[stackSize++], top, true );
+    }
 
     while( stackSize > 0 )
     {
@@ -1106,7 +1123,10 @@ bencWalk( const tr_benc          * top,
                             stackAlloc *= 2;
                             stack = tr_renew( struct SaveNode, stack, stackAlloc );
                         }
-                        nodeInit( &stack[stackSize++], val, sort_dicts );
+                        if( sort_method == TR_SORT_FULL )
+                            nodeInit( &stack[stackSize++], val, true );
+                        else
+                            nodeInit( &stack[stackSize++], val, false );
                     }
                     break;
 
@@ -1118,7 +1138,10 @@ bencWalk( const tr_benc          * top,
                             stackAlloc *= 2;
                             stack = tr_renew( struct SaveNode, stack, stackAlloc );
                         }
-                        nodeInit( &stack[stackSize++], val, sort_dicts );
+                        if( sort_method == TR_SORT_FULL )
+                            nodeInit( &stack[stackSize++], val, true );
+                        else
+                            nodeInit( &stack[stackSize++], val, false );
                     }
                     break;
 
@@ -1235,7 +1258,7 @@ void
 tr_bencFree( tr_benc * val )
 {
     if( isSomething( val ) )
-        bencWalk( val, &freeWalkFuncs, NULL, false );
+        bencWalk( val, &freeWalkFuncs, NULL, TR_SORT_NONE );
 }
 
 /***
@@ -1660,7 +1683,15 @@ tr_bencToBuf( const tr_benc * top, tr_fmt_mode mode )
     switch( mode )
     {
         case TR_FMT_BENC:
-            bencWalk( top, &saveFuncs, buf, true );
+            bencWalk( top, &saveFuncs, buf, TR_SORT_FULL );
+            break;
+
+        case TR_FMT_BENC_TORRENT:
+            bencWalk( top, &saveFuncs, buf, TR_SORT_TORRENT );
+            break;
+
+        case TR_FMT_INFO_DICT:
+            bencWalk( top, &saveFuncs, buf, TR_SORT_NONE );
             break;
 
         case TR_FMT_JSON:
@@ -1669,7 +1700,7 @@ tr_bencToBuf( const tr_benc * top, tr_fmt_mode mode )
             data.doIndent = mode==TR_FMT_JSON;
             data.out = buf;
             data.parents = NULL;
-            bencWalk( top, &jsonWalkFuncs, &data, true );
+            bencWalk( top, &jsonWalkFuncs, &data, TR_SORT_FULL );
             if( evbuffer_get_length( buf ) )
                 evbuffer_add_printf( buf, "\n" );
             break;

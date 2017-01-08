@@ -149,7 +149,7 @@ tr_ctorSetMetainfoFromFile( tr_ctor *    ctor,
 
     setSourceFile( ctor, filename );
 
-    /* if no `name' field was set, then set it from the filename */
+    /* if no `name' field was set, then set it from the filename
     if( ctor->isSet_metainfo )
     {
         tr_benc * info;
@@ -166,7 +166,7 @@ tr_ctorSetMetainfoFromFile( tr_ctor *    ctor,
                 tr_free( base );
             }
         }
-    }
+    }   */
 
     tr_free( metainfo );
     return err;
