@@ -140,7 +140,7 @@ findInfoDictOffset( const tr_torrent * tor )
             if( tr_bencDictFindDict( &top, "info", &infoDict ) )
             {
                 int infoLen;
-                char * infoContents = tr_bencToStr( infoDict, TR_FMT_BENC, &infoLen );
+                char * infoContents = tr_bencToStr( infoDict, TR_FMT_INFO_DICT, &infoLen );
                 const uint8_t * i = (const uint8_t*) tr_memmem( (char*)fileContents, fileLen, infoContents, infoLen );
                 offset = i != NULL ? i - fileContents : 0;
                 tr_free( infoContents );
@@ -341,7 +341,7 @@ tr_torrentSetMetadataPiece( tr_torrent  * tor, int piece, const void  * data, in
                         tor->infoDictLength = infoDictLength;
 
                         /* save the new .torrent file */
-                        tr_bencToFile( &newMetainfo, TR_FMT_BENC, tor->info.torrent );
+                        tr_bencToFile( &newMetainfo, TR_FMT_BENC_TORRENT, tor->info.torrent );
                         tr_sessionSetTorrentFile( tor->session, tor->info.hashString, tor->info.torrent );
                         tr_torrentGotNewInfoDict( tor );
                         tr_torrentSetDirty( tor );

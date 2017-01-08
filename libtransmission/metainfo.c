@@ -507,7 +507,10 @@ tr_metainfoParseImpl( const tr_session  * session,
             /* maybe get the display name */
             if( tr_bencDictFindStr( d, "display-name", &str ) ) {
                 tr_free( inf->name );
-                inf->name = tr_strdup( str );
+                if( strlen( str ) > 50 )
+                    inf->name = tr_strndup( str, 50 );
+                else
+                    inf->name = tr_strdup( str );
             }
 
             if( !inf->name )
@@ -521,7 +524,7 @@ tr_metainfoParseImpl( const tr_session  * session,
     else
     {
         int len;
-        char * bstr = tr_bencToStr( infoDict, TR_FMT_BENC, &len );
+        char * bstr = tr_bencToStr( infoDict, TR_FMT_INFO_DICT, &len );
         tr_sha1( inf->hash, bstr, len, NULL );
         tr_sha1_to_hex( inf->hashString, inf->hash );
 
@@ -537,12 +540,24 @@ tr_metainfoParseImpl( const tr_session  * session,
             if( !tr_bencDictFindStr( infoDict, "name", &str ) )
                 str = "";
         if( !str || !*str )
-            return "name";
-        tr_free( inf->name );
-        if( session && session->cleanUTFenabled )
-            inf->name = tr_utf8clean( str, -1 );
+        {
+            char * nowName;
+            nowName = tr_strdup_printf( "no-name.%16.16s", inf->hashString );
+            tr_free( inf->name );
+            if( session && session->cleanUTFenabled )
+                inf->name = tr_utf8clean( nowName, -1 );
+            else
+                inf->name = tr_strdup( nowName );
+            tr_free( nowName );
+        }
         else
-            inf->name = tr_strdup( str );
+        {
+            tr_free( inf->name );
+            if( session && session->cleanUTFenabled )
+                inf->name = tr_utf8clean( str, -1 );
+            else
+                inf->name = tr_strdup( str );
+        }
     }
 
     /* comment */

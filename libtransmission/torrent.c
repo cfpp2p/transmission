@@ -1169,7 +1169,7 @@ torrentInit( tr_torrent * tor, const tr_ctor * ctor )
         if( !tr_ctorGetMetainfo( ctor, &val ) )
         {
             const char * path = tor->info.torrent;
-            const int err = tr_bencToFile( val, TR_FMT_BENC, path );
+            const int err = tr_bencToFile( val, TR_FMT_BENC_TORRENT, path );
             if( err )
                 tr_torrentSetLocalError( tor, "Unable to save torrent file: %s", tr_strerror( err ) );
             tr_sessionSetTorrentFile( tor->session, tor->info.hashString, path );
@@ -3326,7 +3326,7 @@ tr_torrentSetAnnounceList( tr_torrent             * tor,
             tmpInfo.trackerCount = swap.trackerCount;
 
             tr_metainfoFree( &tmpInfo );
-            tr_bencToFile( &metainfo, TR_FMT_BENC, tor->info.torrent );
+            tr_bencToFile( &metainfo, TR_FMT_BENC_TORRENT, tor->info.torrent );
         }
 
         /* cleanup */
