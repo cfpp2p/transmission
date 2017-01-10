@@ -327,7 +327,7 @@ main( int argc, char * argv[] )
         if( changed )
         {
             ++changedCount;
-            tr_bencToFile( &top, TR_FMT_BENC, filename );
+            tr_bencToFile( &top, TR_FMT_BENC_TORRENT, filename );
         }
 
         tr_bencFree( &top );
