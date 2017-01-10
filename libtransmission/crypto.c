@@ -62,6 +62,7 @@ tr_sha1( uint8_t * setme, const void * content1, int content1_len, ... )
 
 #define DH_PRIVKEY_LEN_MIN 16
 #define DH_PRIVKEY_LEN 20
+#define SALTVAL_LEN 8
 
 static const uint8_t dh_P[PRIME_LEN] =
 {
@@ -343,26 +344,25 @@ tr_cryptoRandBuf( void * buf, size_t len )
 char*
 tr_ssha1( const void * plaintext )
 {
-    enum { saltval_len = 8,
-           salter_len  = 64 };
+    enum { salter_len  = 64 };
     static const char * salter = "0123456789"
                                  "abcdefghijklmnopqrstuvwxyz"
                                  "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                                  "./";
 
     size_t i;
-    unsigned char salt[saltval_len];
+    unsigned char salt[SALTVAL_LEN];
     uint8_t sha[SHA_DIGEST_LENGTH];
-    char buf[2*SHA_DIGEST_LENGTH + saltval_len + 2];
+    char buf[2*SHA_DIGEST_LENGTH + SALTVAL_LEN + 2];
 
-    tr_cryptoRandBuf( salt, saltval_len );
-    for( i=0; i<saltval_len; ++i )
+    tr_cryptoRandBuf( salt, SALTVAL_LEN );
+    for( i=0; i<SALTVAL_LEN; ++i )
         salt[i] = salter[ salt[i] % salter_len ];
 
-    tr_sha1( sha, plaintext, strlen( plaintext ), salt, saltval_len, NULL );
+    tr_sha1( sha, plaintext, strlen( plaintext ), salt, SALTVAL_LEN, NULL );
     tr_sha1_to_hex( &buf[1], sha );
-    memcpy( &buf[1+2*SHA_DIGEST_LENGTH], &salt, saltval_len );
-    buf[1+2*SHA_DIGEST_LENGTH + saltval_len] = '\0';
+    memcpy( &buf[1+2*SHA_DIGEST_LENGTH], &salt, SALTVAL_LEN );
+    buf[1+2*SHA_DIGEST_LENGTH + SALTVAL_LEN] = '\0';
     buf[0] = '{'; /* signal that this is a hash. this makes saving/restoring
                      easier */
 
@@ -373,25 +373,22 @@ bool
 tr_ssha1_matches( const char * source, const char * pass )
 {
     char * salt;
-    size_t saltlen;
     char * hashed;
     uint8_t buf[SHA_DIGEST_LENGTH];
     bool result;
-    const size_t sourcelen = strlen( source );
 
     /* extract the salt */
-    if( sourcelen < 2*SHA_DIGEST_LENGTH-1 )
+    if( ( strlen( source ) != 1 + 2*SHA_DIGEST_LENGTH + SALTVAL_LEN )  || ( source[0] != '{' ) )
         return false;
-    saltlen = sourcelen - 2*SHA_DIGEST_LENGTH-1;
-    salt = tr_malloc( saltlen );
-    memcpy( salt, source + 2*SHA_DIGEST_LENGTH+1, saltlen );
+    salt = tr_malloc( SALTVAL_LEN );
+    memcpy( salt, source + 1 + 2*SHA_DIGEST_LENGTH, SALTVAL_LEN );
 
     /* hash pass + salt */
-    hashed = tr_malloc( 2*SHA_DIGEST_LENGTH + saltlen + 2 );
-    tr_sha1( buf, pass, strlen( pass ), salt, saltlen, NULL );
+    hashed = tr_malloc( 1 + 2*SHA_DIGEST_LENGTH + SALTVAL_LEN + 1 );
+    tr_sha1( buf, pass, strlen( pass ), salt, SALTVAL_LEN, NULL );
     tr_sha1_to_hex( &hashed[1], buf );
-    memcpy( hashed + 1+2*SHA_DIGEST_LENGTH, salt, saltlen );
-    hashed[1+2*SHA_DIGEST_LENGTH + saltlen] = '\0';
+    memcpy( hashed + 1 + 2*SHA_DIGEST_LENGTH, salt, SALTVAL_LEN );
+    hashed[1 + 2*SHA_DIGEST_LENGTH + SALTVAL_LEN] = '\0';
     hashed[0] = '{';
 
     result = strcmp( source, hashed ) == 0 ? true : false;
