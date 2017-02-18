@@ -170,41 +170,52 @@ path_is_harmful( const char * path )
 }
 
 static bool
-getfile( char ** setme, const char * root, tr_benc * path, struct evbuffer * buf, const bool cleanFiles )
+getfile( char ** setme, tr_file_index_t fileIndex, const char * root, tr_benc * path, struct evbuffer * buf, const bool cleanFiles, const bool noPath )
 {
     bool success = false;
+    int n = 0;
 
-    if( tr_bencIsList( path ) )
+    if( !noPath && tr_bencIsList( path ) )
     {
         int i;
-        const int n = tr_bencListSize( path );
+        n = tr_bencListSize( path );
 
-        evbuffer_drain( buf, evbuffer_get_length( buf ) );
-        evbuffer_add( buf, root, strlen( root ) );
-        for( i = 0; i < n; ++i )
+        if( n > 0 )
         {
-            const char * str;
-            if( tr_bencGetStr( tr_bencListChild( path, i ), &str ) )
+            evbuffer_drain( buf, evbuffer_get_length( buf ) );
+            evbuffer_add( buf, root, strlen( root ) );
+
+            for( i = 0; i < n; ++i )
             {
-                evbuffer_add( buf, TR_PATH_DELIMITER_STR, 1 );
-                evbuffer_add( buf, str, strlen( str ) );
+                const char * str;
+                if( tr_bencGetStr( tr_bencListChild( path, i ), &str ) )
+                {
+                    evbuffer_add( buf, TR_PATH_DELIMITER_STR, 1 );
+                    evbuffer_add( buf, str, strlen( str ) );
+                }
             }
+
+            if( cleanFiles )
+                *setme = tr_utf8clean( (char*)evbuffer_pullup( buf, -1 ), evbuffer_get_length( buf ) );
+            else
+                *setme = tr_strndup( (char*)evbuffer_pullup( buf, -1 ), evbuffer_get_length( buf ) );
+
+            /* fprintf( stderr, "[%s]\n", *setme ); */
+            success = true;
         }
-
-        if( cleanFiles )
-            *setme = tr_utf8clean( (char*)evbuffer_pullup( buf, -1 ), evbuffer_get_length( buf ) );
-        else
-            *setme = tr_strndup( (char*)evbuffer_pullup( buf, -1 ), evbuffer_get_length( buf ) );
-
-        /* fprintf( stderr, "[%s]\n", *setme ); */
-        success = true;
     }
 
-    if( ( *setme != NULL ) && path_is_harmful( *setme ) )
+    if( ( ( *setme != NULL ) && path_is_harmful( *setme ) ) || ( n < 1 ) )
     {
+        char * nowName;
+        nowName = tr_strdup_printf( "%s" TR_PATH_DELIMITER_STR "file-number-%d", root, fileIndex );
         tr_free( *setme );
-        *setme = NULL;
-        success = false;
+        if( cleanFiles )
+            *setme = tr_utf8clean( nowName, -1 );
+        else
+            *setme = tr_strdup( nowName );
+        tr_free( nowName );
+        success = true;
     }
 
     return success;
@@ -214,8 +225,21 @@ static const char*
 parseFiles( tr_info * inf, tr_benc * files, const tr_benc * length, const bool cleanFiles )
 {
     int64_t len;
+    bool noPath;
 
     inf->totalSize = 0;
+
+    if( path_is_harmful( inf->name ) )
+    {
+        char * nowName;
+        nowName = tr_strdup_printf( "hash-name.%16.16s", inf->hashString );
+        tr_free( inf->name );
+        if( cleanFiles )
+            inf->name = tr_utf8clean( nowName, -1 );
+        else
+            inf->name = tr_strdup( nowName );
+        tr_free( nowName );
+    }
 
     if( tr_bencIsList( files ) ) /* multi-file mode */
     {
@@ -237,13 +261,12 @@ parseFiles( tr_info * inf, tr_benc * files, const tr_benc * length, const bool c
                 return "files";
             }
 
+            noPath = false;
             if( !tr_bencDictFindList( file, "path.utf-8", &path ) )
-                if( !tr_bencDictFindList( file, "path", &path ) ) {
-                    evbuffer_free( buf );
-                    return "path";
-                }
+                if( !tr_bencDictFindList( file, "path", &path ) )
+                    noPath = true;
 
-            if( !getfile( &inf->files[i].name, inf->name, path, buf, cleanFiles ) ) {
+            if( !getfile( &inf->files[i].name, i, inf->name, path, buf, cleanFiles, noPath ) ) {
                 evbuffer_free( buf );
                 return "path";
             }
@@ -261,9 +284,6 @@ parseFiles( tr_info * inf, tr_benc * files, const tr_benc * length, const bool c
     }
     else if( tr_bencGetInt( length, &len ) ) /* single-file mode */
     {
-        if( path_is_harmful( inf->name ) )
-            return "path";
-
         inf->isMultifile      = 0;
         inf->fileCount        = 1;
         inf->files            = tr_new0( tr_file, 1 );
@@ -614,7 +634,7 @@ tr_metainfoParseImpl( const tr_session  * session,
     /* files */
     if( !isMagnet ) {
         if( ( str = parseFiles( inf, tr_bencDictFind( infoDict, "files" ),
-                                     tr_bencDictFind( infoDict, "length" ), session->cleanUTFenabled ) ) )
+                                     tr_bencDictFind( infoDict, "length" ), ( session ? session->cleanUTFenabled : false ) ) ) )
             return str;
         if( !inf->fileCount || !inf->totalSize )
             return "files";
@@ -633,7 +653,7 @@ tr_metainfoParseImpl( const tr_session  * session,
 
     /* filename of Transmission's copy */
     tr_free( inf->torrent );
-    inf->torrent = session ?  getTorrentFilename( session, inf ) : NULL;
+    inf->torrent = session ? getTorrentFilename( session, inf ) : NULL;
 
     return NULL;
 }
