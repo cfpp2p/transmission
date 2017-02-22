@@ -1846,3 +1846,174 @@ tr_bencLoadFile( tr_benc * setme, tr_fmt_mode mode, const char * filename )
     return err;
 }
 
+/***
+****
+***/
+
+/***
+****
+***/
+
+static tr_benc*
+magDictAdd( tr_benc * dict, const char * key )
+{
+    tr_benc * child;
+
+    /* create it */
+    child = tr_bencDictAdd( dict, key );
+
+    return child;
+}
+
+tr_benc*
+tr_magBencDictAddInt( tr_benc *    dict,
+                      const char * key,
+                      int64_t      val )
+{
+    tr_benc * child = magDictAdd( dict, key );
+    tr_bencInitInt( child, val );
+    return child;
+}
+
+tr_benc*
+tr_magBencDictAddBool( tr_benc * dict, const char * key, bool val )
+{
+    tr_benc * child = magDictAdd( dict, key );
+    tr_bencInitBool( child, val );
+    return child;
+}
+
+tr_benc*
+tr_magBencDictAddReal( tr_benc * dict, const char * key, double val )
+{
+    tr_benc * child = magDictAdd( dict, key );
+    tr_bencInitReal( child, val );
+    return child;
+}
+
+tr_benc*
+tr_magBencDictAddRaw( tr_benc *    dict,
+                      const char * key,
+                      const void * src,
+                      size_t       len )
+{
+    tr_benc * child;
+
+    /* create it */
+    child = tr_bencDictAdd( dict, key );
+
+    /* set it */
+    tr_bencInitRaw( child, src, len );
+
+    return child;
+}
+
+void
+tr_magBencListCopy( tr_benc * target, const tr_benc * src )
+{
+    int i = 0;
+    const tr_benc * val;
+
+    while(( val = tr_bencListChild( (tr_benc*)src, i++ )))
+    {
+       if( tr_bencIsBool( val ) )
+       {
+           bool boolVal = 0;
+           tr_bencGetBool( val, &boolVal );
+           tr_bencListAddBool( target, boolVal );
+       }
+       else if( tr_bencIsReal( val ) )
+       {
+           double realVal = 0;
+           tr_bencGetReal( val, &realVal );
+           tr_bencListAddReal( target, realVal );
+       }
+       else if( tr_bencIsInt( val ) )
+       {
+           int64_t intVal = 0;
+           tr_bencGetInt( val, &intVal );
+           tr_bencListAddInt( target, intVal );
+       }
+       else if( tr_bencIsString( val ) )
+       {
+           tr_bencListAddRaw( target, (const uint8_t*)getStr( val ), val->val.s.len );
+       }
+       else if( tr_bencIsDict( val ) )
+       {
+           tr_magBencMergeDicts( tr_bencListAddDict( target, 0 ), val );
+       }
+       else if ( tr_bencIsList( val ) )
+       {
+           tr_magBencListCopy( tr_bencListAddList( target, 0 ), val );
+       }
+       else
+       {
+           tr_err( "tr_magBencListCopy skipping item" );
+       }
+   }
+}
+
+void
+tr_magBencMergeDicts( tr_benc * target, const tr_benc * source )
+{
+    size_t i;
+    const size_t sourceCount = tr_bencDictSize( source );
+
+    assert( tr_bencIsDict( target ) );
+    assert( tr_bencIsDict( source ) );
+
+    for( i=0; i<sourceCount; ++i )
+    {
+        const char * key;
+        tr_benc * val;
+        tr_benc * t;
+
+        if( tr_bencDictChild( (tr_benc*)source, i, &key, &val ) )
+        {
+            if( tr_bencIsBool( val ) )
+            {
+                bool boolVal;
+                tr_bencGetBool( val, &boolVal );
+                tr_magBencDictAddBool( target, key, boolVal );
+            }
+            else if( tr_bencIsReal( val ) )
+            {
+                double realVal = 0;
+                tr_bencGetReal( val, &realVal );
+                tr_magBencDictAddReal( target, key, realVal );
+            }
+            else if( tr_bencIsInt( val ) )
+            {
+                int64_t intVal = 0;
+                tr_bencGetInt( val, &intVal );
+                tr_magBencDictAddInt( target, key, intVal );
+            }
+            else if( tr_bencIsString( val ) )
+            {
+                tr_magBencDictAddRaw( target, key, getStr( val ), val->val.s.len );
+            }
+            else if( tr_bencIsDict( val ) && tr_bencDictFindDict( target, key, &t ) )
+            {
+                tr_magBencMergeDicts( t, val );
+            }
+            else if( tr_bencIsList( val ) )
+            {
+                tr_magBencListCopy (tr_bencDictAddList (target, key, tr_bencListSize (val)), val);
+            }
+            else if( tr_bencIsDict( val ) )
+            {
+                tr_dbg( "tr_magBencMergeDicts adding non conformant \"%s\"", key );
+                tr_magBencMergeDicts( tr_bencDictAddDict( target, key, 666 ), val );
+                tr_dbg( "tr_magBencMergeDicts added \"%s\"", key );
+            }
+            else
+            {
+                tr_dbg( "tr_magBencMergeDicts skipping \"%s\"", key );
+            }
+        }
+    }
+}
+
+/***
+****
+***/

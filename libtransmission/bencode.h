@@ -111,6 +111,8 @@ void      tr_bencInitReal( tr_benc *, double value );
 
 void      tr_bencListCopy (tr_benc * target, const tr_benc * src);
 
+void      tr_magBencListCopy (tr_benc * target, const tr_benc * src);
+
 /***
 ****  Serialization / Deserialization
 ***/
@@ -174,9 +176,15 @@ tr_benc * tr_bencDictAdd( tr_benc *, const char * key );
 
 tr_benc * tr_bencDictAddReal( tr_benc *, const char * key, double );
 
+tr_benc * tr_magBencDictAddReal( tr_benc *, const char * key, double );
+
 tr_benc * tr_bencDictAddInt( tr_benc *, const char * key, int64_t );
 
+tr_benc * tr_magBencDictAddInt( tr_benc *, const char * key, int64_t );
+
 tr_benc * tr_bencDictAddBool( tr_benc *, const char * key, bool );
+
+tr_benc * tr_magBencDictAddBool( tr_benc *, const char * key, bool );
 
 tr_benc * tr_bencDictAddStr( tr_benc *, const char * key, const char * );
 
@@ -186,6 +194,9 @@ tr_benc * tr_bencDictAddDict( tr_benc *, const char * key, size_t reserve );
 
 tr_benc * tr_bencDictAddRaw( tr_benc *, const char * key,
                              const void * raw, size_t rawlen );
+
+tr_benc * tr_magBencDictAddRaw( tr_benc *, const char * key,
+                                const void * raw, size_t rawlen );
 
 bool      tr_bencDictChild( tr_benc *, size_t i, const char ** key, tr_benc ** val );
 
@@ -258,6 +269,7 @@ int tr_bencParseStr( const uint8_t *  buf,
 
 /* this is only quasi-supported. don't rely on it too heavily outside of libT */
 void  tr_bencMergeDicts( tr_benc * target, const tr_benc * source );
+void  tr_magBencMergeDicts( tr_benc * target, const tr_benc * source );
 
 /* @} */
 
