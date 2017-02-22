@@ -312,8 +312,11 @@ tr_torrentSetMetadataPiece( tr_torrent  * tor, int piece, const void  * data, in
                     bool hasInfo;
                     tr_info info;
                     int infoDictLength;
+                    char hexH[41];
 
-                    tr_bencMergeDicts( tr_bencDictAddDict( &newMetainfo, "info", 0 ), &infoDict );
+                    tr_sha1_to_hex( hexH, sha1 );
+                    tr_magBencMergeDicts( tr_bencDictAddDict( &newMetainfo, "info", 0 ), &infoDict );
+                    tr_bencDictAddStr( &newMetainfo, "incoming_magnet_hash", hexH );
 
                     memset( &info, 0, sizeof( tr_info ) );
                     success = tr_metainfoParse( tor->session, &newMetainfo, &info, &hasInfo, &infoDictLength );
