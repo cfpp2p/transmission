@@ -142,8 +142,13 @@ tr_threadNew( void   ( *func )(void *),
         t->thread = (DWORD) id;
     }
 #else
-    pthread_create( &t->thread, NULL, (void*(*)(void*))ThreadFunc, t );
+
+    pthread_attr_t attr;
+    pthread_attr_init( &attr );
+    pthread_attr_setdetachstate( &attr, PTHREAD_CREATE_DETACHED );
+    pthread_create( &t->thread, &attr, (void*(*)(void*))ThreadFunc, t );
     pthread_detach( t->thread );
+    pthread_attr_destroy(&attr);
 
 #endif
 
