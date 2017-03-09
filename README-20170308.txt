@@ -1,5 +1,14 @@
 https://github.com/cfpp2p/transmission/commits/cygwin
 
+March 05, 2017
+
+FIXED: Some Unicode .torrent files wouldn't load when double clicked.
+FIXED: Add trackers from duplicate torrents.
+ADDED: Add trackers from magnets links on duplicate torrents.
+ADDED: Allow zero as a global timeout for seeding (spin edit).
+FIXED: Adding torrent by url add trackers of duplicate torrents.
+FIXED: download of flags.zip.
+
 March 02, 2017
 libtransmission:
 FIXED: Incoming magnet links, with redundant keys.

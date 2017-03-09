@@ -1,11 +1,21 @@
 
 Install transgui-3.1-setup.exe first then over-write installed exe with transgui.exe
 
-May 6, 2016
+March 05, 2017
 
 Source files now maintained at https://github.com/cfpp2p/transmisson-remote-gui
 
 Enhancement release for cfpp2p daemon
+https://github.com/cfpp2p/transmission
+
+FIXED: Some Unicode .torrent files wouldn't load when double clicked.
+FIXED: Add trackers from duplicate torrents.
+ADDED: Add trackers from magnets links on duplicate torrents.
+ADDED: Allow zero as a global timeout for seeding (spin edit).
+FIXED: Adding torrent by url add trackers of duplicate torrents.
+FIXED: download of flags.zip.
+
+May 6, 2016
 
 @cfpp2p cfpp2p released this Apr 18, 2016
 Initial release for cfpp2p transmission daemon
