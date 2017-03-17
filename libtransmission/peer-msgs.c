@@ -1897,8 +1897,12 @@ fillOutputBuffer( tr_peermsgs * msgs, time_t now )
     {
         if( msgs->prefetchCount > 0 )
             --msgs->prefetchCount;
-        else
-            tr_torrentSetLocalError( msgs->torrent, _( "prefetch counter corrupt! prefetchCount value is %d . Upload failed." ), msgs->prefetchCount );
+        else if( getSession(msgs)->isPrefetchEnabled )
+        {
+            bool wasn = msgs->torrent->isStopping;
+            tr_torrentSetLocalError( msgs->torrent, _( "prefetch-enabled cache warn! prefetchCount %d . Piece not uploaded." ), msgs->prefetchCount );
+            msgs->torrent->isStopping = wasn;
+        }
 
         if( requestIsValid( msgs, &req )
             && tr_cpPieceIsComplete( &msgs->torrent->completion, req.index )
