@@ -612,6 +612,7 @@ const
   idxStreamingMode = 23;
   idxCheatMode = 24;
   idxSdRatio = 25;
+  idxSizeLeft = 26;
  
   idxTag = -1;
   idxSeedsTotal = -2;
@@ -691,11 +692,11 @@ const
 
   StatusFiltersCount = 7;
 
-  TorrentFieldsMap: array[idxName..idxSdRatio] of string =
+  TorrentFieldsMap: array[idxName..idxSizeLeft] of string =
     ('', 'totalSize', '', 'status', 'peersSendingToUs,seeders',
      'peersGettingFromUs,leechers', 'rateDownload', 'rateUpload', 'eta', 'uploadRatio',
      'downloadedEver', 'uploadedEver', '', '', 'addedDate', 'doneDate', 'activityDate', '', 'bandwidthPriority',
-     '', '', 'queuePosition', 'secondsSeeding', 'streamingMode', 'cheatMode', '');
+     '', '', 'queuePosition', 'secondsSeeding', 'streamingMode', 'cheatMode', 'leftUntilDone', '');
 
 implementation
 
@@ -738,7 +739,15 @@ const
 const
   SizeNames: array[1..5] of string = (sByte, sKByte, sMByte, sGByte, sTByte);
 
-
+function StrToHex(const Value: Ansistring): string;
+var
+  n: Integer;
+begin
+  Result := '';
+  for n := 1 to Length(Value) do
+    Result := Result + IntToHex(Byte(Value[n]), 2);
+  Result := LowerCase(Result);
+end;
 
 function GetHumanSize(sz: double; RoundTo: integer = 0): string;
 var
@@ -851,7 +860,7 @@ procedure AddTorrentFile(const FileName: string);
 var
   h: THandle;
 begin
-  h:=FileCreate(FIPCFileName, fmCreate);
+  h:=FileCreateUTF8(FIPCFileName, fmCreate);
   if h <> THandle(-1) then begin
     FileWrite(h, FileName[1], Length(FileName));
     FileClose(h);
@@ -911,7 +920,7 @@ begin
   end
   else
     FHomeDir:=IncludeTrailingPathDelimiter(FHomeDir);
-  ForceDirectories(FHomeDir);
+  ForceDirectoriesUTF8(FHomeDir);
   FIPCFileName:=FHomeDir + 'ipc.txt';
   FRunFileName:=FHomeDir + 'run';
 
@@ -920,8 +929,8 @@ begin
     if IsProtocolSupported(s) or FileExistsUTF8(s) then
       AddTorrentFile(s);
   end;
-  if FileExists(UTF8Decode(FRunFileName)) then begin
-    h:=FileOpen(FRunFileName, fmOpenRead or fmShareDenyNone);
+  if FileExistsUTF8(FRunFileName) then begin
+    h:=FileOpenUTF8(FRunFileName, fmOpenRead or fmShareDenyNone);
     if FileRead(h, pid, SizeOf(pid)) = SizeOf(pid) then begin
 {$ifdef mswindows}
       AllowSetForegroundWindow(pid);
@@ -929,10 +938,10 @@ begin
     end;
     FileClose(h);
 
-    if not FileExists(FIPCFileName) then
-      FileClose(FileCreate(FIPCFileName, fmCreate));
+    if not FileExistsUTF8(FIPCFileName) then
+      FileClose(FileCreateUTF8(FIPCFileName, fmCreate));
     for i:=1 to 50 do
-      if not FileExists(FIPCFileName) then begin
+      if not FileExistsUTF8(FIPCFileName) then begin
         Result:=False;
         exit;
       end
@@ -940,7 +949,7 @@ begin
         Sleep(200);
   end
   else begin
-    h:=FileCreate(FRunFileName, fmCreate);
+    h:=FileCreateUTF8(FRunFileName, fmCreate);
     pid:=GetProcessID;
     FileWrite(h, pid, SizeOf(pid));
     FileClose(h);
@@ -1118,7 +1127,7 @@ end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
 begin
-  DeleteFile(FRunFileName);
+  DeleteFileUTF8(FRunFileName);
   FResolver.Free;
   FIni.Free;
   FTrackers.Free;
@@ -1478,18 +1487,16 @@ procedure TMainForm.DoAddTorrent(const FileName: Utf8String);
 var
   torrent: string;
   Procedure _AddTrackers;
-  var req,req2, args: TJSONObject;
-        fs: TFileStreamU;
+  var req, args: TJSONObject;
+        fs: TFileStreamUTF8;
    TorData, InfoData, LData, LLData: TBEncoded;
    OutStr, Sha1Hash: Ansistring;
-   ResArgs, ResArgs2: TJSONObject;
    t: TJSONArray;
    tt: TJSONObject;
    trackers: TJSONArray;
-   TrackerReplace: TJSONArray;
-   i,j: Integer;
-   s:String;
-   TrackersList, TrackersAddList:TStringList;
+   i, j, TorrentId: Integer;
+   s, tfn:String;
+   TrackersList: TStringList;
    AnnData: TBEncoded;
 
   begin
@@ -1497,94 +1504,143 @@ var
    RpcObj.Status:='';
    AppNormal;
    if MessageDlg(sDuplicateTorrentCaption,sDuplicateTorrent,mtConfirmation,mbYesNo,0)=mrNo then exit;
-     if   IsProtocolSupported(FileName) then
-       //TODO: Need download torrent file...
-     else
-     begin
+    TrackersList:=TStringList.Create;
+    try
+      sha1hash:='';
+      if AnsiCompareText('magnet:?', Copy(FileName, 1, 8)) = 0 then begin
+        // Get trackers from the magnet link
+        TrackersList.Delimiter:='&';
+        TrackersList.DelimitedText:=Copy(FileName, 9, MaxInt);
+        i:=0;
+        while i < TrackersList.Count do begin
+          s:=TrackersList.Names[i];
+          if (CompareText(s, 'xt') = 0) then begin
+            s:=LowerCase(TrackersList.ValueFromIndex[i]);
+            if (sha1hash = '') and (Pos('urn:btih:', s) = 1) then begin
+              s:=Copy(s, 10, MaxInt);
+              if Length(s) = 32 then
+                // base32 encoded hash
+                sha1hash:=StrToHex(Base32Decode(UpperCase(s)))
+              else
+                sha1hash:=s;
+            end;
+          end
+          else
+            if CompareText(s, 'tr') = 0 then begin
+              TrackersList[i]:=DecodeURL(TrackersList.ValueFromIndex[i]);
+              Inc(i);
+              continue;
+            end;
+          TrackersList.Delete(i);
+        end;
+      end
+      else
+      try
+        if IsProtocolSupported(FileName) then begin
+          // Downloading torrent file
+          tfn:=SysToUTF8(FHomeDir) + 'remote-torrent.torrent';
+          if not DownloadFile(FileName, ExtractFilePath(tfn), ExtractFileName(tfn)) then
+            exit;
+       end
+       else
+          tfn:=FileName;
+        // Read trackers from the torrent file...
        AppBusy;
-       fs:=TFileStreamU.Create(UTF8Decode(FileName), fmOpenRead or fmShareDenyNone);
+       TorData:=nil;
+       fs:=TFileStreamUTF8.Create(tfn, fmOpenRead or fmShareDenyNone);
        try
          TorData:=TBEncoded.Create(fs);
          InfoData:=(TorData.ListData.FindElement('info')as TBEncoded);
          InfoData.Encode(InfoData,OutStr);
          sha1hash:=SHA1Print(SHA1String(OutStr));
-  //       ShowMessage('SHA1 hash:'+sha1hash);
-         if Sha1Hash <> '' then
-         begin
-          req:=TJSONObject.Create;
-          try
-            req.Add('method', 'torrent-get');
-            args:=TJSONObject.Create;
-            args.Add('ids', TJSONArray.Create([Sha1Hash]));
-            args.Add('fields', TJSONArray.Create(['trackers']));
-            req.Add('arguments', args);
-            ResArgs:=RpcObj.SendRequest(req);
-          finally
-            req.Free;
+      // ShowMessage('SHA1 hash:'+sha1hash);
+          AnnData:=(TorData.ListData.FindElement('announce-list') as TBEncoded);
+          if AnnData <> nil then
+            for i:=0 to AnnData.ListData.Count - 1 do begin
+              LData:=AnnData.ListData.Items[i].Data as TBEncoded;
+              for j:=0 to LData.ListData.Count - 1 do begin
+                LLData:=LData.ListData.Items[j].Data as TBEncoded;
+                TrackersList.Add(LLData.StringData);
+              end;
+            end
+          else begin
+            AnnData:=(TorData.ListData.FindElement('announce') as TBEncoded);
+            if AnnData <> nil then
+              TrackersList.Add(AnnData.StringData);
           end;
-            t:=ResArgs.Arrays['torrents'];
-            if t.Count = 0 then
-              raise Exception.Create('No torrents in result');
-            tt:=t.Objects[0] as TJSONObject;
-            TrackersList:=TStringList.Create;
-            if tt.Count>0 then
-            begin
-             trackers:=tt.Arrays['trackers'];
-             for i:=0 to trackers.Count-1 do
-               begin
-                  s:=(Trackers.Items[i] as TJSONObject).Strings['announce'];
-                  TrackersList.Add(s);
-               end;
-             end;
-          // ShowMessage(TrackersList.Text);
-
-          //Read Bencoded data from torrent file...
-          TrackersAddList:=TStringList.Create;
-          AnnData:=(TorData.ListData.FindElement('announce-list')as TBEncoded);
-          for i:=0 to AnnData.ListData.Count-1 do
-          begin
-            LData:=AnnData.ListData.Items[i].Data as TBEncoded;
-            for j:=0 to LData.ListData.Count-1 do
-             begin
-               LLData:=LData.ListData.Items[j].Data as TBEncoded;
-               s:=LLData.StringData;
-               if TrackersList.IndexOf(s) = -1 then  TrackersAddList.Add(s);
-             end;
-          end;
-          //=======================================
-          //ShowMessage(TrackersAddList.Text);
-          if TrackersAddList.Count>0 then
-          begin
-           TrackerReplace:=TJSONArray.Create;
-           for s in TrackersAddList do
-            begin
-              TrackerReplace.Add(s);
-            end;
-           args:=TJSONObject.Create;
-           args.Add('ids', TJSONArray.Create([Sha1Hash]));
-           args.Add('trackerAdd',TrackerReplace);
-           req:=TJSONObject.Create;
-           try
-             req.Add('method', 'torrent-set');
-             req.Add('arguments', args);
-             ResArgs:=RpcObj.SendRequest(req,False);
-           finally
-              req.Free;
-           end;
-
-          end;
-          TrackersList.Free;
-          TrackersAddList.Free;
+        finally
+          TorData.Free;
+          fs.Free;
         end;
-
-       finally
-         fs.Free;
-         AppNormal;
-       end;
+      finally
+        // Delete temp file
+        if (tfn <> '') and (tfn <> FileName) then
+          DeleteFileUTF8(tfn);
      end;
 
-  end;
+      // Request trackers from the existing torrent
+      req:=TJSONObject.Create;
+      try
+        req.Add('method', 'torrent-get');
+        args:=TJSONObject.Create;
+        args.Add('ids', TJSONArray.Create([sha1hash]));
+        args.Add('fields', TJSONArray.Create(['id', 'trackers']));
 
+        req.Add('arguments', args);
+        args:=RpcObj.SendRequest(req);
+        if args = nil then begin
+          CheckStatus(False);
+          exit;
+        end;
+        try
+          t:=args.Arrays['torrents'];
+          if t.Count = 0 then
+            raise Exception.Create('Torrent not found.');
+          tt:=t.Objects[0] as TJSONObject;
+          i:=tt.Integers['id'];
+          TorrentId:=i;
+          trackers:=tt.Arrays['trackers'];
+          // Deleting existing trackers from the list
+          for i:=0 to trackers.Count - 1 do begin
+            s:=UTF8Encode((Trackers.Items[i] as TJSONObject).Strings['announce']);
+            j:=TrackersList.IndexOf(s);
+            if j >= 0 then
+              TrackersList.Delete(j);
+          end;
+        finally
+          args.Free;
+        end;
+      finally
+        req.Free;
+      end;
+
+      if TrackersList.Count > 0 then begin
+        trackers:=TJSONArray.Create;
+        for i:=0 to TrackersList.Count - 1 do
+          trackers.Add(TrackersList[i]);
+        args:=TJSONObject.Create;
+        args.Add('ids', TJSONArray.Create([TorrentId]));
+        args.Add('trackerAdd', trackers);
+        req:=TJSONObject.Create;
+        try
+          req.Add('method', 'torrent-set');
+          req.Add('arguments', args);
+          args:=RpcObj.SendRequest(req, False);
+          if args = nil then begin
+            CheckStatus(False);
+            exit;
+          end;
+          args.Free;
+        finally
+          req.Free;
+        end;
+        DoRefresh;
+      end;
+    finally
+      TrackersList.Free;
+      AppNormal;
+    end;
+  end;
 
   function _AddTorrent(args: TJSONObject): integer;
   var
@@ -1678,7 +1734,7 @@ var
   id: integer;
   t, files: TJSONArray;
   i: integer;
-  fs: TFileStreamU;
+  fs: TFileStreamUTF8;
   s, ss, OldDownloadDir, IniSec, path: string;
   tt: TDateTime;
   ok: boolean;
@@ -1691,7 +1747,7 @@ begin
   if IsProtocolSupported(FileName) then
     torrent:='-'
   else begin
-    fs:=TFileStreamU.Create(UTF8Decode(FileName), fmOpenRead or fmShareDenyNone);
+    fs:=TFileStreamUTF8.Create(FileName, fmOpenRead or fmShareDenyNone);
     try
       SetLength(torrent, fs.Size);
       fs.ReadBuffer(PChar(torrent)^, Length(torrent));
@@ -1884,7 +1940,7 @@ begin
 
         id:=0;
         if FIni.ReadBool('Interface', 'DeleteTorrentFile', False) and not IsProtocolSupported(FileName) then
-          DeleteFile(UTF8ToSys(FileName));
+          DeleteFileUTF8(FileName);
 
         FIni.WriteInteger(IniSec, 'PeerLimit', edPeerLimit.Value);
         i:=cbDestFolder.Items.IndexOf(cbDestFolder.Text);
@@ -2596,7 +2652,7 @@ end;
 
 procedure TMainForm.acShowCountryFlagExecute(Sender: TObject);
 const
-  FlagsURL = 'http://transmisson-remote-gui.googlecode.com/files/flags.zip';
+  FlagsURL = 'http://transmissionbt.net/flags.zip';
 begin
   if not acShowCountryFlag.Checked then
     if GetFlagsArchive = '' then begin
@@ -3039,7 +3095,7 @@ begin
     case ADataCol of
       idxStatus:
         Text:=GetTorrentStatus(ARow);
-      idxSize, idxDownloaded, idxUploaded, idxSizeToDowload:
+      idxSize, idxDownloaded, idxUploaded, idxSizeToDowload, idxSizeLeft:
         Text:=GetHumanSize(Sender.Items[ADataCol, ARow]);
       idxDone:
         Text:=Format('%.1f%%', [double(Sender.Items[idxDone, ARow])]);
@@ -4247,6 +4303,7 @@ begin
       FTorrents[idxETA, row]:=MaxInt;
     GetTorrentValue(idxDownloaded, 'downloadedEver', vtExtended);
     GetTorrentValue(idxUploaded, 'uploadedEver', vtExtended);
+    GetTorrentValue(idxSizeLeft, 'leftUntilDone', vtExtended);
     GetTorrentValue(idxAddedOn, 'addedDate', vtExtended);
     GetTorrentValue(idxCompletedOn, 'doneDate', vtExtended);
     GetTorrentValue(idxLastActive, 'activityDate', vtExtended);
@@ -4822,7 +4879,7 @@ begin
   panTransfer.ChildSizing.Layout:=cclNone;
   txStatus.Caption:=GetTorrentStatus(idx);
   txError.Caption:=GetTorrentError(t);
-  txRemaining.Caption:=EtaToString(t.Integers['eta']);
+  txRemaining.Caption:=EtaToString(t.Integers['eta'])+' ('+GetHumanSize(t.Floats['leftUntilDone'])+')';
   txDownloaded.Caption:=GetHumanSize(t.Floats['downloadedEver']);
   txUploaded.Caption:=GetHumanSize(t.Floats['uploadedEver']);
   f:=t.Floats['pieceSize'];
@@ -5437,7 +5494,7 @@ const MaxDataCount=12*60*60; //12 hour with 1 sec interval
 
       {======================Functions Start===================================}
       procedure ClrAVG2(down,up:Double);
-        var i,j:smallint;
+        var i:smallint;
       begin
           for i:= 0 to maxAVG do
           begin
