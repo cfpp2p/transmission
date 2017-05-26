@@ -105,7 +105,7 @@ void             tr_torrentInitFilePriority( tr_torrent       * tor,
 void             tr_torrentSetPieceChecked( tr_torrent       * tor,
                                             tr_piece_index_t   piece );
 
-void             tr_torrentSetChecked( tr_torrent * tor, time_t when );
+void             tr_torrentSetChecked( tr_torrent * tor, int8_t when );
 
 void             tr_torrentCheckSeedLimit( tr_torrent * tor );
 
