@@ -1492,7 +1492,7 @@ getVerifyProgress( const tr_torrent * tor )
         tr_piece_index_t checked = 0;
 
         for( i=0, n=tor->info.pieceCount; i!=n; ++i )
-            if( tor->info.pieces[i].timeChecked )
+            if( tor->info.pieces[i].checked )
                 ++checked;
 
         d = checked / (double)tor->info.pieceCount;
@@ -3188,18 +3188,18 @@ tr_torrentSetPieceChecked( tr_torrent * tor, tr_piece_index_t pieceIndex )
     assert( tr_isTorrent( tor ) );
     assert( pieceIndex < tor->info.pieceCount );
 
-    tor->info.pieces[pieceIndex].timeChecked = tr_time( );
+    tor->info.pieces[pieceIndex].checked = 1;
 }
 
 void
-tr_torrentSetChecked( tr_torrent * tor, time_t when )
+tr_torrentSetChecked( tr_torrent * tor, int8_t when )
 {
     tr_piece_index_t i, n;
 
     assert( tr_isTorrent( tor ) );
 
     for( i=0, n=tor->info.pieceCount; i!=n; ++i )
-        tor->info.pieces[i].timeChecked = when;
+        tor->info.pieces[i].checked = when;
 }
 
 bool
@@ -3230,22 +3230,11 @@ tr_torrentGetFileMTime( const tr_torrent * tor, tr_file_index_t i )
 bool
 tr_torrentPieceNeedsCheck( const tr_torrent * tor, tr_piece_index_t p )
 {
-    uint64_t unused;
-    tr_file_index_t f;
     const tr_info * inf = tr_torrentInfo( tor );
 
     /* if we've never checked this piece, then it needs to be checked */
-    if( !inf->pieces[p].timeChecked )
+    if( !inf->pieces[p].checked )
         return true;
-
-    /* If we think we've completed one of the files in this piece,
-     * but it's been modified since we last checked it,
-     * then it needs to be rechecked */
-    tr_ioFindFileLocation( tor, p, 0, &f, &unused );
-    for( ; f < inf->fileCount && pieceHasFile( p, &inf->files[f] ); ++f )
-        if( tr_cpFileIsComplete( &tor->completion, f ) )
-            if( tr_torrentGetFileMTime( tor, f ) > inf->pieces[p].timeChecked )
-                return true;
 
     return false;
 }
@@ -3805,15 +3794,14 @@ tr_torrentFileCompleted( tr_torrent * tor, tr_file_index_t fileNum )
     const tr_file * f = &inf->files[fileNum];
     tr_piece * p;
     const tr_piece * pend;
-    const time_t now = tr_time( );
 
     /* close the file so that we can reopen in read-only mode as needed */
     tr_fdFileClose( tor->session, tor, fileNum, TR_FD_INDEX_FILE );
 
     /* now that the file is complete and closed, we can start watching its
      * mtime timestamp for changes to know if we need to reverify pieces */
-    for( p=&inf->pieces[f->firstPiece], pend=&inf->pieces[f->lastPiece]; p!=pend; ++p )
-        p->timeChecked = now;
+    for( p=&inf->pieces[f->firstPiece], pend=&inf->pieces[f->lastPiece]+1; p!=pend; ++p )
+        p->checked = 1;
 
     /* if the torrent's current filename isn't the same as the one in the
      * metadata -- for example, if it had the ".part" suffix appended to

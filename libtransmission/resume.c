@@ -476,7 +476,6 @@ saveProgress( tr_benc * dict, tr_torrent * tor )
     tr_benc * prog;
     tr_file_index_t fi;
     const tr_info * inf = tr_torrentInfo( tor );
-    const time_t now = tr_time( );
 
     prog = tr_bencDictAddDict( dict, KEY_PROGRESS, 3 );
 
@@ -486,21 +485,19 @@ saveProgress( tr_benc * dict, tr_torrent * tor )
     {
         const tr_piece * p;
         const tr_piece * pend;
-        time_t oldest_nonzero = now;
-        time_t newest = 0;
         bool has_zero = false;
-        const time_t mtime = tr_torrentGetFileMTime( tor, fi );
+        bool checked = false;
         const tr_file * f = &inf->files[fi];
 
         /* get the oldest and newest nonzero timestamps for pieces in this file */
-        for( p=&inf->pieces[f->firstPiece], pend=&inf->pieces[f->lastPiece]; p!=pend; ++p )
+        for( p=&inf->pieces[f->firstPiece], pend=&inf->pieces[f->lastPiece]+1; p!=pend; ++p )
         {
-            if( !p->timeChecked )
+            if( !p->checked )
                 has_zero = true;
-            else if( oldest_nonzero > p->timeChecked )
-                oldest_nonzero = p->timeChecked;
-            if( newest < p->timeChecked )
-                newest = p->timeChecked;
+            else
+                checked = true;
+            if( has_zero && checked )
+                break;
         }
 
         /* If some of a file's pieces have been checked more recently than
@@ -512,16 +509,15 @@ saveProgress( tr_benc * dict, tr_torrent * tor )
            only a single timestamp is saved for the file if *all* or *none*
            of the pieces were tested more recently than the file's mtime. */
 
-        if( !has_zero && ( mtime <= oldest_nonzero ) ) /* all checked */
-            tr_bencListAddInt( l, oldest_nonzero );
-        else if( newest < mtime ) /* none checked */
-            tr_bencListAddInt( l, newest );
+        if( !has_zero ) /* all checked */
+            tr_bencListAddInt( l, 1 );
+        else if( !checked ) /* none checked */
+            tr_bencListAddInt( l, 0 );
         else { /* some are checked, some aren't... so list piece by piece */
-            const int offset = oldest_nonzero - 1;
             tr_benc * ll = tr_bencListAddList( l, 2 + f->lastPiece - f->firstPiece );
-            tr_bencListAddInt( ll, offset );
+            tr_bencListAddInt( ll, 0 ); /* not used, backwards compatability */
             for( p=&inf->pieces[f->firstPiece], pend=&inf->pieces[f->lastPiece]+1; p!=pend; ++p )
-                tr_bencListAddInt( ll, p->timeChecked ? p->timeChecked - offset : 0 );
+                tr_bencListAddInt( ll, p->checked ? 1 : 0 );
         }
     }
 
@@ -543,7 +539,7 @@ loadProgress( tr_benc * dict, tr_torrent * tor )
     const tr_info * inf = tr_torrentInfo( tor );
 
     for( i=0, n=inf->pieceCount; i<n; ++i )
-        inf->pieces[i].timeChecked = 0;
+        inf->pieces[i].checked = 0;
 
     if( tr_bencDictFindDict( dict, KEY_PROGRESS, &prog ) )
     {
@@ -581,22 +577,26 @@ loadProgress( tr_benc * dict, tr_torrent * tor )
                 {
                     int64_t t;
                     tr_bencGetInt( b, &t );
-                    for( ; p!=pend; ++p )
-                        p->timeChecked = (time_t)t;
+                    if( t )
+                        for( ; p!=pend; ++p )
+                            p->checked = 1;
+                    else
+                        for( ; p!=pend; ++p )
+                            p->checked = 0;
                 }
                 else if( tr_bencIsList( b ) )
                 {
                     int i = 0;
-                    int64_t offset = 0;
+                    int64_t unused = 0; /* backwards compatability */
                     const int pieces = f->lastPiece + 1 - f->firstPiece;
 
-                    tr_bencGetInt( tr_bencListChild( b, 0 ), &offset );
+                    tr_bencGetInt( tr_bencListChild( b, 0 ), &unused ); /* backwards compatability */
 
                     for( i=0; i<pieces; ++i )
                     {
                         int64_t t = 0;
                         tr_bencGetInt( tr_bencListChild( b, i+1 ), &t );
-                        inf->pieces[f->firstPiece+i].timeChecked = (time_t)(t ? t + offset : 0);
+                        inf->pieces[f->firstPiece+i].checked = t ? 1 : 0;
                     }
                 }
             }
@@ -617,12 +617,12 @@ loadProgress( tr_benc * dict, tr_torrent * tor )
                 {
                     const tr_file * f = &inf->files[fi];
                     tr_piece * p = &inf->pieces[f->firstPiece];
-                    const tr_piece * pend = &inf->pieces[f->lastPiece];
+                    const tr_piece * pend = &inf->pieces[f->lastPiece]+1;
                     const time_t mtime = tr_torrentGetFileMTime( tor, fi );
-                    const time_t timeChecked = mtime==t ? mtime : 0;
+                    const int8_t checked = mtime==t ? 1 : 0;
 
                     for( ; p!=pend; ++p )
-                        p->timeChecked = timeChecked;
+                        p->checked = checked;
                 }
             }
         }
