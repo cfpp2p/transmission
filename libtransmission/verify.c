@@ -141,7 +141,8 @@ verifyTorrent( tr_torrent * tor, bool * stopFlag )
                 tr_torrentSetHasPiece( tor, pieceIndex, hasPiece );
                 changed |= hasPiece != hadPiece;
             }
-            tr_torrentSetPieceChecked( tor, pieceIndex );
+            if( hasPiece )
+                tr_torrentSetPieceChecked( tor, pieceIndex );
             now = tr_time( );
             tor->anyDate = now;
 
