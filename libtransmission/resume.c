@@ -515,7 +515,7 @@ saveProgress( tr_benc * dict, tr_torrent * tor )
             tr_bencListAddInt( l, 0 );
         else { /* some are checked, some aren't... so list piece by piece */
             tr_benc * ll = tr_bencListAddList( l, 2 + f->lastPiece - f->firstPiece );
-            tr_bencListAddInt( ll, 0 ); /* not used, backwards compatability */
+            tr_bencListAddInt( ll, 0 ); /* not used, backwards compatibility */
             for( p=&inf->pieces[f->firstPiece], pend=&inf->pieces[f->lastPiece]+1; p!=pend; ++p )
                 tr_bencListAddInt( ll, p->checked ? 1 : 0 );
         }
@@ -587,10 +587,10 @@ loadProgress( tr_benc * dict, tr_torrent * tor )
                 else if( tr_bencIsList( b ) )
                 {
                     int i = 0;
-                    int64_t unused = 0; /* backwards compatability */
+                    int64_t unused = 0; /* backwards compatibility */
                     const int pieces = f->lastPiece + 1 - f->firstPiece;
 
-                    tr_bencGetInt( tr_bencListChild( b, 0 ), &unused ); /* backwards compatability */
+                    tr_bencGetInt( tr_bencListChild( b, 0 ), &unused ); /* backwards compatibility */
 
                     for( i=0; i<pieces; ++i )
                     {
