@@ -2167,7 +2167,8 @@ setExistingFilesVerified( tr_torrent * tor )
         for( pi = 0; pi < info->pieceCount; ++pi )
         {
             tr_torrentSetHasPiece( tor, pi, !missing[pi] );
-            tr_torrentSetPieceChecked( tor, pi );
+            if( !missing[pi] )
+                tr_torrentSetPieceChecked( tor, pi );
         }
     }
 
@@ -3197,7 +3198,8 @@ tr_torrentCheckPiece( tr_torrent * tor, tr_piece_index_t pieceIndex )
 
     tr_deeplog_tor( tor, "[LAZY] tr_torrentCheckPiece tested piece %zu, pass==%d", (size_t)pieceIndex, (int)pass );
     tr_torrentSetHasPiece( tor, pieceIndex, pass );
-    tr_torrentSetPieceChecked( tor, pieceIndex );
+    if( pass )
+        tr_torrentSetPieceChecked( tor, pieceIndex );
     tor->anyDate = tr_time( );
     tr_torrentSetDirty( tor );
 
