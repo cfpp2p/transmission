@@ -1511,6 +1511,18 @@ multiscrape( tr_announcer * announcer, tr_ptrArray * tiers )
         char * url = tier->currentTracker->scrape;
         const uint8_t * hash = tier->tor->info.hash;
 
+        /* https://github.com/transmission/transmission/issues/297 is protected by announceMore( ) */
+        char name[128];
+        tier_build_log_name( tier, name, sizeof( name ) );
+        if( url == NULL )
+        {
+        /* so url == NULL should never be */
+            tr_dbg( " %s scrape url is NULL! tier index is %d .", name, i );
+            continue;
+        }
+        else
+            tr_dbg( " %s scrape url is \"%s\" . tier index is %d .", name, url, i );
+
         /* if there's a request with this scrape URL and a free slot, use it */
         for( j=0; j<request_count; ++j )
         {
@@ -1625,8 +1637,6 @@ announceMore( tr_announcer * announcer )
             tr_tier * tier = &tt->tiers[i];
             if( tierNeedsToAnnounce( tier, now ) )
                 tr_ptrArrayAppend( &announceMe, tier );
-            else if( tierNeedsToScrape( tier, now ) )
-                tr_ptrArrayAppend( &scrapeMe, tier );
         }
     }
 
@@ -1642,6 +1652,17 @@ announceMore( tr_announcer * announcer )
         tr_tordbg( tier->tor, "%s", "Announcing to tracker" );
         dbgmsg( tier, "announcing tier %d of %d", i, n );
         tierAnnounce( announcer, tier );
+    }
+
+    /* build a list of tiers that need to be scraped */
+    tor = NULL;
+    while(( tor = tr_torrentNext( announcer->session, tor ))) {
+        struct tr_torrent_tiers * tt = tor->tiers;
+        for( i=0; tt && i<tt->tier_count; ++i ) {
+            tr_tier * tier = &tt->tiers[i];
+            if( !tierNeedsToAnnounce( tier, now ) && tierNeedsToScrape( tier, now ) )
+                tr_ptrArrayAppend( &scrapeMe, tier );
+        }
     }
 
     /* scrape some */
