@@ -1,5 +1,11 @@
 https://github.com/cfpp2p/transmission/commits/cygwin
 
+June 03, 2017
+libtransmission:
+FIXED: Buggy and resource intensive JIT verify.
+Don't set piece checked stamp for non existent files or hash fails.
+FIXED: scrape_request_delegate()
+
 April 03, 2017
 FIXED: Lightweight systems may limit cache block prefetch, allow for this.
        Also if compiled with --enable-lightweight
