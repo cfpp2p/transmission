@@ -140,9 +140,6 @@ ensureKeyExists( tr_crypto * crypto)
         if( !DH_set0_pqg( dh, p, NULL, g ) )
             logErrorFromSSL( );
 
-        BN_free( p );
-        BN_free( g );
-
         /* private DH value: strong random BN of DH_PRIVKEY_LEN*8 bits */
         prvkey = BN_new( );
         
@@ -150,10 +147,11 @@ ensureKeyExists( tr_crypto * crypto)
             if( BN_rand( prvkey, DH_PRIVKEY_LEN * 8, -1, 0 ) != 1 )
                 logErrorFromSSL( );
         } while ( BN_num_bits( prvkey ) < DH_PRIVKEY_LEN_MIN * 8 );
-        
-        BN_free( prvkey );
 
         if( !DH_generate_key( dh ) )
+            logErrorFromSSL( );
+
+        if( !DH_set0_key( dh, NULL, prvkey ) )
             logErrorFromSSL( );
 
         /* DH can generate key sizes that are smaller than the size of
@@ -165,7 +163,7 @@ ensureKeyExists( tr_crypto * crypto)
         assert( len <= KEY_LEN );
         memset( crypto->myPublicKey, 0, offset );
         BN_bn2bin( pubkey, crypto->myPublicKey + offset );
-        BN_free( pubkey );
+
         crypto->dh = dh;
 #endif
     }
