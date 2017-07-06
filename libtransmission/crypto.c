@@ -96,6 +96,7 @@ ensureKeyExists( tr_crypto * crypto)
 {
     if( crypto->dh == NULL )
     {
+#if OPENSSL_VERSION_NUMBER < 0x10100000
         int len, offset;
         DH * dh = DH_new( );
 
@@ -127,6 +128,46 @@ ensureKeyExists( tr_crypto * crypto)
         BN_bn2bin( dh->pub_key, crypto->myPublicKey + offset );
 
         crypto->dh = dh;
+#else
+/* OpenSSL versions 1.1.0 and greater */
+        int len, offset;
+        DH * dh = DH_new( );
+        BIGNUM *p, *g, *prvkey, *pubkey;
+
+        p = BN_bin2bn( dh_P, sizeof( dh_P ), NULL );
+        g = BN_bin2bn( dh_G, sizeof( dh_G ), NULL );
+
+        if( !DH_set0_pqg( dh, p, NULL, g ) )
+            logErrorFromSSL( );
+
+        BN_free( p );
+        BN_free( g );
+
+        /* private DH value: strong random BN of DH_PRIVKEY_LEN*8 bits */
+        prvkey = BN_new( );
+        
+        do {
+            if( BN_rand( prvkey, DH_PRIVKEY_LEN * 8, -1, 0 ) != 1 )
+                logErrorFromSSL( );
+        } while ( BN_num_bits( prvkey ) < DH_PRIVKEY_LEN_MIN * 8 );
+        
+        BN_free( prvkey );
+
+        if( !DH_generate_key( dh ) )
+            logErrorFromSSL( );
+
+        /* DH can generate key sizes that are smaller than the size of
+           P with exponentially decreasing probability, in which case
+           the msb's of myPublicKey need to be zeroed appropriately. */
+        DH_get0_key( dh, &pubkey, NULL );
+        len = BN_num_bytes( pubkey );
+        offset = KEY_LEN - len;
+        assert( len <= KEY_LEN );
+        memset( crypto->myPublicKey, 0, offset );
+        BN_bn2bin( pubkey, crypto->myPublicKey + offset );
+        BN_free( pubkey );
+        crypto->dh = dh;
+#endif
     }
 }
 
