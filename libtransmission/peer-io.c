@@ -1085,17 +1085,36 @@ addDatatype( tr_peerIo * io, size_t byteCount, bool isPieceData )
 }
 
 static void
+
+#if LIBEVENT_VERSION_NUMBER < 0x02010000
 maybeEncryptBuffer( tr_peerIo * io, struct evbuffer * buf )
+#else
+maybeEncryptBuffer( tr_peerIo * io, struct evbuffer * buf, size_t size )
+#endif
+
 {
     if( io->encryption_type == PEER_ENCRYPTION_RC4 )
     {
         struct evbuffer_ptr pos;
         struct evbuffer_iovec iovec;
         evbuffer_ptr_set( buf, &pos, 0, EVBUFFER_PTR_SET );
+
+#if LIBEVENT_VERSION_NUMBER < 0x02010000
         do {
             evbuffer_peek( buf, -1, &pos, &iovec, 1 );
             tr_cryptoEncrypt( &io->crypto, iovec.iov_len, iovec.iov_base, iovec.iov_base );
         } while( !evbuffer_ptr_set( buf, &pos, iovec.iov_len, EVBUFFER_PTR_ADD ) );
+#else
+        do {
+            if( evbuffer_peek (buf, size, &pos, &iovec, 1 ) <= 0 )
+                break;
+            assert( size >= iovec.iov_len );
+            size -= iovec.iov_len;
+            tr_cryptoEncrypt( &io->crypto, iovec.iov_len, iovec.iov_base, iovec.iov_base );
+        } while( !evbuffer_ptr_set( buf, &pos, iovec.iov_len, EVBUFFER_PTR_ADD ) );
+        assert( size == 0 );
+#endif
+
     }
 }
 
@@ -1103,7 +1122,13 @@ void
 tr_peerIoWriteBuf( tr_peerIo * io, struct evbuffer * buf, bool isPieceData )
 {
     const size_t byteCount = evbuffer_get_length( buf );
+
+#if LIBEVENT_VERSION_NUMBER < 0x02010000
     maybeEncryptBuffer( io, buf );
+#else
+    maybeEncryptBuffer( io, buf, byteCount );
+#endif
+
     evbuffer_add_buffer( io->outbuf, buf );
     addDatatype( io, byteCount, isPieceData );
 }
@@ -1179,11 +1204,22 @@ tr_peerIoReadBytesToBuf( tr_peerIo * io, struct evbuffer * inbuf, struct evbuffe
         struct evbuffer_ptr pos;
         struct evbuffer_iovec iovec;
         evbuffer_ptr_set( outbuf, &pos, old_length, EVBUFFER_PTR_SET );
+
+#if LIBEVENT_VERSION_NUMBER < 0x02010000
         do {
             evbuffer_peek( outbuf, byteCount, &pos, &iovec, 1 );
             tr_cryptoDecrypt( &io->crypto, iovec.iov_len, iovec.iov_base, iovec.iov_base );
             byteCount -= iovec.iov_len;
         } while( !evbuffer_ptr_set( outbuf, &pos, iovec.iov_len, EVBUFFER_PTR_ADD ) );
+#else
+        do {
+            if( evbuffer_peek( outbuf, byteCount, &pos, &iovec, 1 ) <= 0 )
+                break;
+            tr_cryptoDecrypt( &io->crypto, iovec.iov_len, iovec.iov_base, iovec.iov_base );
+            byteCount -= iovec.iov_len;
+        } while( !evbuffer_ptr_set( outbuf, &pos, iovec.iov_len, EVBUFFER_PTR_ADD ) );
+#endif
+
     }
 }
 
