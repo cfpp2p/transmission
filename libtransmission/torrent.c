@@ -3705,22 +3705,22 @@ setLocation( void * vdata )
             }
         }
 
-        if( !err )
-        {
+        if( !err && do_move )
             /* blow away the leftover subdirectories in the old location */
-            if( do_move )
-                tr_torrentDeleteLocalData( tor, remove );
-
-            /* set the new location and reverify */
-            tr_torrentSetDownloadDir( tor, location );
-        }
+            tr_torrentDeleteLocalData( tor, remove );
     }
 
-    if( !err && do_move )
+    if( !err )
     {
-        tr_free( tor->incompleteDir );
-        tor->incompleteDir = NULL;
-        tor->currentDir = tor->downloadDir;
+        /* set the new location and reverify */
+        tr_torrentSetDownloadDir( tor, location );
+
+        if( do_move )
+        {
+            tr_free( tor->incompleteDir );
+            tor->incompleteDir = NULL;
+            tor->currentDir = tor->downloadDir;
+        }
     }
 
     if( data->setme_state )
