@@ -33,12 +33,32 @@
 ****
 ***/
 
+#define MAX_NAME_LENGTH 219
+// 219 + 36 = 255
+// . + 16_byte_hash + .torrent + .tmp.XXXXXX = 36 bytes
+// . + 16_byte_hash + .resume + .tmp.XXXXXX = 35 bytes
+// see tr_bencToFile() for more explanation
+
+
 char*
 tr_metainfoGetBasename( const tr_info * inf )
 {
     size_t i;
-    const size_t name_len = strlen( inf->name );
-    char * ret = tr_strdup_printf( "%s.%16.16s", inf->name, inf->hashString );
+    char * shortName;
+
+    if( !strlen( inf->name ) )
+        // allow empty name -- substitute
+        shortName = tr_strdup( "Hash-Name-" );
+    else if( strlen( inf->name ) <= MAX_NAME_LENGTH )
+        shortName = tr_strdup( inf->name );
+    else
+        // truncate
+        shortName = tr_strndup( inf->name, MAX_NAME_LENGTH );
+
+    char * ret = tr_strdup_printf( "%s.%16.16s", shortName, inf->hashString );
+
+    const size_t name_len = strlen( shortName );
+    tr_free( shortName );
 
     for( i=0; i<name_len; ++i )
         if( ret[i] == '/' )
