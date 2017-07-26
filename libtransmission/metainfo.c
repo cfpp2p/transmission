@@ -41,10 +41,11 @@
 
 
 char*
-tr_metainfoGetBasename( const tr_info * inf )
+tr_metainfoGetBasename( const tr_info * inf, const tr_session * session )
 {
     size_t i;
     char * shortName;
+    char * cleanName;
 
     if( !strlen( inf->name ) )
         // allow empty name -- substitute
@@ -55,10 +56,16 @@ tr_metainfoGetBasename( const tr_info * inf )
         // truncate
         shortName = tr_strndup( inf->name, MAX_NAME_LENGTH );
 
-    char * ret = tr_strdup_printf( "%s.%16.16s", shortName, inf->hashString );
-
-    const size_t name_len = strlen( shortName );
+    if( session && session->cleanUTFenabled )
+        cleanName = tr_utf8clean( shortName, -1 );
+    else
+        cleanName = tr_strdup( shortName );
     tr_free( shortName );
+
+    char * ret = tr_strdup_printf( "%s.%16.16s", cleanName, inf->hashString );
+
+    const size_t name_len = strlen( cleanName );
+    tr_free( cleanName );
 
     for( i=0; i<name_len; ++i )
         if( ret[i] == '/' )
@@ -71,7 +78,7 @@ tr_metainfoGetBasename( const tr_info * inf )
 static char*
 getTorrentFilename( const tr_session * session, const tr_info * inf )
 {
-    char * base = tr_metainfoGetBasename( inf );
+    char * base = tr_metainfoGetBasename( inf, session );
     char * filename = tr_strdup_printf( "%s" TR_PATH_DELIMITER_STR "%s.torrent",
                                         tr_getTorrentDir( session ), base );
     tr_free( base );
