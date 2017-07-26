@@ -82,7 +82,7 @@ enum
 static char*
 getResumeFilename( const tr_torrent * tor )
 {
-    char * base = tr_metainfoGetBasename( tr_torrentInfo( tor ) );
+    char * base = tr_metainfoGetBasename( tr_torrentInfo( tor ), tor->session );
     char * filename = tr_strdup_printf( "%s" TR_PATH_DELIMITER_STR "%s.resume",
                                         tr_getResumeDir( tor->session ), base );
     tr_free( base );

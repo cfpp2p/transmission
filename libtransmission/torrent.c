@@ -1048,7 +1048,7 @@ torrentInit( tr_torrent * tor, const tr_ctor * ctor )
     if( tr_sessionIsIncompleteDirEnabled( session ) )
         tor->incompleteDir = tr_strdup( dir );
 
-    s = tr_metainfoGetBasename( &tor->info );
+    s = tr_metainfoGetBasename( &tor->info, session );
     tor->pieceTempDir = tr_buildPath( tr_sessionGetPieceTempDir( tor->session ), s, NULL );
     tr_free( s );
 
