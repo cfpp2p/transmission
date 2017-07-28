@@ -52,7 +52,8 @@ enum
  */
 uint64_t tr_torrentLoadResume( tr_torrent *    tor,
                                uint64_t        fieldsToLoad,
-                               const tr_ctor * ctor );
+                               const tr_ctor * ctor,
+                               bool* didRenameToFullName );
 
 void     tr_torrentSaveResume( tr_torrent * tor );
 
