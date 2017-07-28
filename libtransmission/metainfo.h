@@ -19,6 +19,12 @@
 
 #include "transmission.h"
 
+enum tr_metainfo_basename_format
+{
+    TR_METAINFO_BASENAME_NAME_AND_PARTIAL_HASH,
+    TR_METAINFO_BASENAME_HASH
+};
+
 struct tr_benc;
 
 bool  tr_metainfoParse( const tr_session     * session,
@@ -33,7 +39,9 @@ void tr_metainfoRemoveSaved( const tr_session * session,
 void tr_metainfoMigrate( tr_session * session,
                          tr_info    * inf );
 
-char* tr_metainfoGetBasename( const tr_info * baseName, const tr_session * session );
+char* tr_metainfoGetBasename( const tr_info * baseName, enum tr_metainfo_basename_format format, const tr_session * session );
 
+void tr_metainfoMigrateFile(tr_session const* session, tr_info const* info, enum tr_metainfo_basename_format old_format,
+    enum tr_metainfo_basename_format new_format);
 
 #endif

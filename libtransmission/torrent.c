@@ -1048,7 +1048,7 @@ torrentInit( tr_torrent * tor, const tr_ctor * ctor )
     if( tr_sessionIsIncompleteDirEnabled( session ) )
         tor->incompleteDir = tr_strdup( dir );
 
-    s = tr_metainfoGetBasename( &tor->info, session );
+    s = tr_metainfoGetBasename( &tor->info, TR_METAINFO_BASENAME_NAME_AND_PARTIAL_HASH, session );
     tor->pieceTempDir = tr_buildPath( tr_sessionGetPieceTempDir( tor->session ), s, NULL );
     tr_free( s );
 
@@ -1076,7 +1076,16 @@ torrentInit( tr_torrent * tor, const tr_ctor * ctor )
                                                   overwritten by the resume file */
 
     torrentInitFromInfo( tor );
-    loaded = tr_torrentLoadResume( tor, ~0, ctor );
+
+    bool didRenameResumeFileToFullName = false;
+    loaded = tr_torrentLoadResume(tor, ~0, ctor, &didRenameResumeFileToFullName);
+
+    if (didRenameResumeFileToFullName)
+    {
+        /* Rename torrent file as well */
+        tr_metainfoMigrateFile(session, &tor->info, TR_METAINFO_BASENAME_HASH, TR_METAINFO_BASENAME_NAME_AND_PARTIAL_HASH);
+    }
+
     tor->completeness = tr_cpGetStatus( &tor->completion );
     setLocalErrorIfFilesDisappeared( tor );
 

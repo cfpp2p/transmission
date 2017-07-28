@@ -80,9 +80,9 @@ enum
 };
 
 static char*
-getResumeFilename( const tr_torrent * tor )
+getResumeFilename(tr_torrent const* tor, enum tr_metainfo_basename_format format)
 {
-    char * base = tr_metainfoGetBasename( tr_torrentInfo( tor ), tor->session );
+    char * base = tr_metainfoGetBasename(tr_torrentInfo(tor), format, tor->session);
     char * filename = tr_strdup_printf( "%s" TR_PATH_DELIMITER_STR "%s.resume",
                                         tr_getResumeDir( tor->session ), base );
     tr_free( base );
@@ -717,7 +717,7 @@ tr_torrentSaveResume( tr_torrent * tor )
     saveStreamingMode( &top, tor );
     saveCheatMode( &top, tor );
 
-    filename = getResumeFilename( tor );
+    filename = getResumeFilename(tor, TR_METAINFO_BASENAME_NAME_AND_PARTIAL_HASH);
 
     if( ( tor->downloadDir == NULL ) || ( tor->pieceTempDir == NULL ) )
     {
@@ -738,7 +738,7 @@ tr_torrentSaveResume( tr_torrent * tor )
 }
 
 static uint64_t
-loadFromFile( tr_torrent * tor, uint64_t fieldsToLoad )
+loadFromFile(tr_torrent* tor, uint64_t fieldsToLoad, bool* didRenameToFullName)
 {
     int64_t  i;
     const char * str;
@@ -750,14 +750,40 @@ loadFromFile( tr_torrent * tor, uint64_t fieldsToLoad )
 
     assert( tr_isTorrent( tor ) );
 
-    filename = getResumeFilename( tor );
+    if (didRenameToFullName != NULL)
+    {
+        *didRenameToFullName = false;
+    }
+
+    filename = getResumeFilename(tor, TR_METAINFO_BASENAME_NAME_AND_PARTIAL_HASH);
 
     if( tr_bencLoadFile( &top, TR_FMT_BENC, filename ) )
     {
         tr_tordbg( tor, "Couldn't read \"%s\"", filename );
 
-        tr_free( filename );
-        return fieldsLoaded;
+
+        char* old_filename = getResumeFilename(tor, TR_METAINFO_BASENAME_HASH);
+
+        if (tr_bencLoadFile( &top, TR_FMT_BENC, old_filename ))
+        {
+            tr_tordbg( tor, "Couldn't read \"%s\"", old_filename );
+
+            tr_free(old_filename);
+            tr_free(filename);
+            return fieldsLoaded;
+        }
+
+        if (!rename(old_filename, filename))
+        {
+            tr_tordbg(tor, "Migrated resume file from \"%s\" to \"%s\"", old_filename, filename);
+
+            if (didRenameToFullName != NULL)
+            {
+                *didRenameToFullName = true;
+            }
+        }
+
+        tr_free(old_filename);
     }
 
     tr_tordbg( tor, "Read resume file \"%s\"", filename );
@@ -981,7 +1007,8 @@ useFallbackFields( tr_torrent * tor, uint64_t fields, const tr_ctor * ctor )
 uint64_t
 tr_torrentLoadResume( tr_torrent *    tor,
                       uint64_t        fieldsToLoad,
-                      const tr_ctor * ctor )
+                      const tr_ctor * ctor,
+                      bool* didRenameToFullName )
 {
     uint64_t ret = 0;
 
@@ -989,7 +1016,7 @@ tr_torrentLoadResume( tr_torrent *    tor,
 
     ret |= useManditoryFields( tor, fieldsToLoad, ctor );
     fieldsToLoad &= ~ret;
-    ret |= loadFromFile( tor, fieldsToLoad );
+    ret |= loadFromFile( tor, fieldsToLoad, didRenameToFullName );
     fieldsToLoad &= ~ret;
     ret |= useFallbackFields( tor, fieldsToLoad, ctor );
 
@@ -999,7 +1026,13 @@ tr_torrentLoadResume( tr_torrent *    tor,
 void
 tr_torrentRemoveResume( const tr_torrent * tor )
 {
-    char * filename = getResumeFilename( tor );
+    char * filename;
+
+    filename = getResumeFilename(tor, TR_METAINFO_BASENAME_NAME_AND_PARTIAL_HASH);
+    unlink( filename );
+    tr_free( filename );
+
+    filename = getResumeFilename(tor, TR_METAINFO_BASENAME_HASH);
     unlink( filename );
     tr_free( filename );
 }
