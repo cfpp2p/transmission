@@ -738,7 +738,7 @@ tr_torrentSaveResume( tr_torrent * tor )
 }
 
 static uint64_t
-loadFromFile(tr_torrent* tor, uint64_t fieldsToLoad, bool* didRenameToFullName)
+loadFromFile(tr_torrent* tor, uint64_t fieldsToLoad, bool* didMigrateRename)
 {
     int64_t  i;
     const char * str;
@@ -750,9 +750,9 @@ loadFromFile(tr_torrent* tor, uint64_t fieldsToLoad, bool* didRenameToFullName)
 
     assert( tr_isTorrent( tor ) );
 
-    if (didRenameToFullName != NULL)
+    if (didMigrateRename != NULL)
     {
-        *didRenameToFullName = false;
+        *didMigrateRename = false;
     }
 
     filename = getResumeFilename(tor, TR_METAINFO_BASENAME_NAME_AND_PARTIAL_HASH);
@@ -777,9 +777,9 @@ loadFromFile(tr_torrent* tor, uint64_t fieldsToLoad, bool* didRenameToFullName)
         {
             tr_tordbg(tor, "Migrated resume file from \"%s\" to \"%s\"", old_filename, filename);
 
-            if (didRenameToFullName != NULL)
+            if (didMigrateRename != NULL)
             {
-                *didRenameToFullName = true;
+                *didMigrateRename = true;
             }
         }
 
@@ -1008,7 +1008,7 @@ uint64_t
 tr_torrentLoadResume( tr_torrent *    tor,
                       uint64_t        fieldsToLoad,
                       const tr_ctor * ctor,
-                      bool* didRenameToFullName )
+                      bool* didMigrateRename )
 {
     uint64_t ret = 0;
 
@@ -1016,7 +1016,7 @@ tr_torrentLoadResume( tr_torrent *    tor,
 
     ret |= useManditoryFields( tor, fieldsToLoad, ctor );
     fieldsToLoad &= ~ret;
-    ret |= loadFromFile( tor, fieldsToLoad, didRenameToFullName );
+    ret |= loadFromFile( tor, fieldsToLoad, didMigrateRename );
     fieldsToLoad &= ~ret;
     ret |= useFallbackFields( tor, fieldsToLoad, ctor );
 

@@ -1077,10 +1077,10 @@ torrentInit( tr_torrent * tor, const tr_ctor * ctor )
 
     torrentInitFromInfo( tor );
 
-    bool didRenameResumeFileToFullName = false;
-    loaded = tr_torrentLoadResume(tor, ~0, ctor, &didRenameResumeFileToFullName);
+    bool didMigrateRenamedResumeFile = false;
+    loaded = tr_torrentLoadResume(tor, ~0, ctor, &didMigrateRenamedResumeFile);
 
-    if (didRenameResumeFileToFullName)
+    if (didMigrateRenamedResumeFile)
     {
         /* Rename torrent file as well */
         tr_metainfoMigrateFile(session, &tor->info, TR_METAINFO_BASENAME_HASH, TR_METAINFO_BASENAME_NAME_AND_PARTIAL_HASH);
