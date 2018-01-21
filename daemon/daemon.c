@@ -445,7 +445,7 @@ main( int argc, char ** argv )
                       break;
             case 't': tr_bencDictAddBool( &settings, TR_PREFS_KEY_RPC_AUTH_REQUIRED, true );
                       break;
-            case 'T': tr_bencDictAddBool( &settings, TR_PREFS_KEY_RPC_AUTH_REQUIRED, false );
+            case 'T': tr_bencDictAddBool( &settings, TR_PREFS_KEY_RPC_AUTH_REQUIRED, true );
                       break;
             case 'u': tr_bencDictAddStr( &settings, TR_PREFS_KEY_RPC_USERNAME, optarg );
                       break;
@@ -555,8 +555,7 @@ main( int argc, char ** argv )
             tr_err( "Unable to save pidfile \"%s\": %s", pid_filename, tr_strerror( errno ) );
     }
 
-    if( tr_bencDictFindBool( &settings, TR_PREFS_KEY_RPC_AUTH_REQUIRED, &boolVal ) && boolVal )
-        tr_ninf( MY_NAME, "requiring authentication" );
+    tr_ninf( MY_NAME, "ALWAYS requiring authentication" );
 
     mySession = session;
 
