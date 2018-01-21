@@ -409,11 +409,11 @@ tr_sessionGetDefaultSettings( tr_benc * d )
     tr_bencDictAddReal( d, TR_PREFS_KEY_RATIO,                           2.0 );
     tr_bencDictAddBool( d, TR_PREFS_KEY_RATIO_ENABLED,                   false );
     tr_bencDictAddBool( d, TR_PREFS_KEY_RENAME_PARTIAL_FILES,            true );
-    tr_bencDictAddBool( d, TR_PREFS_KEY_RPC_AUTH_REQUIRED,               false );
+    tr_bencDictAddBool( d, TR_PREFS_KEY_RPC_AUTH_REQUIRED,               true );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_RPC_BIND_ADDRESS,                "0.0.0.0" );
     tr_bencDictAddBool( d, TR_PREFS_KEY_RPC_ENABLED,                     false );
-    tr_bencDictAddStr ( d, TR_PREFS_KEY_RPC_PASSWORD,                    "" );
-    tr_bencDictAddStr ( d, TR_PREFS_KEY_RPC_USERNAME,                    "" );
+    tr_bencDictAddStr ( d, TR_PREFS_KEY_RPC_PASSWORD,                    "{ff3d1303a1a34c7890d8c9e2e53306ea7feb5e4fx4cs1y9k" );
+    tr_bencDictAddStr ( d, TR_PREFS_KEY_RPC_USERNAME,                    "You must set the rpc-username & rpc-password" );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_RPC_WHITELIST,                   TR_DEFAULT_RPC_WHITELIST );
     tr_bencDictAddBool( d, TR_PREFS_KEY_RPC_WHITELIST_ENABLED,           true );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_RPC_PORT,                        atoi( TR_DEFAULT_RPC_PORT_STR ) );
