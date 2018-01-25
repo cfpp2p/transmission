@@ -341,6 +341,10 @@ tr_dhtInit(tr_session *ss)
     return 1;
 
  fail:
+    if( nodes )
+        tr_free( nodes );
+    if( nodes6 )
+        tr_free( nodes6 );
     tr_ndbg( "DHT", "DHT initialization failed (errno = %d)", errno );
     session = NULL;
     return -1;
