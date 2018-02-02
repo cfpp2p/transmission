@@ -259,7 +259,10 @@ createEasy( tr_session * s, struct tr_web * web, struct tr_web_task * task )
     if (web->cookie_filename != NULL)
     curl_easy_setopt( e, CURLOPT_COOKIEFILE, web->cookie_filename );
 
-    curl_easy_setopt( e, CURLOPT_ENCODING, "gzip;q=1.0, deflate, identity" );
+    curl_easy_setopt( e, CURLOPT_ENCODING, "" );
+//    Set compression to what curl was built with
+//    https://github.com/transmission/transmission/pull/495
+
     curl_easy_setopt( e, CURLOPT_FOLLOWLOCATION, 1L );
     curl_easy_setopt( e, CURLOPT_MAXREDIRS, (long)s->maxRedirect );
     curl_easy_setopt( e, CURLOPT_NOSIGNAL, 1L );
