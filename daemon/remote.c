@@ -1797,7 +1797,7 @@ flush( const char * rpcurl, tr_benc ** benc )
                 benc = NULL;
                 break;
             default:
-                evbuffer_add_printf( buf, '\0' );
+                evbuffer_add( buf, "", 1 );
                 fprintf( stderr, "Unexpected response: %s\n", evbuffer_pullup( buf, -1 ) );
                 status |= EXIT_FAILURE;
                 break;
