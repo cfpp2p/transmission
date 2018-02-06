@@ -1747,29 +1747,7 @@ tr_curl_easy_init( struct evbuffer * writebuf )
         curl_easy_setopt( curl, CURLOPT_SSL_VERIFYHOST, 0 ); /* do not verify subject/hostname */
         curl_easy_setopt( curl, CURLOPT_SSL_VERIFYPEER, 0 ); /* since most certs will be self-signed, do not verify against CA */
     }
-    if( sessionId ) {
-        char * h = tr_strdup_printf( "%s: %s", TR_RPC_SESSION_ID_HEADER, sessionId );
-        struct curl_slist * custom_headers = curl_slist_append( NULL, h );
-        tr_free( h );
-
-        curl_easy_setopt( curl, CURLOPT_HTTPHEADER, custom_headers );
-        curl_easy_setopt( curl, CURLOPT_PRIVATE, custom_headers );
-    }
     return curl;
-}
-
-static void
-tr_curl_easy_cleanup(CURL* curl)
-{
-    struct curl_slist* custom_headers = NULL;
-    curl_easy_getinfo(curl, CURLINFO_PRIVATE, &custom_headers);
-
-    curl_easy_cleanup(curl);
-
-    if (custom_headers != NULL)
-    {
-        curl_slist_free_all(custom_headers);
-    }
 }
 
 static int
@@ -1779,10 +1757,18 @@ flush( const char * rpcurl, tr_benc ** benc )
     CURL * curl;
     int status = EXIT_SUCCESS;
     struct evbuffer * buf = evbuffer_new( );
+    struct curl_slist * custom_headers = NULL;
     char * json = tr_bencToStr( *benc, TR_FMT_JSON_LEAN, NULL );
     char *rpcurl_http =  tr_strdup_printf( UseSSL? "https://%s" : "http://%s", rpcurl );
 
     curl = tr_curl_easy_init( buf );
+    if( sessionId ) {
+        char * h = tr_strdup_printf( "%s: %s", TR_RPC_SESSION_ID_HEADER, sessionId );
+        custom_headers = curl_slist_append( NULL, h );
+        tr_free( h );
+
+        curl_easy_setopt( curl, CURLOPT_HTTPHEADER, custom_headers );
+    }
     curl_easy_setopt( curl, CURLOPT_URL, rpcurl_http );
     curl_easy_setopt( curl, CURLOPT_POSTFIELDS, json );
     curl_easy_setopt( curl, CURLOPT_TIMEOUT, getTimeoutSecs( json ) );
@@ -1807,7 +1793,9 @@ flush( const char * rpcurl, tr_benc ** benc )
                 /* Session id failed. Our curl header func has already
                  * pulled the new session id from this response's headers,
                  * build a new CURL* and try again */
-                tr_curl_easy_cleanup( curl );
+                curl_easy_cleanup( curl );
+                if( custom_headers != NULL )
+                    curl_slist_free_all( custom_headers );
                 curl = NULL;
                 status |= flush( rpcurl, benc );
                 benc = NULL;
@@ -1825,7 +1813,9 @@ flush( const char * rpcurl, tr_benc ** benc )
     tr_free( json );
     evbuffer_free( buf );
     if( curl != 0 )
-        tr_curl_easy_cleanup( curl );
+        curl_easy_cleanup( curl );
+        if( custom_headers != NULL )
+            curl_slist_free_all( custom_headers );
     if( benc != NULL ) {
         tr_bencFree( *benc );
         tr_free( *benc );
