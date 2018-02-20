@@ -367,7 +367,7 @@ tr_sessionGetDefaultSettings( tr_benc * d )
 
     assert( tr_bencIsDict( d ) );
 
-    tr_bencDictReserve( d, 91);
+    tr_bencDictReserve( d, 92);
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_ENABLED,               false );
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_WEBSEEDS,              false );
     tr_bencDictAddBool( d, TR_PREFS_KEY_IPV6_ENABLED,                    false );
@@ -455,6 +455,8 @@ tr_sessionGetDefaultSettings( tr_benc * d )
     tr_bencDictAddInt ( d, TR_PREFS_KEY_MULTISCRAPE_MAXIMUM,             64 );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_CONCURRENT_ANNOUNCE_MAXIMUM,     48 );
     tr_bencDictAddBool( d, TR_PREFS_KEY_CLEAN_JSON_UTF,                  false );
+    tr_bencDictAddInt ( d, TR_PREFS_KEY_DHT_BLOCK_THIS_PORT,             1 );
+
 
   tr_bencDictAddStr  (d, TR_PREFS_KEY_DOWNLOAD_GROUP_DEFAULT,          tr_getDefaultDownloadGroupDefault ());
   knownGroups = tr_getDefaultDownloadGroups ();
@@ -470,7 +472,7 @@ tr_sessionGetSettings( tr_session * s, struct tr_benc * d )
 
     assert( tr_bencIsDict( d ) );
 
-    tr_bencDictReserve( d, 90 );
+    tr_bencDictReserve( d, 91 );
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_ENABLED,                tr_blocklistIsEnabled( s ) );
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_WEBSEEDS,               s->blockListWebseeds );
     tr_bencDictAddBool( d, TR_PREFS_KEY_IPV6_ENABLED,                     s->ipv6Enabled );
@@ -557,6 +559,8 @@ tr_sessionGetSettings( tr_session * s, struct tr_benc * d )
     tr_bencDictAddInt ( d, TR_PREFS_KEY_MULTISCRAPE_MAXIMUM,              s->maxMultiscrape );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_CONCURRENT_ANNOUNCE_MAXIMUM,      s->maxConcurrentAnnounces );
     tr_bencDictAddBool( d, TR_PREFS_KEY_CLEAN_JSON_UTF,                   tr_sessionGetCleanJsonUtf( s ) );
+    tr_bencDictAddInt ( d, TR_PREFS_KEY_DHT_BLOCK_THIS_PORT,              s->dhtBlockThisPort );
+
 
   tr_bencDictAddStr  (d, TR_PREFS_KEY_DOWNLOAD_GROUP_DEFAULT,       tr_sessionGetDownloadGroupDefault (s));
   knownGroups = tr_sessionGetDownloadGroups (s);
@@ -961,6 +965,8 @@ sessionSetImpl( void * vdata )
         session->maxConcurrentAnnounces = ( i >= 0 ) ? i : -1 ;
     if( tr_bencDictFindBool( settings, TR_PREFS_KEY_CLEAN_JSON_UTF, &boolVal ) )
         session->cleanUTFenabled = boolVal;
+    if( tr_bencDictFindInt( settings, TR_PREFS_KEY_DHT_BLOCK_THIS_PORT, &i ) )
+        session->dhtBlockThisPort = ( ( i >= 0 ) && ( i <= USHRT_MAX ) ) ? i : 0 ;
 
   if (tr_bencDictFindList (settings, TR_PREFS_KEY_DOWNLOAD_GROUPS, &groups))
   {
@@ -3233,6 +3239,27 @@ tr_sessionGetMaxConcurrentAnnounces( const tr_session * session )
     assert( tr_isSession( session ) );
 
     return session->maxConcurrentAnnounces;
+}
+
+void
+tr_sessionSetDHTblockThisPort( tr_session * session, tr_port dhtBlockThisPort )
+{
+    assert( tr_isSession( session ) );
+//    if( dhtBlockThisPort >= 0 )  always >= 0 due to type
+//    {
+        session->dhtBlockThisPort = dhtBlockThisPort;
+        printf( "transmission session: Block DHT port set to %d \n", dhtBlockThisPort );
+        fflush( stdout );
+//    }
+   
+}
+
+tr_port
+tr_sessionGetDHTblockThisPort( const tr_session * session )
+{
+    assert( tr_isSession( session ) );
+
+    return session->dhtBlockThisPort;
 }
 
 /****
