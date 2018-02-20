@@ -274,6 +274,7 @@ tr_dhtInit(tr_session *ss)
     int rc;
     bool have_id = false;
     char * dat_file;
+    char * block_this_port;
     uint8_t * nodes = NULL, * nodes6 = NULL;
     const uint8_t * raw;
     size_t len, len6;
@@ -286,6 +287,13 @@ tr_dhtInit(tr_session *ss)
 
     if( getenv( "TR_DHT_VERBOSE" ) != NULL )
         dht_debug = stderr;
+
+    if( getenv( "TR_DHT_PORT_FILTER" ) != NULL )
+        port_filter = stderr;
+
+    block_this_port = getenv( "TR_DHT_BLOCK_THIS_PORT" );
+    if( block_this_port != NULL ) blocked_port = strtol( block_this_port, NULL, 0 );
+    else blocked_port = 0;
 
     dat_file = tr_buildPath( ss->configDir, "dht.dat", NULL );
     rc = tr_bencLoadFile( &benc, TR_FMT_BENC, dat_file );

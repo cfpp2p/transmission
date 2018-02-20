@@ -313,6 +313,13 @@ static time_t token_bucket_time;
 static int token_bucket_tokens;
 
 FILE *dht_debug = NULL;
+FILE *port_filter = NULL;
+
+unsigned short blocked_port;
+static int port_differs_count = 0;
+static int announce_count = 0;
+static int both_port_count = 0;
+
 
 #ifdef __GNUC__
     __attribute__ ((format (printf, 1, 2)))
@@ -325,6 +332,16 @@ debugf(const char *format, ...)
     vfprintf(dht_debug, format, args);
     va_end(args);
     fflush(dht_debug);
+}
+
+static void
+port_filterf(const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    vfprintf(port_filter, format, args);
+    va_end(args);
+    fflush(port_filter);
 }
 
 static void
@@ -1608,6 +1625,12 @@ dht_init(int s, int s6, const unsigned char *id, const unsigned char *v)
     storage = NULL;
     numstorage = 0;
 
+    if(dht_debug)
+        debugf("(TR_DHT_VERBOSE) setting TR_DHT_BLOCK_THIS_PORT is %d.\n", blocked_port);
+    else
+        if(port_filter)
+            port_filterf("(TR_DHT_PORT_FILTER) setting TR_DHT_BLOCK_THIS_PORT is %d%s", blocked_port, ".\n");
+
     if(s >= 0) {
         buckets = calloc(sizeof(struct bucket), 1);
         if(buckets == NULL)
@@ -2088,6 +2111,7 @@ dht_periodic(const void *buf, size_t buflen,
             }
             break;
         case ANNOUNCE_PEER:
+            if(dht_debug || port_filter) ++announce_count;
             if(dht_debug) debugf("Announce peer!\n");
             new_node(id, from, fromlen, 1);
             if(id_cmp(info_hash, zeroes) == 0) {
@@ -2102,19 +2126,21 @@ dht_periodic(const void *buf, size_t buflen,
                            203, "Announce_peer with wrong token");
                 break;
             }
+            unsigned short port_temp = port;
             if(implied_port != 0) {
                 if(port != 0) {
-                    if(dht_debug) debugf("Both port and implied_port.\n");
+                    if(dht_debug || port_filter) ++both_port_count;
+                    if(dht_debug) debugf("Both port (%d) and implied_port.\n", ntohs(port));
                     /* But continue, that's what the spec says. */
                 }
                 switch(from->sa_family) {
                 case AF_INET:
                     port = htons(((struct sockaddr_in*)from)->sin_port);
-                    if(dht_debug) debugf("Announce_peer: AF_INET implied_port %d.\n", port);
+                    if(dht_debug) debugf("Announce_peer: AF_INET implied_port %d.\n", ntohs(port));
                     break;
                 case AF_INET6:
                     port = htons(((struct sockaddr_in6*)from)->sin6_port);
-                    if(dht_debug) debugf("Announce_peer: AF_INET6 implied_port %d.\n", port);
+                    if(dht_debug) debugf("Announce_peer: AF_INET6 implied_port %d.\n", ntohs(port));
                     break;
                 default:
                     port = 0;
@@ -2122,12 +2148,41 @@ dht_periodic(const void *buf, size_t buflen,
                     break;
                 }
             }
+
+            if((dht_debug || port_filter) && port_temp && (port_temp != port)) {
+                ++port_differs_count;
+                if(dht_debug) {
+                    debugf("port (%d) not equal to implied port (%d) differs count = %d.\n",
+                            ntohs(port_temp), ntohs(port), port_differs_count);
+                    debugf("Total announce count = %d.\n", announce_count);
+                    debugf("Both port count = %d.\n", both_port_count);
+                }
+                else if(port_filter) {
+                    port_filterf("port (%d) not equal to implied port (%d) differs count = %d.\n",
+                            ntohs(port_temp), ntohs(port), port_differs_count);
+                    port_filterf("Total announce count = %d.\n", announce_count);
+                    port_filterf("Both port count = %d.\n", both_port_count);
+                }
+            }
+
             if(port == 0) {
                 if(dht_debug) debugf("Announce_peer with forbidden port %d.\n", port);
                 send_error(from, fromlen, tid, tid_len,
                            203, "Announce_peer with forbidden port number");
                 break;
             }
+
+            if(port == htons(blocked_port)) {
+                if(dht_debug) debugf("Blocked port %d (environment setting TR_DHT_BLOCK_THIS_PORT).\n",
+                                            ntohs(port));
+                else if(port_filter) port_filterf("Blocked port %d (environment setting TR_DHT_BLOCK_THIS_PORT).\n",
+                                            ntohs(port));
+                send_error(from, fromlen, tid, tid_len,
+                           203, "Announce_peer with forbidden port number");
+                port = 0;
+                break;
+            }
+
             storage_store(info_hash, from, port);
             /* Note that if storage_store failed, we lie to the requestor.
                This is to prevent them from backtracking, and hence

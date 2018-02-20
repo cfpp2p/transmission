@@ -2169,7 +2169,22 @@ tr_peerMgrAddPex( tr_torrent * tor, uint8_t from,
         if( !tr_sessionIsAddressBlocked( t->manager->session, &pex->addr ) )
         {
             if( tr_address_is_valid_for_peers( t->manager->session, &pex->addr, pex->port ) )
-                ensureAtomExists( t, &pex->addr, pex->port, pex->flags, seedProbability, from );
+                {
+                if( ( from == TR_PEER_FROM_DHT ) &&
+                              ( pex->port == htons( t->manager->session->dhtBlockThisPort ) ) )
+                     {
+                     tr_tordbg( tor, "Blocked DHT port %d", ntohs( pex->port ) );
+                     tr_tordbg( tor, "pex peer DHT candidate %s dropped.", tr_address_to_string( &pex->addr ) );
+                     printf( "transmission: %s -- Blocked DHT port %d \n", tor->info.name, ntohs( pex->port ) );
+                     printf( "transmission: %s -- pex peer DHT candidate %s dropped. \n",
+                                    tor->info.name, tr_address_to_string( &pex->addr ) );
+                     fflush( stdout );
+
+                     }    
+                else {
+                     ensureAtomExists( t, &pex->addr, pex->port, pex->flags, seedProbability, from );
+                     }
+                }
         }
         else {
              tr_tordbg( tor, "Blocklisted IP %s dropped as pex peer candidate", tr_address_to_string( &pex->addr ) );

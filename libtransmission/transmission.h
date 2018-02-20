@@ -255,6 +255,7 @@ const char* tr_getDefaultDownloadGroupDefault (void);
 #define TR_PREFS_KEY_MULTISCRAPE_MAXIMUM                "multiscrape-maximum"
 #define TR_PREFS_KEY_CONCURRENT_ANNOUNCE_MAXIMUM        "concurrent-announces-maximum"
 #define TR_PREFS_KEY_CLEAN_JSON_UTF                     "clean-json-utf-enabled"
+#define TR_PREFS_KEY_DHT_BLOCK_THIS_PORT                "DHT-block-this-port"
 
 
 /**
@@ -942,6 +943,9 @@ void tr_sessionSetTorrentAddedScript( tr_session *, const char * scriptFilename 
 /**
 ***
 **/
+
+void tr_sessionSetDHTblockThisPort( tr_session *, tr_port dhtBlockThisPort );
+tr_port  tr_sessionGetDHTblockThisPort( const tr_session * );
 
 void tr_sessionSetMaxMagnetBadPiece( tr_session *, int maxMagnetBadPiece );
 int  tr_sessionGetMaxMagnetBadPiece( const tr_session * );

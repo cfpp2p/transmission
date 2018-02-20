@@ -139,6 +139,7 @@ struct tr_session
     int                          maxRedirect;
     int                          maxMultiscrape;
     int                          maxConcurrentAnnounces;
+    tr_port                      dhtBlockThisPort;
 
     tr_benc                      removedTorrents;
 
