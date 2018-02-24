@@ -1,5 +1,11 @@
 https://github.com/cfpp2p/transmission/commits/cygwin
 
+
+Commits on Feb 20, 2018
+    filter out DHT pollution caused by DHT versions prior to 0.25
+    ref: jech/dht#29
+    cfpp2p committed Feb 20, 2018
+
 Commits on Feb 9, 2018
     Fixed: DHT `implied_port` parameter of the announce_peer message.
     cfpp2p committed Feb 9, 2018
