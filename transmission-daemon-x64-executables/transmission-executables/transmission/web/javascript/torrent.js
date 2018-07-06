@@ -90,7 +90,6 @@ Torrent.Fields.InfoExtra = [
 	'dateCreated',
 	'files',
 	'hashString',
-	'isPrivate',
 	'pieceCount',
 	'pieceSize'
 ];
@@ -106,6 +105,8 @@ Torrent.Fields.StatsExtra = [
 	'haveValid',
 	'peers',
 	'trackerStats',
+	'isPrivate',
+	'blocklistOverride',
 	'webseedsSendingToUs'
 ];
 
@@ -223,6 +224,7 @@ Torrent.prototype =
 	getPieceCount: function() { return this.fields.pieceCount; },
 	getPieceSize: function() { return this.fields.pieceSize; },
 	getPrivateFlag: function() { return this.fields.isPrivate; },
+	getBlovrFlag: function() { return this.fields.blocklistOverride; },
 	getQueuePosition: function() { return this.fields.queuePosition; },
 	getRecheckProgress: function() { return this.fields.recheckProgress; },
 	getSeedRatioLimit: function() { return this.fields.seedRatioLimit; },

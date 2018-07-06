@@ -109,6 +109,10 @@ resourcestring
   SAverage = 'average';
   sDuplicateTorrentCaption = 'Duplicate Torrent';
   sDuplicateTorrent = 'Add trackers from torrent file?';
+  sPrivateOn = 'ON';
+  sPrivateOff = 'OFF';
+  sBlocklistOverrideOn = 'True';
+  sBlocklistOverrideOff = 'False';
 
 type
   TSpeedRecord=record
@@ -613,6 +617,8 @@ const
   idxCheatMode = 24;
   idxSdRatio = 25;
   idxSizeLeft = 26;
+  idxPrivate = 27;
+  idxBlocklistOverride = 28;
  
   idxTag = -1;
   idxSeedsTotal = -2;
@@ -692,11 +698,12 @@ const
 
   StatusFiltersCount = 7;
 
-  TorrentFieldsMap: array[idxName..idxSizeLeft] of string =
+  TorrentFieldsMap: array[idxName..idxBlocklistOverride] of string =
     ('', 'totalSize', '', 'status', 'peersSendingToUs,seeders',
      'peersGettingFromUs,leechers', 'rateDownload', 'rateUpload', 'eta', 'uploadRatio',
      'downloadedEver', 'uploadedEver', '', '', 'addedDate', 'doneDate', 'activityDate', '', 'bandwidthPriority',
-     '', '', 'queuePosition', 'secondsSeeding', 'streamingMode', 'cheatMode', 'leftUntilDone', '');
+     '', '', 'queuePosition', 'secondsSeeding', 'streamingMode', 'cheatMode', 'leftUntilDone', 'isPrivate',
+     'blocklistOverride', '');
 
 implementation
 
@@ -2379,10 +2386,12 @@ begin
 
           if args.IndexOfName('blocklist-url') >= 0 then begin
             edBlocklistURL.Text:=UTF8Encode(args.Strings['blocklist-url']);
-            if cbBlocklist.Checked then
-              cbBlocklist.Caption:=cbBlocklist.Caption + ' ' + IntToStr(args.Integers['blocklist-size']) + ' entries in list'
-            else
-              cbBlocklist.Caption:=cbBlocklist.Caption + ' (' + IntToStr(args.Integers['blocklist-size']) + ' disabled entries in list)';
+            if cbBlocklist.Checked then begin
+              if args.Integers['blocklist-override'] = 0 then
+                cbBlocklist.Caption:=cbBlocklist.Caption + ' ' + IntToStr(args.Integers['blocklist-size']) + ' entries in list'
+              else
+                cbBlocklist.Caption:=cbBlocklist.Caption + ' ' + IntToStr(args.Integers['blocklist-size']) + ' disabled (override) entries in list';
+            end else cbBlocklist.Caption:=cbBlocklist.Caption + ' (' + IntToStr(args.Integers['blocklist-size']) + ' disabled entries in list)';
           end else begin
             edBlocklistURL.Visible:=False;
             cbBlocklist.Left:=cbPEX.Left;
@@ -3150,6 +3159,24 @@ begin
 
       idxSdRatio:
         Text:=RatioToString(Sender.Items[idxSdRatio, ARow]);
+
+      idxPrivate:
+        begin
+          j:=Sender.Items[idxPrivate, ARow];
+          if j >= 1 then
+            Text:=sPrivateOn
+          else
+            Text:=sPrivateOff;
+        end;
+
+      idxBlocklistOverride:
+        begin
+          j:=Sender.Items[idxBlocklistOverride, ARow];
+          if j >= 1 then
+            Text:=sBlocklistOverrideOn
+          else
+            Text:=sBlocklistOverrideOff;
+        end;
 
     end;
   end;
@@ -4408,6 +4435,12 @@ begin
         else FTorrents[idxSdRatio, row]:=NULL;
       end
     else FTorrents[idxSdRatio, row]:=NULL;
+
+    if t.IndexOfName('isPrivate') >= 0 then
+      FTorrents[idxPrivate, row]:=t.Integers['isPrivate'];
+
+    if t.IndexOfName('blocklistOverride') >= 0 then
+      FTorrents[idxBlocklistOverride, row]:=t.Integers['blocklistOverride'];
 
     DownSpeed:=DownSpeed + FTorrents[idxDownSpeed, row];
     UpSpeed:=UpSpeed + FTorrents[idxUpSpeed, row];

@@ -151,6 +151,7 @@
 						<div class="title">Blocklist</div>
 						<div class="row"><div class="key"><input type="checkbox" id="blocklist-enabled"/><label for="blocklist-enabled">Enable blocklist:</label></div>
 						                 <div class="value"><input type="url" id="blocklist-url"/></div></div>
+						<div class="row"><div title="Set or Reset by last torrent started">Blocklist Override: <span id="blocklist-override">?</span></div></div>
 						<div class="row"><div class="key" style="margin-top: 3px; font-size: smaller;">Blocklist has <span id="blocklist-size">?</span> rules</div>
 						                 <div class="value"><input type="button" id="blocklist-update-button" value="Update"/></div></div>
 					</div>
@@ -205,6 +206,10 @@
 					<div class="inspector_row">
 						<div class="inspector_label">Secure:</div>
 						<div id="torrent_inspector_secure"></div>
+					</div>
+					<div class="inspector_row">
+						<div class="inspector_label">Blocklist Override:</div>
+						<div id="torrent_inspector_blocklist_override"></div>
 					</div>
 					<div class="inspector_row">
 						<div class="inspector_label">Comment:</div>

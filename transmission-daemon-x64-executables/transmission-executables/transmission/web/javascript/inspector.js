@@ -102,6 +102,7 @@ function Inspector(controller) {
             pieceSize = '',
             hash = '',
             secure = '',
+            blocklist_override = '',
             comment = '',
             creator = '',
             date = '',
@@ -118,6 +119,7 @@ function Inspector(controller) {
             pieceSize   = accumulateString(pieceSize, fmt.mem(t.getPieceSize()));
             hash        = accumulateString(hash, t.getHashString());
             secure      = accumulateString(secure, (t.getPrivateFlag() ? 'Private' : 'Public')+' Torrent');
+            blocklist_override      = accumulateString(blocklist_override, (t.getBlovrFlag() ? 'True' : 'False'));
             comment     = accumulateString(comment, t.getComment() || 'N/A');
 			switch( t.getCheatMode() ) {
 				case 0:
@@ -174,6 +176,7 @@ function Inspector(controller) {
 
         setInnerHTML(e.hash, hash || na);
         setInnerHTML(e.secure, secure || na);
+        setInnerHTML(e.blocklist_override, blocklist_override || na);
         setInnerHTML(e.comment, comment.replace(/(https?|ftp):\/\/([\w\-]+(\.[\w\-]+)*(\.[a-z]{2,4})?)(\d{1,5})?(\/([^<>\s]*))?/g, '<a target="_blank" href="$&">$&</a>') || na);
         setInnerHTML(e.streaming_mode, streaming_mode || na);
         setInnerHTML(e.cheat_mode, cheat_mode || na);
@@ -538,6 +541,7 @@ function Inspector(controller) {
         data.elements.progress       = $(ti+'progress')[0];
         data.elements.ratio          = $(ti+'ratio')[0];
         data.elements.secure         = $(ti+'secure')[0];
+        data.elements.blocklist_override         = $(ti+'blocklist_override')[0];
         data.elements.size           = $(ti+'size')[0];
         data.elements.state          = $(ti+'state')[0];
         data.elements.pieces         = $(ti+'pieces')[0];
