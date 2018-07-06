@@ -44,7 +44,8 @@ enum
     TR_FR_PIECE_TEMP_DIR      = ( 1 << 22 ),
     TR_FR_CHEAT_RATIO         = ( 1 << 23 ),
     TR_FR_PRIVATE_ENABLED     = ( 1 << 24 ),
-    TR_FR_GROUP               = ( 1 << 25 )
+    TR_FR_GROUP               = ( 1 << 25 ),
+    TR_FR_BLOCKLIST_OVERRIDE  = ( 1 << 26 )
 };
 
 /**

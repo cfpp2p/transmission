@@ -418,6 +418,10 @@ bool tr_privateTrackerOff( const char * url ) TR_GNUC_NONNULL(1);
 
 bool tr_privateTrackerOn( const char * url ) TR_GNUC_NONNULL(1);
 
+bool tr_blocklistOverrideOff( const char * url ) TR_GNUC_NONNULL(1);
+
+bool tr_blocklistOverrideOn( const char * url ) TR_GNUC_NONNULL(1);
+
 /** @brief return true if the url is a [ http, https, ftp, ftps ] url that Transmission understands */
 bool tr_urlIsValid( const char * url, int url_len ) TR_GNUC_NONNULL(1);
 

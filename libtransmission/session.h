@@ -112,6 +112,7 @@ struct tr_session
     bool                         isUTPEnabled;
     bool                         isLPDEnabled;
     bool                         isBlocklistEnabled;
+    bool                         isBlocklistOverride;
     bool                         isPrefetchEnabled;
     bool                         isTorrentAddedScriptEnabled;
     bool                         isTorrentDoneScriptEnabled;

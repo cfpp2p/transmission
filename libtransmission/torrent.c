@@ -1117,6 +1117,11 @@ torrentInit( tr_torrent * tor, const tr_ctor * ctor )
     doStart = tor->isRunning;
     tor->isRunning = 0;
 
+    if( !( loaded & TR_FR_BLOCKLIST_OVERRIDE ) )
+    {
+        tor->blocklistOverride = false;
+    }
+
     if( !( loaded & TR_FR_SPEEDLIMIT ) )
     {
         tr_torrentUseSpeedLimit( tor, TR_UP, false );
@@ -1911,6 +1916,15 @@ torrentStartImpl( void * vtor )
 
     tr_torrentRecheckCompleteness( tor );
     torrentSetQueued( tor, false );
+
+    if( tor->session->isBlocklistEnabled ) {
+        // turn off blocklists if not already overrride and the torrent directs this
+        if( tor->blocklistOverride && !tor->session->isBlocklistOverride )
+            tr_blocklistSetOverride( tor->session, true );
+        // put blocklists back on if previous override and the torrent directs this
+        else if( !tor->blocklistOverride && tor->session->isBlocklistOverride )
+            tr_blocklistSetOverride( tor->session, false );
+    }
 
     now = tr_time( );
     tor->isRunning = true;

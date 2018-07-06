@@ -175,6 +175,7 @@ const char* tr_getDefaultDownloadGroupDefault (void);
 #define TR_PREFS_KEY_BIND_ADDRESS_IPV4                  "bind-address-ipv4"
 #define TR_PREFS_KEY_BIND_ADDRESS_IPV6                  "bind-address-ipv6"
 #define TR_PREFS_KEY_BLOCKLIST_ENABLED                  "blocklist-enabled"
+#define TR_PREFS_KEY_BLOCKLIST_OVERRIDE                 "blocklist-override"
 #define TR_PREFS_KEY_BLOCKLIST_URL                      "blocklist-url"
 #define TR_PREFS_KEY_BLOCKLIST_WEBSEEDS                 "blocklist-webseeds"
 #define TR_PREFS_KEY_IPV6_ENABLED                       "ipv6-enabled"
@@ -1095,7 +1096,12 @@ bool    tr_blocklistExists       ( const tr_session * session );
 
 bool    tr_blocklistIsEnabled    ( const tr_session * session );
 
+bool    tr_blocklistIsOverride   ( const tr_session * session );
+
 void    tr_blocklistSetEnabled   ( tr_session       * session,
+                                   bool               isEnabled );
+
+void    tr_blocklistSetOverride  ( tr_session       * session,
                                    bool               isEnabled );
 
 /** @brief The blocklist that ges updated when an RPC client

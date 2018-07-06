@@ -613,6 +613,8 @@ addField( const tr_torrent * const tor,
         tr_bencDictAddInt( d, key, st->addedDate );
     else if( tr_streq( key, keylen, "bandwidthPriority" ) )
         tr_bencDictAddInt( d, key, tr_torrentGetPriority( tor ) );
+    else if( tr_streq( key, keylen, "blocklistOverride" ) )
+        tr_bencDictAddBool( d, key, tor->blocklistOverride );
     else if( tr_streq( key, keylen, "streamingMode" ) )
         tr_bencDictAddInt( d, key, tr_torrentGetStreamingMode( tor ) );
     else if( tr_streq( key, keylen, "cheatMode" ) )
@@ -1058,6 +1060,20 @@ addTrackerUrls( tr_torrent * tor, tr_benc * urls )
             {
                 tor->info.isPrivate = true;
                 errmsg = "private flag set to true";
+                changedFlag = true;
+                tr_torrentSetDirty( tor );
+            }
+            else if( tr_blocklistOverrideOff( announce ) )
+            {
+                tor->blocklistOverride = false;
+                errmsg = "blocklist override set to false";
+                changedFlag = true;
+                tr_torrentSetDirty( tor );
+            }
+            else if( tr_blocklistOverrideOn( announce ) )
+            {
+                tor->blocklistOverride = true;
+                errmsg = "blocklist override set to true";
                 changedFlag = true;
                 tr_torrentSetDirty( tor );
             }
@@ -1909,6 +1925,7 @@ sessionGet( tr_session               * s,
     tr_bencDictAddInt ( d, TR_PREFS_KEY_ALT_SPEED_TIME_DAY,tr_sessionGetAltSpeedDay(s) );
     tr_bencDictAddBool( d, TR_PREFS_KEY_ALT_SPEED_TIME_ENABLED, tr_sessionUsesAltSpeedTime(s) );
     tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_ENABLED, tr_blocklistIsEnabled( s ) );
+    tr_bencDictAddBool( d, TR_PREFS_KEY_BLOCKLIST_OVERRIDE, tr_blocklistIsOverride( s ) );
     tr_bencDictAddStr ( d, TR_PREFS_KEY_BLOCKLIST_URL, tr_blocklistGetURL( s ) );
     tr_bencDictAddInt ( d, TR_PREFS_KEY_MAX_CACHE_SIZE_MB, tr_sessionGetCacheLimit_MB( s ) );
     tr_bencDictAddInt ( d, "blocklist-size", tr_blocklistGetRuleCount( s ) );
