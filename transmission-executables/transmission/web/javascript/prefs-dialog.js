@@ -23,6 +23,7 @@ function PrefsDialog(remote) {
             'blocklist-enabled',
             'blocklist-size',
             'blocklist-url',
+            'blocklist-override',
             'dht-enabled',
             'download-dir',
             'encryption',
@@ -268,6 +269,11 @@ function PrefsDialog(remote) {
             {
                 // special case -- regular text area
                 e.text('' + val.toStringWithCommas());
+            }
+            if (key === 'blocklist-override')
+            {
+                // special case -- regular text area
+                e.text('' + val.toString());
             }
             else switch (e[0].type)
             {
