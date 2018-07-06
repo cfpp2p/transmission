@@ -1009,6 +1009,32 @@ tr_privateTrackerOn( const char * url )
     }
 }
 
+bool
+tr_blocklistOverrideOff( const char * url )
+{
+    if( ( url == NULL ) || ( strlen( url ) != 20 ) )
+    {
+        return false;
+    }
+    else
+    {
+        return !memcmp(url,"blocklistoverrideOFF",20);
+    }
+}
+
+bool
+tr_blocklistOverrideOn( const char * url )
+{
+    if( ( url == NULL ) || ( strlen( url ) != 19 ) )
+    {
+        return false;
+    }
+    else
+    {
+        return !memcmp(url,"blocklistoverrideON",19);
+    }
+}
+
 /** @brief return true if the URL is a http or https or ftp or sftp one that Transmission understands */
 bool
 tr_urlIsValid( const char * url, int url_len )

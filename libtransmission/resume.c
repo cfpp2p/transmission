@@ -52,6 +52,7 @@
 #define KEY_UPLOADED            "uploaded"
 #define KEY_CHEATMODE           "cheat-mode"
 #define KEY_STREAMINGMODE       "streaming-mode"
+#define KEY_BLOCKLIST_OVERRIDE  "blocklist-override"
 
 #define KEY_SPEED_KiBps            "speed"
 #define KEY_SPEED_Bps              "speed-Bps"
@@ -683,7 +684,7 @@ tr_torrentSaveResume( tr_torrent * tor )
     if( !tr_isTorrent( tor ) )
         return;
 
-    tr_bencInitDict( &top, 55 ); /* arbitrary "big enough" number */
+    tr_bencInitDict( &top, 56 ); /* arbitrary "big enough" number */
     tr_bencDictAddInt( &top, KEY_TIME_SEEDING, tor->secondsSeeding );
     tr_bencDictAddInt( &top, KEY_TIME_DOWNLOADING, tor->secondsDownloading );
     tr_bencDictAddInt( &top, KEY_ACTIVITY_DATE, tor->activityDate );
@@ -704,6 +705,7 @@ tr_torrentSaveResume( tr_torrent * tor )
     tr_bencDictAddBool( &top, KEY_PAUSED, !tor->isRunning && !tor->isQueued );
     tr_bencDictAddReal( &top, KEY_CHEATRATIO, tor->cheatRatio );
     tr_bencDictAddBool( &top, KEY_PRIVATEENABLED, tor->info.isPrivate );
+    tr_bencDictAddBool( &top, KEY_BLOCKLIST_OVERRIDE, tor->blocklistOverride );
     savePeers( &top, tor );
     if( tr_torrentHasMetadata( tor ) )
     {
@@ -868,6 +870,13 @@ loadFromFile(tr_torrent* tor, uint64_t fieldsToLoad, bool* didMigrateRename)
     {
         tor->info.isPrivate = boolVal;
         fieldsLoaded |= TR_FR_PRIVATE_ENABLED;
+    }
+
+    if( ( fieldsToLoad & TR_FR_BLOCKLIST_OVERRIDE )
+      && tr_bencDictFindBool( &top, KEY_BLOCKLIST_OVERRIDE, &boolVal ) )
+    {
+        tor->blocklistOverride = boolVal;
+        fieldsLoaded |= TR_FR_BLOCKLIST_OVERRIDE;
     }
 
     double cratio;

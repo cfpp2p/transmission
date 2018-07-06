@@ -920,6 +920,8 @@ sessionSetImpl( void * vdata )
         session->peer_congestion_algorithm = tr_strdup("");
     if( tr_bencDictFindBool( settings, TR_PREFS_KEY_BLOCKLIST_ENABLED, &boolVal ) )
         tr_blocklistSetEnabled( session, boolVal );
+        // blocklist override never on at session startup
+        session->isBlocklistOverride = false;
     if( tr_bencDictFindStr( settings, TR_PREFS_KEY_BLOCKLIST_URL, &str ) )
         tr_blocklistSetURL( session, str );
     if( tr_bencDictFindBool( settings, TR_PREFS_KEY_START, &boolVal ) )
@@ -2568,6 +2570,14 @@ tr_blocklistIsEnabled( const tr_session * session )
     return session->isBlocklistEnabled;
 }
 
+bool
+tr_blocklistIsOverride( const tr_session * session )
+{
+    assert( tr_isSession( session ) );
+
+    return session->isBlocklistOverride;
+}
+
 void
 tr_blocklistSetEnabled( tr_session * session, bool isEnabled )
 {
@@ -2576,9 +2586,24 @@ tr_blocklistSetEnabled( tr_session * session, bool isEnabled )
     assert( tr_isSession( session ) );
 
     session->isBlocklistEnabled = isEnabled != 0;
+    session->isBlocklistOverride = false;
 
     for( l=session->blocklists; l!=NULL; l=l->next )
         _tr_blocklistSetEnabled( l->data, isEnabled );
+}
+
+void
+tr_blocklistSetOverride( tr_session * session, bool isEnabled )
+{
+    tr_list * l;
+
+    assert( tr_isSession( session ) );
+
+    session->isBlocklistOverride = isEnabled;
+    session->isBlocklistEnabled = true;
+
+    for( l=session->blocklists; l!=NULL; l=l->next )
+        _tr_blocklistSetEnabled( l->data, !isEnabled );
 }
 
 bool

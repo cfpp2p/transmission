@@ -254,6 +254,7 @@ struct tr_torrent
     bool                       preFetchMagnet;
     bool                       isDirty;
     bool                       isQueued;
+    bool                       blocklistOverride;
 
     bool                       magnetVerify;
 
