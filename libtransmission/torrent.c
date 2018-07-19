@@ -919,6 +919,65 @@ static bool setLocalErrorIfFilesDisappeared(tr_torrent* tor)
     return disappeared;
 }
 
+static void get_local_time_str(char* const buffer, size_t const buffer_len)
+{
+    time_t const now = tr_time();
+
+    tr_strlcpy(buffer, ctime(&now), buffer_len);
+
+    char* newline_pos = strchr(buffer, '\n');
+
+    /* ctime() includes '\n', but it's better to be safe */
+    if (newline_pos != NULL)
+    {
+        *newline_pos = '\0';
+    }
+}
+
+static void torrentCallScript(tr_torrent const* tor, char const* script)
+{
+    if (script == NULL || *script == '\0')
+    {
+        return;
+    }
+
+    char time_str[32];
+    get_local_time_str(time_str, TR_N_ELEMENTS(time_str));
+
+    char* const torrent_dir = tr_sys_path_native_separators(tr_strdup(tor->currentDir));
+
+    char* const cmd[] =
+    {
+        tr_strdup(script),
+        NULL
+    };
+
+    char* const env[] =
+    {
+        tr_strdup_printf("TR_APP_VERSION=%s", SHORT_VERSION_STRING),
+        tr_strdup_printf("TR_TIME_LOCALTIME=%s", time_str),
+        tr_strdup_printf("TR_TORRENT_DIR=%s", torrent_dir),
+        tr_strdup_printf("TR_TORRENT_HASH=%s", tor->info.hashString),
+        tr_strdup_printf("TR_TORRENT_ID=%d", tr_torrentId(tor)),
+        tr_strdup_printf("TR_TORRENT_NAME=%s", tr_torrentName(tor)),
+        NULL
+    };
+
+    tr_logAddTorInfo(tor, "Calling script \"%s\"", script);
+
+    tr_error* error = NULL;
+
+    if (!tr_spawn_async(cmd, env, TR_IF_WIN32("\\", "/"), &error))
+    {
+        tr_logAddTorErr(tor, "Error executing script \"%s\" (%d): %s", script, error->code, error->message);
+        tr_error_free(error);
+    }
+
+    tr_free_ptrv((void* const*)env);
+    tr_free_ptrv((void* const*)cmd);
+    tr_free(torrent_dir);
+}
+
 static void torrentInit(tr_torrent* tor, tr_ctor const* ctor)
 {
     tr_session* session = tr_ctorGetSession(ctor);
@@ -1054,10 +1113,14 @@ static void torrentInit(tr_torrent* tor, tr_ctor const* ctor)
 
     tor->tiers = tr_announcerAddTorrent(tor, onTrackerResponse, NULL);
 
-    if (isNewTorrent)
+    if ((isNewTorrent) && (tr_torrentHasMetadata (tor)))
     {
         tor->startAfterVerify = doStart;
         tr_torrentVerify(tor, NULL, NULL);
+
+        if (tr_sessionIsTorrentAddedScriptEnabled (tor->session))
+            torrentCallScript (tor, tr_sessionGetTorrentAddedScript (tor->session));
+
     }
     else if (doStart)
     {
@@ -2039,6 +2102,8 @@ static void stopTorrent(void* vtor)
         tr_logAddTorInfo(tor, "%s", "Magnet Verify");
         refreshCurrentDir(tor);
         tr_torrentVerify(tor, NULL, NULL);
+        if (tr_sessionIsTorrentAddedScriptEnabled (tor->session))
+            torrentCallScript (tor, tr_sessionGetTorrentAddedScript (tor->session));
     }
 }
 
@@ -2212,65 +2277,6 @@ void tr_torrentSetIdleLimitHitCallback(tr_torrent* tor, tr_torrent_idle_limit_hi
 void tr_torrentClearIdleLimitHitCallback(tr_torrent* torrent)
 {
     tr_torrentSetIdleLimitHitCallback(torrent, NULL, NULL);
-}
-
-static void get_local_time_str(char* const buffer, size_t const buffer_len)
-{
-    time_t const now = tr_time();
-
-    tr_strlcpy(buffer, ctime(&now), buffer_len);
-
-    char* newline_pos = strchr(buffer, '\n');
-
-    /* ctime() includes '\n', but it's better to be safe */
-    if (newline_pos != NULL)
-    {
-        *newline_pos = '\0';
-    }
-}
-
-static void torrentCallScript(tr_torrent const* tor, char const* script)
-{
-    if (script == NULL || *script == '\0')
-    {
-        return;
-    }
-
-    char time_str[32];
-    get_local_time_str(time_str, TR_N_ELEMENTS(time_str));
-
-    char* const torrent_dir = tr_sys_path_native_separators(tr_strdup(tor->currentDir));
-
-    char* const cmd[] =
-    {
-        tr_strdup(script),
-        NULL
-    };
-
-    char* const env[] =
-    {
-        tr_strdup_printf("TR_APP_VERSION=%s", SHORT_VERSION_STRING),
-        tr_strdup_printf("TR_TIME_LOCALTIME=%s", time_str),
-        tr_strdup_printf("TR_TORRENT_DIR=%s", torrent_dir),
-        tr_strdup_printf("TR_TORRENT_HASH=%s", tor->info.hashString),
-        tr_strdup_printf("TR_TORRENT_ID=%d", tr_torrentId(tor)),
-        tr_strdup_printf("TR_TORRENT_NAME=%s", tr_torrentName(tor)),
-        NULL
-    };
-
-    tr_logAddTorInfo(tor, "Calling script \"%s\"", script);
-
-    tr_error* error = NULL;
-
-    if (!tr_spawn_async(cmd, env, TR_IF_WIN32("\\", "/"), &error))
-    {
-        tr_logAddTorErr(tor, "Error executing script \"%s\" (%d): %s", script, error->code, error->message);
-        tr_error_free(error);
-    }
-
-    tr_free_ptrv((void* const*)env);
-    tr_free_ptrv((void* const*)cmd);
-    tr_free(torrent_dir);
 }
 
 void tr_torrentRecheckCompleteness(tr_torrent* tor)
