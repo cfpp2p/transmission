@@ -103,6 +103,7 @@ struct tr_session
     bool isLPDEnabled;
     bool isBlocklistEnabled;
     bool isPrefetchEnabled;
+    bool isTorrentAddedScriptEnabled;
     bool isTorrentDoneScriptEnabled;
     bool isClosing;
     bool isClosed;
@@ -177,6 +178,7 @@ struct tr_session
     int torrentCount;
     tr_torrent* torrentList;
 
+    char* torrentAddedScript;
     char* torrentDoneScript;
 
     char* configDir;
