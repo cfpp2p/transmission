@@ -631,6 +631,17 @@ web_response_func( tr_session    * session,
     else
         is_blocklisted = 0;
 
+    if( response_code == 998 )
+    {
+        w->wait_factor = MAX_WAIT_FACTOR;
+        if( tor )
+            tr_tordbg( tor, "pausing webseed code 998" );
+        else if( w->torrent_id )
+            tr_dbg( "??unknown?? webseed torrent pausing %d - code 998", w->torrent_id );
+        else
+            tr_dbg( "detected response code 998" );
+    }
+
     if( response_code == 999 )
     {
         w->wait_factor = MAX_WAIT_FACTOR;

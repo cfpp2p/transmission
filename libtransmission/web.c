@@ -575,6 +575,8 @@ tr_webThreadFunc( void * vsession )
 /*fprintf( stderr, "removing a completed task.. taskCount is now %d (response code: %d, response len: %d)\n", taskCount, (int)task->code, (int)evbuffer_get_length(task->response) );*/
                 if( ( progress_callback_func( task, 0, 0, 0, (double)999 ) ) || ( res == CURLE_TOO_MANY_REDIRECTS ) )
                     task->code = 999L;
+                if( res == CURLE_BAD_CONTENT_ENCODING )
+                    task->code = 998L;
                 tr_runInEventThread( task->session, task_finish_func, task );
                 --taskCount;
             }
@@ -675,6 +677,7 @@ tr_webGetResponseStr( long code )
         case 503: return "Service Unavailable";
         case 504: return "Gateway Timeout";
         case 505: return "HTTP Version Not Supported";
+        case 998: return "Webseed server compression error";
         case 999: return "Too many redirects";
         default:  return "Unknown Error";
     }
