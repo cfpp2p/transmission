@@ -252,6 +252,8 @@ createEasy( tr_session * s, struct tr_web * web, struct tr_web_task * task )
             curl_easy_setopt( e, CURLOPT_PROGRESSDATA, task );
             curl_easy_setopt( e, CURLOPT_NOPROGRESS, 0L );
         }
+        else
+            curl_easy_setopt( e, CURLOPT_HTTP_CONTENT_DECODING, 0L );
     }
 
     curl_easy_setopt( e, CURLOPT_AUTOREFERER, 1L );
