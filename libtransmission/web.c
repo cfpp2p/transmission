@@ -200,6 +200,8 @@ progress_callback_func( void * vtask, double dltotal, double dlnow,
 {
     struct tr_web_task * task = vtask;
     tr_torrent * wsTor = NULL;
+    if( ( (int)ulnow > CURLE_OK ) && ( (int)ulnow < CURL_LAST ) )
+        tr_dbg( "CURLcode error %d ", (int)ulnow );
     if( task->torrentId != -1 ) {
         wsTor = tr_torrentFindFromId( task->session, task->torrentId );
         if( !wsTor ) {
@@ -575,10 +577,25 @@ tr_webThreadFunc( void * vsession )
 
 
 /*fprintf( stderr, "removing a completed task.. taskCount is now %d (response code: %d, response len: %d)\n", taskCount, (int)task->code, (int)evbuffer_get_length(task->response) );*/
-                if( ( progress_callback_func( task, 0, 0, 0, (double)999 ) ) || ( res == CURLE_TOO_MANY_REDIRECTS ) )
+                if( res != CURLE_OK )
+                {
+                    if( progress_callback_func( task, 0, 0, 0, (double)res ) )
+                        task->code = 997L;
+                }
+                else
+                {
+                    if( progress_callback_func( task, 0, 0, 0, (double)997 ) )
+                        task->code = 997L;
+                }
+
+                if( res == CURLE_TOO_MANY_REDIRECTS )
                     task->code = 999L;
                 if( res == CURLE_BAD_CONTENT_ENCODING )
                     task->code = 998L;
+                if( tr_isSession( task->session ) )
+                    if( task->session->maxWebseedConnectFails >= 999999999 )
+                        if( res != CURLE_OK )
+                            task->code = 996L;
                 tr_runInEventThread( task->session, task_finish_func, task );
                 --taskCount;
             }
@@ -679,6 +696,8 @@ tr_webGetResponseStr( long code )
         case 503: return "Service Unavailable";
         case 504: return "Gateway Timeout";
         case 505: return "HTTP Version Not Supported";
+        case 996: return "CURLcode error";
+        case 997: return "Webseed torrent halt";
         case 998: return "Webseed server compression error";
         case 999: return "Too many redirects";
         default:  return "Unknown Error";
