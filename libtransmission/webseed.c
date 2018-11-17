@@ -230,6 +230,18 @@ write_block_func( void * vdata )
 
     tor = tr_torrentFindFromId( w->session, w->torrent_id );
 
+    if( w->wait_factor >= MAX_WAIT_FACTOR ) {
+        if( !tor )
+           tr_dbg( "?unknown? webseed deleted torrent ID %d write block aborted by wait factor %d ",
+                    w->torrent_id, w->wait_factor );
+        else
+            tr_tordbg( tor, "webseed paused - write block aborted by wait factor %d ",
+                       w->wait_factor );
+        evbuffer_free( buf );
+        tr_free( data );
+        return;
+    }
+
     if( !tor || !tor->isRunning || tor->isStopping || tr_torrentIsSeed( tor ) || w->is_stopping )
     {
         if( !tor )
@@ -388,6 +400,17 @@ on_content_changed( struct evbuffer                * buf,
     struct tr_torrent * wtor;
     wtor = tr_torrentFindFromId( w->session, w->torrent_id );
 
+    if( w->wait_factor >= MAX_WAIT_FACTOR )
+    {
+        if( !wtor )
+           tr_dbg( "?unknown? ID %d webseed task response code %d content changed aborted - wait factor %d ",
+                   w->torrent_id, (int)task->response_code, w->wait_factor );
+        else
+            tr_tordbg( wtor, "webseed task response code %d content changed aborted - wait factor %d ",
+                       (int)task->response_code, w->wait_factor );
+        return;
+    }
+
     if( !w->is_stopping )
     {
         tr_bandwidthUsed( &w->bandwidth, TR_DOWN, n_added, true, tr_time_msec( ) );
@@ -402,7 +425,7 @@ on_content_changed( struct evbuffer                * buf,
         else
             tr_tordbg( wtor, "webseed paused - content changed aborted - run flag:%d - stop flag:%d - w stop flag is %d ",
                        wtor->isRunning, wtor->isStopping, w->is_stopping );
-        task->response_code = 999L;
+        task->response_code = 997L;
         w->wait_factor = MAX_WAIT_FACTOR;
         return;
     }
@@ -631,33 +654,55 @@ web_response_func( tr_session    * session,
     else
         is_blocklisted = 0;
 
-    if( response_code == 998 )
-    {
-        w->wait_factor = MAX_WAIT_FACTOR;
-        if( tor )
-            tr_tordbg( tor, "pausing webseed code 998" );
-        else if( w->torrent_id )
-            tr_dbg( "??unknown?? webseed torrent pausing %d - code 998", w->torrent_id );
-        else
-            tr_dbg( "detected response code 998" );
-    }
-
     if( response_code == 999 )
     {
         w->wait_factor = MAX_WAIT_FACTOR;
         if( tor )
-            tr_tordbg( tor, "pausing webseed code 999" );
+            tr_tordbg( tor, "pausing webseed code 999 Too many redirects" );
         else if( w->torrent_id )
-            tr_dbg( "??unknown?? webseed torrent pausing %d - code 999", w->torrent_id );
+            tr_dbg( "??unknown?? webseed torrent pausing %d - code 999 Too many redirects", w->torrent_id );
         else
-            tr_dbg( "detected response code 999" );
+            tr_dbg( "detected response code 999 Too many redirects" );
+    }
+
+    else if( response_code == 998 )
+    {
+        w->wait_factor = MAX_WAIT_FACTOR;
+        if( tor )
+            tr_tordbg( tor, "pausing webseed code 998 Webseed server compression error" );
+        else if( w->torrent_id )
+            tr_dbg( "??unknown?? webseed torrent pausing %d - code 998 Webseed server compression error", w->torrent_id );
+        else
+            tr_dbg( "detected response code 998 Webseed server compression error" );
+    }
+
+    else if( response_code == 997 )
+    {
+        w->wait_factor = MAX_WAIT_FACTOR;
+        if( tor )
+            tr_tordbg( tor, "pausing webseed code 997 Webseed torrent halt" );
+        else if( w->torrent_id )
+            tr_dbg( "??unknown?? webseed torrent pausing %d - code 997 Webseed torrent halt", w->torrent_id );
+        else
+            tr_dbg( "detected response code 997 Webseed torrent halt" );
+    }
+
+    else if( response_code == 996 )
+    {
+        w->wait_factor = MAX_WAIT_FACTOR;
+        if( tor )
+            tr_tordbg( tor, "pausing webseed code 996 CURLcode error" );
+        else if( w->torrent_id )
+            tr_dbg( "??unknown?? webseed torrent pausing %d - code 996 CURLcode error", w->torrent_id );
+        else
+            tr_dbg( "detected response code 996 CURLcode error" );
     }
 
     if( w->is_stopping )
     {
         success = 0;
         w->wait_factor = MAX_WAIT_FACTOR;
-        t->response_code = 999L;
+        t->response_code = 997L;
         if( !tor )
            tr_dbg( "?unknown? ID %d webseed deleted torrent content changed - aborted - w stop flag is %d ",
                     w->torrent_id, w->is_stopping );
@@ -665,7 +710,6 @@ web_response_func( tr_session    * session,
             tr_tordbg( tor, "webseed paused - content changed aborted - run flag:%d - stop flag:%d - w stop flag is %d ",
                        tor->isRunning, tor->isStopping, w->is_stopping );
     }
-
 
     if( tor )
     {
@@ -675,14 +719,17 @@ web_response_func( tr_session    * session,
                        tor->isRunning, tor->isStopping );
             success = 0;  // if we have a paused state then drop the task so we can eventually free everything
             w->wait_factor = MAX_WAIT_FACTOR;
-            t->response_code = 999L; // lets fail this one because we are paused
+            t->response_code = 997L; // lets fail this one because we are paused
         }
-		 
+    }
+
+    if( tor && ( w->wait_factor < MAX_WAIT_FACTOR ) )
+    {
         /* active_transfers was only increased if the connection was successful */
         if( t->response_code == 206 && !is_blocklisted )
             --w->active_transfers;
 
-        if( !success || is_blocklisted )
+        if( !success )
         {
             const tr_block_index_t blocks_remain = (t->length + tor->blockSize - 1)
                                                    / tor->blockSize - t->blocks_done;
@@ -696,12 +743,15 @@ web_response_func( tr_session    * session,
                      {
                          /* now wait a while until retrying to establish a connection */
                          ++w->retry_tickcount;
-                         if( w->wait_factor < MAX_WAIT_FACTOR )
+                         if( w->session->maxWebseedConnectFails >= 999999999 )
+                         {
+                             if( ++w->wait_factor >= 5 ) w->wait_factor = 28800;
+                         }
+                         else
                          {
                              if( ++w->wait_factor >= w->session->maxWebseedConnectFails ) w->wait_factor = 28800;
-                                                                                // wait 100 days -- arbitrary
                          }
-                         else w->wait_factor = 28800;
+                                                                                // 28800 - wait 100 days -- arbitrary
                          if( w->session->maxWebseedConnectFails == 0 ) w->wait_factor = 1; // yikes! - bypass ALL blocks !!
                      }
 
@@ -727,7 +777,6 @@ web_response_func( tr_session    * session,
             else
             {
 
-                // if it were blocklisted we have already read to buffer so save it anyway -- it is too late...
                 if( buf_len ) {
                     /* on_content_changed() will not write a block if it is smaller than
                     the torrent's block size, i.e. the torrent's very last block */
@@ -744,6 +793,7 @@ web_response_func( tr_session    * session,
                     else tr_tordbg( tor, "we did ask for this piece, but piece %d is already complete...",
                                                                                t->piece_index );
                 }
+
                 ++w->idle_connections;
 
                 tr_list_remove_data( &w->tasks, t );
@@ -753,12 +803,21 @@ web_response_func( tr_session    * session,
                 on_idle( w );
             }
         }
+        if( !success && !t->blocks_done && ( w->consecutive_failures >= MAX_CONSECUTIVE_FAILURES )
+            && !w->retry_tickcount && ( w->wait_factor >= MAX_WAIT_FACTOR ) )
+            w->wait_factor = 28800;
     }
     else
     {
-        tr_dbg( "?unknown? ID %d webseed deleted torrent web response aborted", w->torrent_id );
-        w->wait_factor = MAX_WAIT_FACTOR;
-        t->response_code = 999L;
+        if( tor && ( w->wait_factor >= MAX_WAIT_FACTOR ) )
+            tr_tordbg( tor, "web_response_function - too big a wait factor %d",
+                             w->wait_factor );
+        if( !tor )
+        {
+            tr_dbg( "?unknown? ID %d webseed deleted torrent web response aborted", w->torrent_id );
+            w->wait_factor = MAX_WAIT_FACTOR;
+            t->response_code = 997L;
+        }
     }
 }
 
