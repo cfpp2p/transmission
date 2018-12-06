@@ -1003,13 +1003,6 @@ parseUtMetadata( tr_peermsgs * msgs, int msglen, struct evbuffer * inbuf )
 
     if( msg_type == METADATA_MSG_TYPE_REQUEST )
     {
-        if( msgs->torrent->cheatMode == 1 )
-        {
-            ++msgs->torrent->uploadedCur;
-            msgs->torrent->isDirty = true;
-        }
-        // SRS 07-22-2016  log the request as a 1 byte upload -- useful results ONLY when zero uplaod speed set
-        // and active only when cheatMode = TR_CHEAT_ALWLEECH
         if( ( piece >= 0 )
             && ( piece < ( ( msgs->torrent->infoDictLength + ( METADATA_PIECE_SIZE - 1 ) ) / METADATA_PIECE_SIZE ) )
             && tr_torrentHasMetadata( msgs->torrent )
@@ -1525,7 +1518,7 @@ readBtMessage( tr_peermsgs * msgs, struct evbuffer * inbuf, size_t inlen )
             dbgmsg( msgs, "Got a BT_FEXT_HAVE_ALL" );
             if( fext ) {
                 tr_bitfieldSetHasAll( &msgs->peer->have );
-                assert( tr_bitfieldHasAll( &msgs->peer->have ) );
+assert( tr_bitfieldHasAll( &msgs->peer->have ) );
                 fireClientGotHaveAll( msgs );
                 updatePeerProgress( msgs );
             } else {
@@ -1593,52 +1586,34 @@ clientGotBlock( tr_peermsgs                * msgs,
     assert( msgs );
     assert( req );
 
-    if( !tr_peerMgrDidPeerRequest( msgs->torrent, msgs->peer, block ) ) {
-        dbgmsg( msgs, "we didn't ask for this message..." );
-        tr_tordbg( tor, "We didn't ask for this message... index %u offset %u length %u",
-                                                 req->index, req->offset, req->length );
-        return EBADMSG;
-    }
-    if( tr_cpPieceIsComplete( &msgs->torrent->completion, req->index ) ) {
-        dbgmsg( msgs, "we did ask for this message, but the piece is already complete..." );
-        tr_tordbg( tor, "This piece is already complete... index %u offset %u length %u",
-                                                 req->index, req->offset, req->length );
-        fireGotRej( msgs, req );
-        return 0;
-    }
-
     if (!requestIsValid (msgs, req)) {
         dbgmsg (msgs, "dropping invalid block %u:%u->%u", req->index, req->offset, req->length);
-        tr_tordbg( tor, "We asked for an invalid block!! index %u offset %u length %u",
-                                                 req->index, req->offset, req->length );
-        fireGotRej( msgs, req );
-        return 0;
+        return EBADMSG;
     }
 
     if( req->length != tr_torBlockCountBytes( msgs->torrent, block ) ) {
         dbgmsg( msgs, "wrong block size -- expected %u, got %d",
                 tr_torBlockCountBytes( msgs->torrent, block ), req->length );
-        tr_tordbg( tor, "Invalid block size!! index %u offset %u length %u",
-                                                 req->index, req->offset, req->length );
-        fireGotRej( msgs, req );
         return EMSGSIZE;
     }
 
     dbgmsg( msgs, "got block %u:%u->%u", req->index, req->offset, req->length );
-    if( req->index == 1 )
-        tr_tordbg( tor, "Got first piece! index %u offset %u length %u",
-                                                 req->index, req->offset, req->length );
+
+    if( !tr_peerMgrDidPeerRequest( msgs->torrent, msgs->peer, block ) ) {
+        dbgmsg( msgs, "we didn't ask for this message..." );
+        return 0;
+    }
+    if( tr_cpPieceIsComplete( &msgs->torrent->completion, req->index ) ) {
+        dbgmsg( msgs, "we did ask for this message, but the piece is already complete..." );
+        return 0;
+    }
 
     /**
     ***  Save the block
     **/
 
-    if(( err = tr_cacheWriteBlock( getSession(msgs)->cache, tor, req->index, req->offset, req->length, data ))) {
-        tr_torerr( tor, "cache write block failed - index %u offset %u length %u",
-                                          req->index, req->offset, req->length );
-        fireGotRej( msgs, req );
+    if(( err = tr_cacheWriteBlock( getSession(msgs)->cache, tor, req->index, req->offset, req->length, data )))
         return err;
-    }
 
     tr_bitfieldAdd( &msgs->peer->blame, req->index );
     fireGotBlock( msgs, req );

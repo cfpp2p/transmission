@@ -1685,9 +1685,6 @@ peerCallbackFunc( tr_peer * peer, const tr_peer_event * e, void * vt )
 
     assert( peer != NULL );
 
-    if( e->pieceIndex == 1 )
-        tr_tordbg( t->tor, "Callback %s piece index: %u", tr_atomAddrStr( peer->atom ), e->pieceIndex );
-
     switch( e->eventType )
     {
         case TR_PEER_PEER_GOT_DATA:
@@ -1742,17 +1739,11 @@ peerCallbackFunc( tr_peer * peer, const tr_peer_event * e, void * vt )
 
         case TR_PEER_CLIENT_GOT_REJ: {
             tr_block_index_t b = _tr_block( t->tor, e->pieceIndex, e->offset );
-
-            if( peer->atom ) //do not show dead webseeds
-                tr_tordbg( t->tor, "Peer %s sent a reject message", tr_atomAddrStr( peer->atom ) );
-
             if( b < t->tor->blockCount )
                 removeRequestFromTables( t, b, peer );
-            else {
-                tr_tordbg( t->tor, "Peer %s sent an out-of-range reject message", tr_atomAddrStr( peer->atom ) );
+            else
                 tordbg( t, "Peer %s sent an out-of-range reject message",
                            tr_atomAddrStr( peer->atom ) );
-            }
             break;
         }
 
@@ -1902,14 +1893,11 @@ peerCallbackFunc( tr_peer * peer, const tr_peer_event * e, void * vt )
             {
                 /* some protocol error from the peer */
                 peer->doPurge = 1;
-                tr_tordbg( t->tor, "setting %s doPurge flag - reason is error %d - %s",
-                                       tr_atomAddrStr( peer->atom ), e->err, tr_strerror( e->err ) );
                 tordbg( t, "setting %s doPurge flag because we got an ERANGE, EMSGSIZE, or ENOTCONN error",
                         tr_atomAddrStr( peer->atom ) );
             }
             else
             {
-                tr_tordbg( t->tor, "unhandled %s error: %d - %s", tr_atomAddrStr( peer->atom ), e->err, tr_strerror( e->err ) );
                 tordbg( t, "unhandled error: %s", tr_strerror( e->err ) );
             }
             break;
