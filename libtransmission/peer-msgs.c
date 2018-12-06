@@ -1518,7 +1518,7 @@ readBtMessage( tr_peermsgs * msgs, struct evbuffer * inbuf, size_t inlen )
             dbgmsg( msgs, "Got a BT_FEXT_HAVE_ALL" );
             if( fext ) {
                 tr_bitfieldSetHasAll( &msgs->peer->have );
-assert( tr_bitfieldHasAll( &msgs->peer->have ) );
+                assert( tr_bitfieldHasAll( &msgs->peer->have ) );
                 fireClientGotHaveAll( msgs );
                 updatePeerProgress( msgs );
             } else {
@@ -1586,34 +1586,52 @@ clientGotBlock( tr_peermsgs                * msgs,
     assert( msgs );
     assert( req );
 
+    if( !tr_peerMgrDidPeerRequest( msgs->torrent, msgs->peer, block ) ) {
+        dbgmsg( msgs, "we didn't ask for this message..." );
+        tr_tordbg( tor, "We didn't ask for this message... index %u offset %u length %u",
+                                                 req->index, req->offset, req->length );
+        return EBADMSG;
+    }
+    if( tr_cpPieceIsComplete( &msgs->torrent->completion, req->index ) ) {
+        dbgmsg( msgs, "we did ask for this message, but the piece is already complete..." );
+        tr_tordbg( tor, "This piece is already complete... index %u offset %u length %u",
+                                                 req->index, req->offset, req->length );
+        fireGotRej( msgs, req );
+        return 0;
+    }
+
     if (!requestIsValid (msgs, req)) {
         dbgmsg (msgs, "dropping invalid block %u:%u->%u", req->index, req->offset, req->length);
-        return EBADMSG;
+        tr_tordbg( tor, "We asked for an invalid block!! index %u offset %u length %u",
+                                                 req->index, req->offset, req->length );
+        fireGotRej( msgs, req );
+        return 0;
     }
 
     if( req->length != tr_torBlockCountBytes( msgs->torrent, block ) ) {
         dbgmsg( msgs, "wrong block size -- expected %u, got %d",
                 tr_torBlockCountBytes( msgs->torrent, block ), req->length );
+        tr_tordbg( tor, "Invalid block size!! index %u offset %u length %u",
+                                                 req->index, req->offset, req->length );
+        fireGotRej( msgs, req );
         return EMSGSIZE;
     }
 
     dbgmsg( msgs, "got block %u:%u->%u", req->index, req->offset, req->length );
-
-    if( !tr_peerMgrDidPeerRequest( msgs->torrent, msgs->peer, block ) ) {
-        dbgmsg( msgs, "we didn't ask for this message..." );
-        return 0;
-    }
-    if( tr_cpPieceIsComplete( &msgs->torrent->completion, req->index ) ) {
-        dbgmsg( msgs, "we did ask for this message, but the piece is already complete..." );
-        return 0;
-    }
+    if( req->index == 1 )
+        tr_tordbg( tor, "Got first piece! index %u offset %u length %u",
+                                                 req->index, req->offset, req->length );
 
     /**
     ***  Save the block
     **/
 
-    if(( err = tr_cacheWriteBlock( getSession(msgs)->cache, tor, req->index, req->offset, req->length, data )))
+    if(( err = tr_cacheWriteBlock( getSession(msgs)->cache, tor, req->index, req->offset, req->length, data ))) {
+        tr_torerr( tor, "cache write block failed - index %u offset %u length %u",
+                                          req->index, req->offset, req->length );
+        fireGotRej( msgs, req );
         return err;
+    }
 
     tr_bitfieldAdd( &msgs->peer->blame, req->index );
     fireGotBlock( msgs, req );
