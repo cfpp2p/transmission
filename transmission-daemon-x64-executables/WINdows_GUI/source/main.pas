@@ -619,6 +619,10 @@ const
   idxSizeLeft = 26;
   idxPrivate = 27;
   idxBlocklistOverride = 28;
+  idxUploadLimited = 29;
+  idxDownloadLimited = 30;
+  idxUploadLimit = 31;
+  idxDownloadLimit = 32;
  
   idxTag = -1;
   idxSeedsTotal = -2;
@@ -698,12 +702,12 @@ const
 
   StatusFiltersCount = 7;
 
-  TorrentFieldsMap: array[idxName..idxBlocklistOverride] of string =
+  TorrentFieldsMap: array[idxName..idxDownloadLimit] of string =
     ('', 'totalSize', '', 'status', 'peersSendingToUs,seeders',
      'peersGettingFromUs,leechers', 'rateDownload', 'rateUpload', 'eta', 'uploadRatio',
      'downloadedEver', 'uploadedEver', '', '', 'addedDate', 'doneDate', 'activityDate', '', 'bandwidthPriority',
-     '', '', 'queuePosition', 'secondsSeeding', 'streamingMode', 'cheatMode', 'leftUntilDone', 'isPrivate',
-     'blocklistOverride', '');
+     '', '', 'queuePosition', 'secondsSeeding', 'streamingMode', 'cheatMode', '', 'leftUntilDone', 'isPrivate',
+     'blocklistOverride', 'uploadLimited', 'downloadLimited', 'uploadLimit', 'downloadLimit');
 
 implementation
 
@@ -3178,6 +3182,82 @@ begin
             Text:=sBlocklistOverrideOff;
         end;
 
+      idxUploadLimited:
+        begin
+          j:=Sender.Items[idxUploadLimited, ARow];
+          if j >= 0 then
+            Text:=IntToStr(j)
+          else
+            Text:='?';
+        end;
+
+      idxDownloadLimited:
+        begin
+          j:=Sender.Items[idxDownloadLimited, ARow];
+          if j >= 0 then
+            Text:=IntToStr(j)
+          else
+            Text:='?';
+        end;
+
+      idxUploadLimit:
+        begin
+          j:=Sender.Items[idxUploadLimit, ARow];
+          if Sender.Items[idxUploadLimited, ARow] = 0 then
+              begin
+                if (j < 0) or (j >= 2097152) then
+                  Text:='*'+Utf8Encode(WideString(WideChar($221E)))
+                else
+                  Text:='*'+GetHumanSize(j*1024)+sPerSecond;
+              end
+          else
+          begin
+            if Sender.Items[idxUploadLimited, ARow] <> 99999 then
+              begin
+                if (j < 0) or (j >= 2097152) then
+                  Text:=Utf8Encode(WideString(WideChar($221E)))
+                else
+                  Text:=GetHumanSize(j*1024)+sPerSecond;
+              end 
+            else
+              begin
+                if (j < 0) or (j >= 2097152) then
+                  Text:='?'+Utf8Encode(WideString(WideChar($221E)))
+                else
+                  Text:='?'+GetHumanSize(j*1024)+sPerSecond;
+              end
+          end
+        end;
+
+      idxDownloadLimit:
+        begin
+          j:=Sender.Items[idxDownloadLimit, ARow];
+          if Sender.Items[idxDownloadLimited, ARow] = 0 then
+              begin
+                if (j < 0) or (j >= 2097152) then
+                  Text:='*'+Utf8Encode(WideString(WideChar($221E)))
+                else
+                  Text:='*'+GetHumanSize(j*1024)+sPerSecond;
+              end
+          else
+          begin
+            if Sender.Items[idxDownloadLimited, ARow] <> 99999 then
+              begin
+                if (j < 0) or (j >= 2097152) then
+                  Text:=Utf8Encode(WideString(WideChar($221E)))
+                else
+                  Text:=GetHumanSize(j*1024)+sPerSecond;
+              end 
+            else
+              begin
+                if (j < 0) or (j >= 2097152) then
+                  Text:='?'+Utf8Encode(WideString(WideChar($221E)))
+                else
+                  Text:='?'+GetHumanSize(j*1024)+sPerSecond;
+              end
+          end
+        end;
+
     end;
   end;
 end;
@@ -4442,6 +4522,22 @@ begin
     if t.IndexOfName('blocklistOverride') >= 0 then
       FTorrents[idxBlocklistOverride, row]:=t.Integers['blocklistOverride'];
 
+    if t.IndexOfName('uploadLimit') >= 0 then
+      FTorrents[idxUploadLimit, row]:=t.Integers['uploadLimit']
+    else FTorrents[idxUploadLimited, row]:=99999;
+
+    if t.IndexOfName('uploadLimited') >= 0 then
+      FTorrents[idxUploadLimited, row]:=t.Integers['uploadLimited']
+    else FTorrents[idxUploadLimited, row]:=99999;
+
+    if t.IndexOfName('downloadLimit') >= 0 then
+      FTorrents[idxDownloadLimit, row]:=t.Integers['downloadLimit']
+    else FTorrents[idxDownloadLimited, row]:=99999;
+
+    if t.IndexOfName('downloadLimited') >= 0 then
+      FTorrents[idxDownloadLimited, row]:=t.Integers['downloadLimited']
+    else FTorrents[idxDownloadLimited, row]:=99999;
+
     DownSpeed:=DownSpeed + FTorrents[idxDownSpeed, row];
     UpSpeed:=UpSpeed + FTorrents[idxUpSpeed, row];
 
@@ -4967,7 +5063,7 @@ begin
     if t.Booleans['downloadLimited'] then
     begin
       i:=t.Integers['downloadLimit'];
-      if i < 0 then
+      if (i < 0) or (i >= 2097152) then
         s:=Utf8Encode(WideString(WideChar($221E)))
       else
         s:=GetHumanSize(i*1024)+sPerSecond;
@@ -4977,7 +5073,7 @@ begin
     if t.Booleans['uploadLimited'] then
     begin
       i:=t.Integers['uploadLimit'];
-      if i < 0 then
+      if (i < 0) or (i >= 2097152) then
         s:=Utf8Encode(WideString(WideChar($221E)))
       else
         s:=GetHumanSize(i*1024)+sPerSecond;

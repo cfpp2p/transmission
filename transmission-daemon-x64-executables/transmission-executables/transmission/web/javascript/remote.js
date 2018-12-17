@@ -291,7 +291,7 @@ TransmissionRemote.prototype =
 		this.sendRequest(o, function(response) {
 			remote._controller.refreshTorrents();
 			if ((response.result != 'success') && (response.result != 'duplicate torrent') && hashValid) {
-				url = 'http://torrasave.site/torrent/' + hash + '.torrent';
+				url = 'http://itorrents.org/torrent/' + hash + '.torrent';
 				o = {
 					method: 'torrent-add',
 					arguments: {
@@ -307,6 +307,10 @@ TransmissionRemote.prototype =
 					var win = window.open(url, '_blank');
 					win.focus();
 					url = 'http://btcache.me/torrent/' + hash;
+					alert('\r\nAllow pop-up to' + '\r\nDownload torrent by URL' + '\r\nadding torrent by URL\r\n"' + url + '"');
+					var win2 = window.open(url, '_blank');
+					win2.focus();
+					url = 'https://torrage.info/torrent.php?h=' + hash;
 					alert('\r\nAllow pop-up to' + '\r\nDownload torrent by URL' + '\r\nadding torrent by URL\r\n"' + url + '"');
 					var win2 = window.open(url, '_blank');
 					win2.focus();
