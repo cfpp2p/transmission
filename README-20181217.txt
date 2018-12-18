@@ -1,5 +1,37 @@
 https://github.com/cfpp2p/transmission/commits/cygwin
 
+December 17, 2018
+NO source code changes: DHT 0.26
+
+December 07, 2018
+Fix bad message request handling when a block is complete.
+Purge the associated peer of an unrequested message.
+Requests for now completed pieces are removed from tables expeditiously.
+Properly process messages with bad blocks.
+
+November 24, 2018
+Fix webseeders with gzip tgz encoding might not work.
+https://github.com/transmission/transmission/issues/753
+
+Update torrent cache downloaders.
+
+
+GUI update -- August 03, 2018
+
+Two less in rpc call.
+
+Display disabled upload and download limits.
+Eliminate redundant rpc calls.
+
+Fix some columns' data not showing.
+Fix arithmetic overflow for over 2GB/s speed selected.
+Add upload and download speed limit columns.
+
+transgui.exe
+
+GUI --  .exe binary
+
+
 Commits on July 6, 2018
 Feature - per torrent global blocklist override(do not block) on torrent start.
 Default on torrent start is to turn off override.
