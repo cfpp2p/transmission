@@ -1,0 +1,48 @@
+From 74804ea332d0d2a1bba5799ca52b673319de156e Mon Sep 17 00:00:00 2001
+From: cfpp2p <cfpp2p>
+Date: Wed, 19 Dec 2018 18:18:19 -0500
+Subject: [PATCH] transmissiondcfp: update to revision 14734-17
+
+---
+ .../transmissiondcfp-2.77+14734-14.tar.bz2.sha512      |  1 -
+ .../transmissiondcfp-2.77+14734-17.tar.bz2.sha512      |  1 +
+ make/transmissiondcfp.mk                               | 10 +++++-----
+ 3 files changed, 6 insertions(+), 6 deletions(-)
+ delete mode 100644 checksums/transmissiondcfp-2.77+14734-14.tar.bz2.sha512
+ create mode 100644 checksums/transmissiondcfp-2.77+14734-17.tar.bz2.sha512
+
+diff --git a/checksums/transmissiondcfp-2.77+14734-14.tar.bz2.sha512 b/checksums/transmissiondcfp-2.77+14734-14.tar.bz2.sha512
+deleted file mode 100644
+index 94af0e486..000000000
+--- a/checksums/transmissiondcfp-2.77+14734-14.tar.bz2.sha512
++++ /dev/null
+@@ -1 +0,0 @@
+-731232b0ed9f56c25a46a84c71cc364499d3a7787e1aa282561ebd31dd270a83e007d7ab7fb24b83773c81fbc2eb785174df444ae1aedd1bf9d3ea352aa50f06
+diff --git a/checksums/transmissiondcfp-2.77+14734-17.tar.bz2.sha512 b/checksums/transmissiondcfp-2.77+14734-17.tar.bz2.sha512
+new file mode 100644
+index 000000000..6cf7223a0
+--- /dev/null
++++ b/checksums/transmissiondcfp-2.77+14734-17.tar.bz2.sha512
+@@ -0,0 +1 @@
++01608468c70e6d9563e5d68198e267bcedd917432a36cf118f2363232fc8ff14d15f793d1d72a973c3559ee7dabe9cdd277ffcba9c8816602c657716c0b183b7
+diff --git a/make/transmissiondcfp.mk b/make/transmissiondcfp.mk
+index 399a22b27..907a83f6c 100644
+--- a/make/transmissiondcfp.mk
++++ b/make/transmissiondcfp.mk
+@@ -24,11 +24,11 @@
+ #
+ # SVN releases also include transmissiond-dbg while official releases does not.
+ #
+-TRANSMISSIONDCFP_SITE=http://$(SOURCEFORGE_MIRROR)/project/transmissiondaemon/embedded-2018-07-09
+-TRANSMISSIONDCFP_VERSION=2.77+14734-14
+-TRANSMISSIONDCFP_ALT_VERSION=2.77plus14734-14
+-TRANSMISSIONDCFP_ALT2_VERSION=2.77plus14734-14
+-TRANSMISSIONDCFP_ALT_SITE=https://github.com/cfpp2p/transmission/releases/download/$(TRANSMISSIONDCFP_ALT_VERSION)
++TRANSMISSIONDCFP_SITE=http://$(SOURCEFORGE_MIRROR)/project/transmissiondaemon/embedded-2018-12-19
++TRANSMISSIONDCFP_VERSION=2.77+14734-17
++TRANSMISSIONDCFP_ALT_VERSION=2.77plus14734-17
++TRANSMISSIONDCFP_ALT2_VERSION=2.77plus14734-17
++TRANSMISSIONDCFP_ALT_SITE=https://raw.githubusercontent.com/cfpp2p/transmission/Windows_Daemon_%26_Clients/nslu2-unslung-embeded
+ TRANSMISSIONDCFP_ALT2_SITE=http://transmissionbt.net
+ 
+ 
