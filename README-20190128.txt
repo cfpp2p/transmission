@@ -1,5 +1,14 @@
 https://github.com/cfpp2p/transmission/commits/cygwin
 
+January 28, 2019
+Context menu for mobile devices: click/tap then hold 1 second.
+
+Thanks @zmwangx 
+https://github.com/transmission/transmission/pull/774
+https://github.com/transmission/transmission/issues/464
+
+Implements a tap and hold functionality. Click/tap and hold for 1s (default) triggers taphold event. Click/tap and release triggers normal click event.
+
 December 17, 2018
 NO source code changes: DHT 0.26
 
