@@ -54,6 +54,7 @@ static tr_option options[] =
 {
   { 'm', "magnet", "Give a magnet link for the specified torrent", "m", 0, NULL },
   { 's', "scrape", "Ask the torrent's trackers how many peers are in the torrent's swarm", "s", 0, NULL },
+  { 'u', "unsorted", "Do not sort files by name", "u", 0, NULL },
   { 'V', "version", "Show version number and exit", "V", 0, NULL },
   { 0, NULL, NULL, NULL, 0, NULL }
 };
@@ -66,6 +67,7 @@ getUsage( void )
 
 static bool magnetFlag = false;
 static bool scrapeFlag = false;
+static bool unsorted = false;
 static bool showVersion = false;
 const char * filename = NULL;
 
@@ -81,6 +83,7 @@ parseCommandLine( int argc, const char ** argv )
         {
             case 'm': magnetFlag = true; break;
             case 's': scrapeFlag = true; break;
+            case 'u': unsorted = true; break;
             case 'V': showVersion = true; break;
             case TR_OPT_UNK: filename = optarg; break;
             default: return 1;
@@ -171,7 +174,10 @@ showInfo( const tr_info * inf )
     files = tr_new( tr_file*, inf->fileCount );
     for( i=0; i<(int)inf->fileCount; ++i )
         files[i] = &inf->files[i];
-    qsort( files, inf->fileCount, sizeof(tr_file*), compare_files_by_name );
+    if (!unsorted)
+    {
+        qsort( files, inf->fileCount, sizeof(tr_file*), compare_files_by_name );
+    }
     for( i=0; i<(int)inf->fileCount; ++i )
         printf( "  %s (%s)\n", files[i]->name, tr_formatter_size_B( buf, files[i]->length, sizeof( buf ) ) );
     tr_free( files );
