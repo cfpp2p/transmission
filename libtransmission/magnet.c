@@ -13,6 +13,7 @@
 #include <assert.h>
 #include <string.h> /* strchr() */
 #include <stdio.h> /* sscanf() */
+#include <ctype.h> /* isxdigit() */
 
 #include "transmission.h"
 #include "bencode.h"
@@ -93,6 +94,72 @@ base32_to_sha1( uint8_t * out, const char * in, const int inlen )
 ****
 ***/
 
+static bool tr_isHex(char const* in, size_t const inlen)
+{
+    size_t i;
+
+    for (i = 0; i < inlen; ++i)
+    {
+        if (!isxdigit(in[i]))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+static bool tr_isBase32(char const* in, size_t const inlen)
+{
+    size_t i;
+
+    for (i = 0; i < inlen; ++i)
+    {
+        int lookup = in[i] - '0';
+
+        if (lookup < 0 || lookup >= base32LookupLen)
+        {
+            return false;
+        }
+
+        if (base32Lookup[lookup] == 0xFF)
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool tr_maybeHash(char const* uri)
+{
+    size_t len = strlen(uri);
+
+    if((len == 32) && tr_isBase32(uri, len))
+        return true;
+
+    if ((len == 40) && tr_isHex(uri, len))
+        return true;
+
+    return false;
+}
+
+static bool hash_to_sha1(uint8_t* sha1, char const* hash, size_t hashlen)
+{
+    if (hashlen == 40)
+    {
+        tr_hex_to_sha1(sha1, hash);
+        return true;
+    }
+    else if (hashlen == 32)
+    {
+        base32_to_sha1(sha1, hash, hashlen);
+        return true;
+    }
+
+    return false;
+}
+
 #define MAX_TRACKERS 64
 #define MAX_WEBSEEDS 64
 
@@ -138,15 +205,7 @@ tr_magnetParse( const char * uri )
             {
                 const char * hash = val + 9;
                 const int hashlen = vallen - 9;
-
-                if( hashlen == 40 ) {
-                    tr_hex_to_sha1( sha1, hash );
-                    got_checksum = true;
-                }
-                else if( hashlen == 32 ) {
-                    base32_to_sha1( sha1, hash, hashlen );
-                    got_checksum = true;
-                }
+                got_checksum = hash_to_sha1(sha1, hash, hashlen);
             }
 
             if( ( vallen > 0 ) && ( keylen==2 ) && !memcmp( key, "dn", 2 ) )
@@ -165,6 +224,11 @@ tr_magnetParse( const char * uri )
 
             walk = next != NULL ? next + 1 : NULL;
         }
+    }
+    else if (uri != NULL)
+    {
+        size_t const hashlen = strlen(uri);
+        got_checksum = hash_to_sha1(sha1, uri, hashlen);
     }
 
     if( got_checksum )

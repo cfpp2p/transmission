@@ -1677,7 +1677,7 @@ torrentAdd( tr_session               * session,
                 tr_ctorSetMetainfo( ctor, (uint8_t*)metainfo, len );
                 tr_free( metainfo );
             }
-            else if( !strncmp( fname, "magnet:?", 8 ) )
+            else if( !strncmp( fname, "magnet:?", 8 ) || tr_maybeHash(fname) )
             {
                 tr_ctorSetMetainfoFromMagnetLink( ctor, fname );
             }

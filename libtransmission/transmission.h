@@ -1313,6 +1313,11 @@ void tr_metainfoFree( tr_info * inf );
 tr_torrent * tr_torrentNew( const tr_ctor   * ctor,
                             int             * setmeError );
 
+
+/** @brief Check if uri may be interpreted as raw hash */
+bool tr_maybeHash(char const* uri);
+
+
 /** @} */
 
 /***********************************************************************
