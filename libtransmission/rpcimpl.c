@@ -747,6 +747,8 @@ addField( const tr_torrent * const tor,
         tr_bencDictAddInt( d, key, tr_torrentGetRatioMode( tor ) );
     else if( tr_streq( key, keylen, "sizeWhenDone" ) )
         tr_bencDictAddInt( d, key, st->sizeWhenDone );
+    else if( tr_streq( key, keylen, "source" ) )
+        tr_bencDictAddStr( d, key, inf->source ? inf->source : "" );
     else if( tr_streq( key, keylen, "startDate" ) )
         tr_bencDictAddInt( d, key, st->startDate );
     else if( tr_streq( key, keylen, "status" ) )
