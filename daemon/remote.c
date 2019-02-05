@@ -25,6 +25,7 @@
 #endif
 
 #include <event2/buffer.h>
+#include <event2/util.h>
 
 #define CURL_DISABLE_TYPECHECK /* otherwise -Wunreachable-code goes insane */
 #include <curl/curl.h>
@@ -738,7 +739,7 @@ parseResponseHeader( void *ptr, size_t size, size_t nmemb, void * stream UNUSED 
     const char * key = TR_RPC_SESSION_ID_HEADER ": ";
     const size_t key_len = strlen( key );
 
-    if( ( line_len >= key_len ) && !memcmp( line, key, key_len ) )
+    if( ( line_len >= key_len ) && !evutil_ascii_strncasecmp( line, key, key_len ) )
     {
         const char * begin = line + key_len;
         const char * end = begin;
