@@ -218,7 +218,7 @@ handle_upload( struct evhttp_request * req,
         /* first look for the session id */
         for( i=0; i<n; ++i ) {
             struct tr_mimepart * p = tr_ptrArrayNth( &parts, i );
-            if( tr_memmem( p->headers, p->headers_len, TR_RPC_SESSION_ID_HEADER, strlen( TR_RPC_SESSION_ID_HEADER ) ) )
+            if( tr_memmemcase( p->headers, p->headers_len, TR_RPC_SESSION_ID_HEADER, strlen( TR_RPC_SESSION_ID_HEADER ) ) )
                 break;
         }
         if( i<n ) {
