@@ -283,7 +283,7 @@ main( int argc, char ** argv )
     tr_ctorSetPaused( ctor, TR_FORCE, false );
     if( fileContents != NULL ) {
         tr_ctorSetMetainfo( ctor, fileContents, fileLength );
-    } else if( !memcmp( torrentPath, "magnet:?", 8 ) ) {
+    } else if( !memcmp( torrentPath, "magnet:?", 8 ) || tr_maybeHash(torrentPath) ) {
         tr_ctorSetMetainfoFromMagnetLink( ctor, torrentPath );
     } else if( !memcmp( torrentPath, "http", 4 ) ) {
         tr_webRun( h, torrentPath, NULL, NULL, onTorrentFileDownloaded, ctor );
