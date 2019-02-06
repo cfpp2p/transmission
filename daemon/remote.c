@@ -695,6 +695,7 @@ static const char * details_keys[] = {
     "seedRatioMode",
     "seedRatioLimit",
     "sizeWhenDone",
+    "source",
     "startDate",
     "status",
     "totalSize",
@@ -1001,6 +1002,8 @@ printDetails( tr_benc * top )
                 printf( "  Comment: %s\n", str );
             if( tr_bencDictFindStr( t, "creator", &str ) && str && *str )
                 printf( "  Creator: %s\n", str );
+            if( tr_bencDictFindStr( t, "source", &str ) && str && *str )
+                printf( "  Source: %s\n", str );
             if( tr_bencDictFindInt( t, "pieceCount", &i ) )
                 printf( "  Piece Count: %" PRId64 "\n", i );
             if( tr_bencDictFindInt( t, "pieceSize", &i ) )

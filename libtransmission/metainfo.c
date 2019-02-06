@@ -651,6 +651,18 @@ tr_metainfoParseImpl( const tr_session  * session,
     else
         inf->comment = tr_strdup( str );
 
+    /* source */
+    if( !tr_bencDictFindStr( infoDict, "source", &str ) )
+        if( !tr_bencDictFindStr( infoDict, "source.utf-8", &str ) )
+            if( !tr_bencDictFindStr( meta, "source", &str ) )
+                if( !tr_bencDictFindStr( meta, "source.utf-8", &str ) )
+                    str = "";
+    tr_free( inf->source );
+    if( session && session->cleanUTFenabled )
+        inf->source = tr_utf8clean( str, -1 );
+    else
+        inf->source = tr_strdup( str );
+
     /* created by */
     if( !tr_bencDictFindStr( meta, "created by.utf-8", &str ) )
         if( !tr_bencDictFindStr( meta, "created by", &str ) )
@@ -759,6 +771,7 @@ tr_metainfoFree( tr_info * inf )
     tr_free( inf->files );
     tr_free( inf->comment );
     tr_free( inf->creator );
+    tr_free( inf->source );
     tr_free( inf->torrent );
     tr_free( inf->name );
 

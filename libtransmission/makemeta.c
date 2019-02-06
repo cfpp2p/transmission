@@ -206,6 +206,7 @@ tr_metaInfoBuilderFree( tr_metainfo_builder * builder )
         tr_free( builder->files );
         tr_free( builder->top );
         tr_free( builder->comment );
+        tr_free( builder->source );
         for( i = 0; i < builder->trackerCount; ++i )
             tr_free( builder->trackers[i].announce );
         tr_free( builder->trackers );
@@ -380,6 +381,8 @@ makeInfoDict( tr_benc *             dict,
     }
 
     tr_bencDictAddInt( dict, "private", builder->isPrivate ? 1 : 0 );
+    if( builder->source && *builder->source )
+        tr_bencDictAddStr( dict, "source", builder->source );
 }
 
 static void
@@ -515,7 +518,9 @@ tr_makeMetaInfo( tr_metainfo_builder *   builder,
                  const tr_tracker_info * trackers,
                  int                     trackerCount,
                  const char *            comment,
-                 int                     isPrivate )
+                 int                     isPrivate,
+                 const char *            source )
+
 {
     int       i;
     tr_lock * lock;
@@ -525,6 +530,7 @@ tr_makeMetaInfo( tr_metainfo_builder *   builder,
         tr_free( builder->trackers[i].announce );
     tr_free( builder->trackers );
     tr_free( builder->comment );
+    tr_free( builder->source );
     tr_free( builder->outputFile );
 
     /* initialize the builder variables */
@@ -540,6 +546,7 @@ tr_makeMetaInfo( tr_metainfo_builder *   builder,
     }
     builder->comment = tr_strdup( comment );
     builder->isPrivate = isPrivate;
+    builder->source = tr_strdup( source );
     if( outputFile && *outputFile )
         builder->outputFile = tr_strdup( outputFile );
     else

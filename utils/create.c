@@ -34,10 +34,12 @@ const char * comment = NULL;
 const char * outfile = NULL;
 const char * infile = NULL;
 static int piecesize = 0;
+const char * source = NULL;
 
 static tr_option options[] =
 {
   { 'p', "private", "Allow this torrent to only be used with the specified tracker(s)", "p", 0, NULL },
+  { 'r', "source", "Set the source for private trackers", "r", 1, "<source>" },
   { 'o', "outfile", "Save the generated .torrent to this filename", "o", 1, "<file>" },
   { 's', "piecesize", "Set the piece of size in KiB (32, 64, 128... 4096, 8192)", "s", 1, "<size in KiB>" },
   { 'c', "comment", "Add a comment", "c", 1, "<comment>" },
@@ -78,6 +80,7 @@ parseCommandLine( int argc, const char ** argv )
                           ++trackerCount;
                       }
                       break;
+            case 'r': source = optarg; break;
             case TR_OPT_UNK: infile = optarg; break;
             default: return 1;
         }
@@ -159,7 +162,7 @@ main( int argc, char * argv[] )
     printf( "Creating torrent \"%s\" with %d KiB piece size...", outfile, b->pieceSize / KiB );
     fflush( stdout );
 
-    tr_makeMetaInfo( b, outfile, trackers, trackerCount, comment, isPrivate );
+    tr_makeMetaInfo( b, outfile, trackers, trackerCount, comment, isPrivate, source );
     while( !b->isDone ) {
         tr_wait_msec( 500 );
         putc( '.', stdout );

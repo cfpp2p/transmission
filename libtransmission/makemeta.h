@@ -61,6 +61,7 @@ typedef struct tr_metainfo_builder
     char *             comment;
     char *             outputFile;
     int                isPrivate;
+    char *             source;
 
     /**
     ***  These are set inside tr_makeMetaInfo() so the client
@@ -119,7 +120,8 @@ void tr_makeMetaInfo( tr_metainfo_builder *   builder,
                       const tr_tracker_info * trackers,
                       int                     trackerCount,
                       const char *            comment,
-                      int                     isPrivate );
+                      int                     isPrivate,
+                      const char *            source );
 
 
 #ifdef __cplusplus

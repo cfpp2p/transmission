@@ -2032,6 +2032,7 @@ struct tr_info
     char            ** webseeds;
 
     char             * comment;
+    char             * source;
     char             * creator;
     tr_file          * files;
     tr_piece         * pieces;
