@@ -208,7 +208,7 @@ tr_magnetParse( const char * uri )
                 got_checksum = hash_to_sha1(sha1, hash, hashlen);
             }
 
-            if( ( vallen > 0 ) && ( keylen==2 ) && !memcmp( key, "dn", 2 ) )
+            if( ( displayName == NULL ) && ( vallen > 0 ) && ( keylen==2 ) && !memcmp( key, "dn", 2 ) )
 //#ifdef WIN32
                 displayName = cleanFilename(tr_http_unescape (val, vallen));
 //#else
@@ -244,6 +244,23 @@ tr_magnetParse( const char * uri )
         info->webseedCount = wsCount;
         info->webseeds = tr_memdup( ws, sizeof(char*) * wsCount );
         memcpy( info->hash, sha1, sizeof(uint8_t) * SHA_DIGEST_LENGTH );
+    }
+    else
+    {
+
+        int i;
+
+        for ( i = 0; i < trCount; i++)
+        {
+            tr_free(tr[i]);
+        }
+
+        for ( i = 0; i < wsCount; i++)
+        {
+            tr_free(ws[i]);
+        }
+
+        tr_free(displayName);
     }
 
     return info;
