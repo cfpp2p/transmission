@@ -326,7 +326,7 @@ torrentStop( tr_session               * session,
     {
         tr_torrent * tor = torrents[i];
 
-        if( tor->isRunning || tr_torrentIsQueued( tor ) )
+        if( tor->isRunning || tr_torrentIsQueued( tor ) || tor->verifyState > TR_VERIFY_NONE )
         {
             tor->isStopping = true;
             notify( session, TR_RPC_TORRENT_STOPPED, tor );
