@@ -58,6 +58,8 @@ procedure HideTaskbarButton;
 
 function OpenURL(const URL: string; const Params: string = ''): boolean;
 
+function UpdateGeoIp: integer;
+
 function CompareFilePath(const p1, p2: string): integer;
 
 procedure AppBusy;
@@ -380,6 +382,23 @@ begin
 
   {$ifdef unix}
     Result:=UnixOpenURL(URL) = 0;
+  {$endif unix}
+
+{$endif darwin}
+end;
+
+function UpdateGeoIp: integer;
+begin
+{$ifdef mswindows}
+    Result:=ShellExecute(0, nil, PChar('geoipupd.cmd'), nil, nil, 1);
+{$endif mswindows}
+
+{$ifdef darwin}
+  Result:=2;
+{$else darwin}
+
+  {$ifdef unix}
+    Result:=2;
   {$endif unix}
 
 {$endif darwin}

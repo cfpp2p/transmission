@@ -52,7 +52,10 @@ resourcestring
   sUpdating = 'Updating...';
   sFinishedDownload = '''%s'' has finished downloading';
   sDownloadComplete = 'Download complete';
-  sUpdateComplete = 'Update complete.';
+  sUpdateComplete = 'GeoIP Update command sent...';
+  sUpdateFailed = 'Update command FAILED error code %d';
+  geoipupdNotFound = 'geoipupd.cmd not found' + LineEnding + 'copy geoipupd.cmd to' + LineEnding + 'directory where transgui.exe is located';
+  sUpdateGeoIpXtrnl = 'Update your GeoIP database manually';
   sTorrentVerification = 'Torrent verification may take a long time.' + LineEnding + 'Are you sure to start verification of torrent ''%s''?';
   sTorrentsVerification = 'Torrents verification may take a long time.' + LineEnding + 'Are you sure to start verification of %d torrents?';
   sSkipTorrentVerification = 'Skip verify ONLY with completed files' + LineEnding + 'Are you sure to skip verification for files of torrent ''%s''?';
@@ -528,7 +531,7 @@ type
     procedure BeforeCloseApp;
     function GetGeoIpDatabase: string;
     function GetFlagsArchive: string;
-    function DownloadGeoIpDatabase(AUpdate: boolean): boolean;
+    function DownloadGeoIpDatabase: boolean;
     procedure TorrentColumnsChanged;
     function EtaToString(ETA: integer): string;
     function GetTorrentStatus(TorrentIdx: integer): string;
@@ -2035,18 +2038,19 @@ end;
 
 function TMainForm.GetFlagImage(const CountryCode: string): integer;
 var
-  s, FlagsPath, ImageName: string;
+  s, FlagsPath, FlagsArchivePath, ImageName: string;
   pic: TPicture;
 begin
   Result:=0;
   if CountryCode = '' then exit;
   try
     ImageName:=CountryCode + '.png';
-    FlagsPath:=FHomeDir + 'flags' + DirectorySeparator;
+    s:=GetFlagsArchive;
+    FlagsArchivePath:=ExtractFilePath(s);
+    FlagsPath:=FlagsArchivePath + 'flags' + DirectorySeparator;
     if not FileExists(FlagsPath + ImageName) then begin
       // Unzipping flag image
       if FUnZip = nil then begin
-        s:=GetFlagsArchive;
         if s <> '' then begin
           ForceDirectories(FlagsPath);
           FUnZip:=TUnZipper.Create;
@@ -2118,51 +2122,37 @@ end;
 
 function TMainForm.GetGeoIpDatabase: string;
 begin
-  Result:=LocateFile('GeoIP.dat', [FHomeDir, ExtractFilePath(ParamStr(0))]);
+  Result:=LocateFile('GeoIP.dat', [ExtractFilePath(ParamStr(0)), FHomeDir]);
 end;
 
 function TMainForm.GetFlagsArchive: string;
 begin
-  Result:=LocateFile('flags.zip', [FHomeDir, ExtractFilePath(ParamStr(0))]);
+  Result:=LocateFile('flags.zip', [ExtractFilePath(ParamStr(0)), FHomeDir]);
 end;
 
-function TMainForm.DownloadGeoIpDatabase(AUpdate: boolean): boolean;
-const
-  GeoLiteURL = 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz';
+function TMainForm.DownloadGeoIpDatabase: boolean;
+{$ifdef mswindows}
 var
-  tmp: string;
-  gz: TGZFileStream;
-  fs: TFileStream;
+  e: integer;
+{$endif mswindows}
 begin
   Result:=False;
-  tmp:=FHomeDir + 'GeoIP.dat.gz';
-  if not FileExists(tmp) or AUpdate then begin
-    if MessageDlg('', sGeoIPConfirm, mtConfirmation, mbYesNo, 0, mbYes) <> mrYes then
+{$ifdef mswindows}
+  if MessageDlg('', sGeoIPConfirm, mtConfirmation, mbYesNo, 0, mbYes) <> mrYes then
+    exit;
+  e:=UpdateGeoIp;
+  if e <= 32 then begin
+    if e = 2 then begin
+      MessageDlg(geoipupdNotFound, mtInformation, [mbOK], 0);
       exit;
-    if not DownloadFile(GeoLiteURL, ExtractFilePath(tmp), ExtractFileName(tmp)) then
-      exit;
-  end;
-  try
-    FreeAndNil(FResolver);
-    gz:=TGZFileStream.Create(tmp, gzopenread);
-    try
-      fs:=TFileStream.Create(FHomeDir + 'GeoIP.dat', fmCreate);
-      try
-        while fs.CopyFrom(gz, 64*1024) = 64*1024 do
-          ;
-      finally
-        fs.Free;
-      end;
-    finally
-      gz.Free;
     end;
-    DeleteFile(tmp);
-  except
-    DeleteFile(FHomeDir + 'GeoIP.dat');
-    DeleteFile(tmp);
-    raise;
+    MessageDlg(Format(sUpdateFailed, [e]), mtInformation, [mbOK], 0);
+    exit;
   end;
   Result:=True;
+{$else} // Non-Windows targets
+  MessageDlg(sUpdateGeoIpXtrnl, mtInformation, [mbOK], 0);
+{$endif mswindows}
 end;
 
 procedure TMainForm.TorrentColumnsChanged;
@@ -2576,7 +2566,7 @@ procedure TMainForm.acResolveCountryExecute(Sender: TObject);
 begin
   if not acResolveCountry.Checked then
     if GetGeoIpDatabase = '' then
-      if not DownloadGeoIpDatabase(False) then
+      if not DownloadGeoIpDatabase then
         exit;
 
   acResolveCountry.Checked:=not acResolveCountry.Checked;
@@ -2983,7 +2973,7 @@ end;
 
 procedure TMainForm.acUpdateGeoIPExecute(Sender: TObject);
 begin
-  if DownloadGeoIpDatabase(True) then
+  if DownloadGeoIpDatabase then
     MessageDlg(sUpdateComplete, mtInformation, [mbOK], 0);
 end;
 
